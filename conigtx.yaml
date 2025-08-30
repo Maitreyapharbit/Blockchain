@@ -1,0 +1,195 @@
+---
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/orderer.pharbit.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+        OrdererEndpoints:
+            - orderer.pharbit.com:7050
+
+    - &PharmaCorp
+        Name: PharmaCorp
+        ID: PharmaCorpMSP
+        MSPDir: crypto-config/peerOrganizations/pharmacorp.pharbit.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('PharmaCorpMSP.admin', 'PharmaCorpMSP.peer', 'PharmaCorpMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('PharmaCorpMSP.admin', 'PharmaCorpMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('PharmaCorpMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('PharmaCorpMSP.peer')"
+
+    - &MediDistributor
+        Name: MediDistributor
+        ID: MediDistributorMSP
+        MSPDir: crypto-config/peerOrganizations/medidistributor.pharbit.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('MediDistributorMSP.admin', 'MediDistributorMSP.peer', 'MediDistributorMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('MediDistributorMSP.admin', 'MediDistributorMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('MediDistributorMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('MediDistributorMSP.peer')"
+
+    - &CityPharmacy
+        Name: CityPharmacy
+        ID: CityPharmacyMSP
+        MSPDir: crypto-config/peerOrganizations/citypharmacy.pharbit.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('CityPharmacyMSP.admin', 'CityPharmacyMSP.peer', 'CityPharmacyMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('CityPharmacyMSP.admin', 'CityPharmacyMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('CityPharmacyMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('CityPharmacyMSP.peer')"
+
+    - &HealthRegulator
+        Name: HealthRegulator
+        ID: HealthRegulatorMSP
+        MSPDir: crypto-config/peerOrganizations/healthregulator.pharbit.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('HealthRegulatorMSP.admin', 'HealthRegulatorMSP.peer', 'HealthRegulatorMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('HealthRegulatorMSP.admin', 'HealthRegulatorMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('HealthRegulatorMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('HealthRegulatorMSP.peer')"
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+Application: &ApplicationDefaults
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+    OrdererType: etcdraft
+    Addresses:
+        - orderer.pharbit.com:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+    EtcdRaft:
+        Consenters:
+            - Host: orderer.pharbit.com
+              Port: 7050
+              ClientTLSCert: crypto-config/ordererOrganizations/orderer.pharbit.com/orderers/orderer.pharbit.com/tls/server.crt
+              ServerTLSCert: crypto-config/ordererOrganizations/orderer.pharbit.com/orderers/orderer.pharbit.com/tls/server.crt
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+    Capabilities:
+        <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
+
+Profiles:
+    PharbitOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            PharbitConsortium:
+                Organizations:
+                    - *PharmaCorp
+                    - *MediDistributor
+                    - *CityPharmacy
+                    - *HealthRegulator
+
+    PharmaSupplyChainChannel:
+        Consortium: PharbitConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *PharmaCorp
+                - *MediDistributor
+                - *CityPharmacy
+                - *HealthRegulator
+            Capabilities:
+                <<: *ApplicationCapabilities
