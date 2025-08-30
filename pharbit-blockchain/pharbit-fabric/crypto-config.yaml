@@ -1,0 +1,38 @@
+OrdererOrgs:
+  - Name: OrdererOrg
+    Domain: orderer.pharbit.com
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: PharmaCorp
+    Domain: pharmacorp.pharbit.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+  - Name: MediDistributor
+    Domain: medidistributor.pharbit.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+  - Name: CityPharmacy
+    Domain: citypharmacy.pharbit.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+  - Name: HealthRegulator
+    Domain: healthregulator.pharbit.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
