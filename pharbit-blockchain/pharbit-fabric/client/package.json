@@ -1,0 +1,27 @@
+{
+  "name": "pharbit-blockchain-client",
+  "version": "1.0.0",
+  "description": "Client application for Pharbit Blockchain medicine tracking",
+  "main": "create-first-block.js",
+  "scripts": {
+    "start": "node create-first-block.js",
+    "create-block": "node create-first-block.js",
+    "query": "node query-medicine.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "blockchain",
+    "hyperledger-fabric",
+    "medicine-tracking",
+    "pharmaceutical"
+  ],
+  "author": "Pharbit Team",
+  "license": "MIT",
+  "dependencies": {
+    "fabric-network": "^2.2.19",
+    "fabric-ca-client": "^2.2.19"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
