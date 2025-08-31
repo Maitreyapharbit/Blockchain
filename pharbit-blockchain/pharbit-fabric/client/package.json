@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node create-first-block.js",
     "create-block": "node create-first-block.js",
+    "create-transaction": "node create-transaction.js",
     "query": "node query-medicine.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
