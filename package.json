@@ -59,5 +59,10 @@
   "bugs": {
     "url": "https://github.com/Maitreyapharbit/Blockchain/issues"
   },
-  "homepage": "https://github.com/Maitreyapharbit/Blockchain#readme"
+  "homepage": "https://github.com/Maitreyapharbit/Blockchain#readme",
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.893.0",
+    "@aws-sdk/client-s3": "^3.893.0",
+    "@aws-sdk/s3-request-presigner": "^3.893.0"
+  }
 }

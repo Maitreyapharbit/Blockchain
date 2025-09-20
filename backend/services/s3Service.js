@@ -1,14 +1,5 @@
-// Stub getUploadMiddleware for backend startup
-function getUploadMiddleware() {
-  return (req, res, next) => next();
-}
-
-// Stub upload for backend startup
-async function upload(req, res, next) {
-  req.file = { originalname: 'stub.txt', buffer: Buffer.from('stub'), mimetype: 'text/plain' };
-  next();
-}
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command, CopyObjectCommand, HeadObjectCommand, PutObjectTaggingCommand, GetObjectTaggingCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs-extra');
@@ -18,15 +9,12 @@ const logger = require('../utils/logger');
 
 class S3Service {
   constructor() {
-    this.s3 = new AWS.S3({
-      accessKeyId: config.aws.accessKeyId,
-      secretAccessKey: config.aws.secretAccessKey,
-      region: config.aws.region,
-      signatureVersion: 'v4',
+    this.client = new S3Client({
+      region: process.env.AWS_REGION
     });
-    this.bucket = config.aws.s3Bucket;
-    this.maxFileSize = config.upload.maxFileSize;
-    this.allowedFileTypes = config.upload.allowedFileTypes;
+    this.bucket = process.env.AWS_S3_BUCKET;
+    this.maxFileSize = 100 * 1024 * 1024; // 100MB
+    this.allowedFileTypes = ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif'];
   }
 
   /**
@@ -118,22 +106,14 @@ class S3Service {
    * @returns {Promise<Object>} Upload result
    */
   async uploadWithProgress(params, fileSize) {
-    return new Promise((resolve, reject) => {
-      const upload = this.s3.upload(params);
-      
-      upload.on('httpUploadProgress', (progress) => {
-        const percentage = Math.round((progress.loaded / fileSize) * 100);
-        logger.debug('Upload progress', { percentage, loaded: progress.loaded, total: fileSize });
-      });
-
-      upload.send((err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
+    try {
+      const command = new PutObjectCommand(params);
+      const response = await this.client.send(command);
+      return response;
+    } catch (error) {
+      logger.error('Upload failed', { error: error.message });
+      throw error;
+    }
   }
 
   /**
