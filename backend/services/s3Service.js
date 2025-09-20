@@ -126,7 +126,9 @@ class S3Service {
         Key: fileKey
       };
 
-      const result = await this.s3.getObject(params).promise();
+      const { GetObjectCommand } = require('@aws-sdk/client-s3');
+      const command = new GetObjectCommand(params);
+      const result = await this.client.send(command);
 
       logger.info('File downloaded successfully', { fileKey, size: result.ContentLength });
 
@@ -162,7 +164,10 @@ class S3Service {
         params.ContentType = contentType;
       }
 
-      const url = await this.s3.getSignedUrlPromise(operation, params);
+      const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+      const { GetObjectCommand } = require('@aws-sdk/client-s3');
+      const command = new GetObjectCommand(params);
+      const url = await getSignedUrl(this.client, command, { expiresIn });
 
       logger.info('Pre-signed URL generated', { fileKey, expiresIn, operation });
 
@@ -186,7 +191,9 @@ class S3Service {
         Key: fileKey
       };
 
-      await this.s3.deleteObject(params).promise();
+      const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+      const command = new DeleteObjectCommand(params);
+      await this.client.send(command);
 
       logger.info('File deleted successfully', { fileKey });
 
@@ -212,7 +219,9 @@ class S3Service {
         Key: destinationKey
       };
 
-      const result = await this.s3.copyObject(params).promise();
+      const { CopyObjectCommand } = require('@aws-sdk/client-s3');
+      const command = new CopyObjectCommand(params);
+      const result = await this.client.send(command);
 
       logger.info('File copied successfully', { sourceKey, destinationKey });
 
@@ -247,7 +256,9 @@ class S3Service {
         params.ContinuationToken = continuationToken;
       }
 
-      const result = await this.s3.listObjectsV2(params).promise();
+      const { ListObjectsV2Command } = require('@aws-sdk/client-s3');
+      const command = new ListObjectsV2Command(params);
+      const result = await this.client.send(command);
       const files = result.Contents.map((item) => ({
         key: item.Key,
         size: item.Size,
@@ -279,7 +290,9 @@ class S3Service {
         Key: fileKey
       };
 
-      const result = await this.s3.headObject(params).promise();
+      const { HeadObjectCommand } = require('@aws-sdk/client-s3');
+      const command = new HeadObjectCommand(params);
+      const result = await this.client.send(command);
 
       return {
         key: fileKey,
@@ -441,7 +454,9 @@ class S3Service {
         }
       };
 
-      await this.s3.putObjectTagging(params).promise();
+      const { PutObjectTaggingCommand } = require('@aws-sdk/client-s3');
+      const command = new PutObjectTaggingCommand(params);
+      await this.client.send(command);
 
       logger.info('File tags added successfully', { fileKey, tags });
 
@@ -465,7 +480,9 @@ class S3Service {
         Key: fileKey
       };
 
-      const result = await this.s3.getObjectTagging(params).promise();
+      const { GetObjectTaggingCommand } = require('@aws-sdk/client-s3');
+      const command = new GetObjectTaggingCommand(params);
+      const result = await this.client.send(command);
 
       const tags = {};
       result.TagSet.forEach((tag) => {
@@ -478,6 +495,31 @@ class S3Service {
       logger.error('File tags retrieval failed', { error: error.message, fileKey });
       throw new Error(`File tags retrieval failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Get upload middleware for multer
+   * @param {Object} options - Upload options
+   * @returns {Function} Multer middleware
+   */
+  getUploadMiddleware(options = {}) {
+    const multer = require('multer');
+    const memoryStorage = multer.memoryStorage();
+    
+    return multer({
+      storage: memoryStorage,
+      limits: {
+        fileSize: options.maxFileSize || this.maxFileSize
+      },
+      fileFilter: (req, file, cb) => {
+        const fileExtension = path.extname(file.originalname).toLowerCase().substring(1);
+        if (this.allowedFileTypes.includes(fileExtension)) {
+          cb(null, true);
+        } else {
+          cb(new Error(`File type .${fileExtension} is not allowed. Allowed types: ${this.allowedFileTypes.join(', ')}`), false);
+        }
+      }
+    });
   }
 }
 
