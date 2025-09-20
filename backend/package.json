@@ -4,8 +4,8 @@
   "description": "Node.js Express backend for pharmaceutical blockchain management",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "nodemon --exec 'node -r dotenv/config' index.js",
+    "dev": "nodemon -r dotenv/config index.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --watchAll=false",
