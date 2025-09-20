@@ -26,11 +26,11 @@ const consoleFormat = winston.format.combine(
   }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
     let log = `${timestamp} [${level}]: ${message}`;
-    
+
     if (Object.keys(meta).length > 0) {
       log += `\n${JSON.stringify(meta, null, 2)}`;
     }
-    
+
     return log;
   })
 );
@@ -45,7 +45,7 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       format: process.env.NODE_ENV === 'production' ? logFormat : consoleFormat
     }),
-    
+
     // Write all logs with level 'error' and below to error.log
     new winston.transports.File({
       filename: path.join(logDir, 'error.log'),
@@ -53,7 +53,7 @@ const logger = winston.createLogger({
       maxsize: 5242880, // 5MB
       maxFiles: 5
     }),
-    
+
     // Write all logs to combined.log
     new winston.transports.File({
       filename: path.join(logDir, 'combined.log'),
@@ -61,7 +61,7 @@ const logger = winston.createLogger({
       maxFiles: 5
     })
   ],
-  
+
   // Handle exceptions and rejections
   exceptionHandlers: [
     new winston.transports.File({
@@ -70,7 +70,7 @@ const logger = winston.createLogger({
       maxFiles: 5
     })
   ],
-  
+
   rejectionHandlers: [
     new winston.transports.File({
       filename: path.join(logDir, 'rejections.log'),
@@ -83,7 +83,7 @@ const logger = winston.createLogger({
 // Add request logging middleware
 logger.request = (req, res, next) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logData = {
@@ -96,14 +96,14 @@ logger.request = (req, res, next) => {
       userId: req.user?.id,
       contentLength: res.get('Content-Length')
     };
-    
+
     if (res.statusCode >= 400) {
       logger.warn('HTTP Request', logData);
     } else {
       logger.info('HTTP Request', logData);
     }
   });
-  
+
   next();
 };
 
@@ -117,7 +117,7 @@ logger.blockchain = (txHash, method, status, gasUsed, error = null) => {
     error: error?.message,
     timestamp: new Date().toISOString()
   };
-  
+
   if (status === 'success') {
     logger.info('Blockchain Transaction', logData);
   } else {
@@ -135,7 +135,7 @@ logger.database = (operation, table, status, duration, error = null) => {
     error: error?.message,
     timestamp: new Date().toISOString()
   };
-  
+
   if (status === 'success') {
     logger.info('Database Operation', logData);
   } else {
@@ -154,7 +154,7 @@ logger.s3 = (operation, bucket, key, status, size, error = null) => {
     error: error?.message,
     timestamp: new Date().toISOString()
   };
-  
+
   if (status === 'success') {
     logger.info('S3 Operation', logData);
   } else {
@@ -171,7 +171,7 @@ logger.security = (event, userId, ip, details = {}) => {
     details,
     timestamp: new Date().toISOString()
   };
-  
+
   logger.warn('Security Event', logData);
 };
 
@@ -183,7 +183,7 @@ logger.performance = (operation, duration, metadata = {}) => {
     metadata,
     timestamp: new Date().toISOString()
   };
-  
+
   if (duration > 5000) { // Log slow operations
     logger.warn('Slow Operation', logData);
   } else {
@@ -200,7 +200,7 @@ logger.audit = (action, resource, userId, details = {}) => {
     details,
     timestamp: new Date().toISOString()
   };
-  
+
   logger.info('Audit Log', logData);
 };
 

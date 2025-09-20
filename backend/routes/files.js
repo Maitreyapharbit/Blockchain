@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { validators, fileSchemas, validateJoi } = require('../middleware/validation');
 const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
 const s3Service = require('../services/s3Service');
@@ -77,7 +77,7 @@ router.post('/upload',
       try {
         // Generate unique file ID
         const fileId = uuidv4();
-        
+
         // Upload file to S3
         const uploadResult = await s3Service.uploadFile(file, {
           fileId,
@@ -181,7 +181,7 @@ router.get('/:fileId',
   validators.validateFileId,
   asyncHandler(async (req, res) => {
     const { fileId } = req.params;
-    
+
     const file = await databaseService.getFile(fileId);
     if (!file) {
       return sendErrorResponse(res, 'File not found', 404, 'FILE_NOT_FOUND');
@@ -247,7 +247,7 @@ router.get('/:fileId/download',
   validators.validateFileId,
   asyncHandler(async (req, res) => {
     const { fileId } = req.params;
-    
+
     const file = await databaseService.getFile(fileId);
     if (!file) {
       return sendErrorResponse(res, 'File not found', 404, 'FILE_NOT_FOUND');
@@ -261,13 +261,13 @@ router.get('/:fileId/download',
     try {
       // Download file from S3
       const fileData = await s3Service.downloadFile(file.s3_key);
-      
+
       // Set response headers
       res.setHeader('Content-Type', file.content_type);
       res.setHeader('Content-Length', fileData.contentLength);
       res.setHeader('Content-Disposition', `attachment; filename="${file.original_name}"`);
       res.setHeader('Last-Modified', fileData.lastModified);
-      
+
       // Send file data
       res.send(fileData.body);
 
@@ -337,7 +337,7 @@ router.get('/:fileId/url',
   asyncHandler(async (req, res) => {
     const { fileId } = req.params;
     const expiresIn = parseInt(req.query.expiresIn) || 3600;
-    
+
     const file = await databaseService.getFile(fileId);
     if (!file) {
       return sendErrorResponse(res, 'File not found', 404, 'FILE_NOT_FOUND');
@@ -415,7 +415,7 @@ router.get('/batches/:batchId',
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
     const { category } = req.query;
-    
+
     let query = databaseService.getClient()
       .from('files')
       .select('*')
@@ -429,7 +429,7 @@ router.get('/batches/:batchId',
 
     if (error) throw error;
 
-    const files = (data || []).map(file => ({
+    const files = (data || []).map((file) => ({
       id: file.id,
       fileId: file.file_id,
       originalName: file.original_name,
@@ -523,7 +523,7 @@ router.get('/',
 
     if (error) throw error;
 
-    const files = (data || []).map(file => ({
+    const files = (data || []).map((file) => ({
       id: file.id,
       fileId: file.file_id,
       originalName: file.original_name,
@@ -582,7 +582,7 @@ router.delete('/:fileId',
   validators.validateFileId,
   asyncHandler(async (req, res) => {
     const { fileId } = req.params;
-    
+
     const file = await databaseService.getFile(fileId);
     if (!file) {
       return sendErrorResponse(res, 'File not found', 404, 'FILE_NOT_FOUND');
@@ -596,7 +596,7 @@ router.delete('/:fileId',
     try {
       // Delete file from S3
       await s3Service.deleteFile(file.s3_key);
-      
+
       // Delete file record from database
       const { error } = await databaseService.getClient()
         .from('files')

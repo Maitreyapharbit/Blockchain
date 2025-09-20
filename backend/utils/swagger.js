@@ -110,7 +110,7 @@ const options = {
             }
           }
         },
-        
+
         // User schemas
         User: {
           type: 'object',
@@ -185,7 +185,7 @@ const options = {
             }
           }
         },
-        
+
         // Batch schemas
         Batch: {
           type: 'object',
@@ -397,7 +397,7 @@ const options = {
             }
           }
         },
-        
+
         // Compliance schemas
         ComplianceRecord: {
           type: 'object',
@@ -711,7 +711,7 @@ const options = {
             }
           }
         },
-        
+
         // Wallet schemas
         Wallet: {
           type: 'object',
@@ -769,7 +769,7 @@ const options = {
             }
           }
         },
-        
+
         // File schemas
         File: {
           type: 'object',

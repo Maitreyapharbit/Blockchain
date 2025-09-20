@@ -1,430 +1,69 @@
-import 'styled-components';import 'styled-components';import 'styled-components';import 'styled-components';import 'styled-components';import 'styled-components';import 'styled-components'import 'styled-components'import 'styled-components';import 'styled-components';declare module 'styled-components' {declare module 'styled-components' {import 'styled-components'declare module 'styled-components' {// theme.d.tsimport 'styled-components'import { DefaultTheme } from 'styled-components'import 'styled-components';import 'styled-components';
+import 'styled-components'declare module 'styled-components' {// theme.d.tsimport 'styled-components'import { DefaultTheme } from 'styled-components'import 'styled-components';import 'styled-components';
 
 
 
-declare module 'styled-components' {
+declare module 'styled-components' {  export interface DefaultTheme {
 
   export interface DefaultTheme {
 
-    colors: {declare module 'styled-components' {
+    mode: 'light' | 'dark'    colors: {import 'styled-components'
 
-      primary: string;
+    colors: {
 
-      secondary: string;  export interface DefaultTheme {
+      primary: string      primary: string
 
-      background: string;
+      secondary: string
 
-      text: string;    colors: {declare module 'styled-components' {
+      background: string      secondary: string
 
-    };
+      surface: string
 
-  }      primary: string;
+      text: string      background: string
 
-}
-      secondary: string;  export interface DefaultTheme {
+      textSecondary: string
 
-      background: string;
+      border: string      surface: stringdeclare module 'styled-components' {
 
-      text: string;    colors: {declare module 'styled-components' {
+      error: string
 
-    };
+      success: string      text: string
 
-  }      primary: string;
+      warning: string
 
-}
-      secondary: string;  export interface DefaultTheme {
-
-      background: string;
-
-      text: string;    colors: {declare module 'styled-components' {
-
-    };
-
-  }      primary: string;
-
-}
-      secondary: string;  export interface DefaultTheme {
-
-      background: string;
-
-      text: string;    colors: {declare module 'styled-components' {
-
-    };
-
-  }      primary: string;
-
-}
-      secondary: string;  export interface DefaultTheme {
-
-      background: string;
-
-      text: string;    colors: {declare module 'styled-components' {
-
-    };
-
-  }      primary: string;
-
-}
-      secondary: string;  export interface DefaultTheme {
-
-      background: string;
-
-      text: string;    colors: {declare module 'styled-components' {
-
-    };
-
-  }      primary: string
-
-}
-      secondary: string  export interface DefaultTheme {
-
-      background: string
-
-      text: string    colors: {declare module 'styled-components' {
+      info: string      textSecondary: string  export interface DefaultTheme {declare module 'styled-components' {
 
     }
 
-  }      primary: string
+    spacing: {      border: string
 
-}
-      secondary: string  export interface DefaultTheme {
+      xxs: string
 
-      background: string
+      xs: string      error: string    colors: {
 
-      surface: string    isDark: boolean;declare module 'styled-components' {  export interface DefaultTheme {
+      sm: string
 
-      text: string
+      md: string      success: string
 
-      textSecondary: string    colors: {
+      lg: string
 
-      border: string
+      xl: string      warning: string      primary: string  export interface DefaultTheme {
 
-      error: string      primary: string;  export interface DefaultTheme {
+    }
 
-      success: string
+    typography: {      info: string
 
-      warning: string      secondary: string;
+      fonts: {
 
-      info: string
+        primary: string    }      secondary: string
 
-    }      background: string;    mode: 'light' | 'dark';    mode: 'light' | 'dark'  export interface DefaultTheme {
+        secondary: string
 
-  }
-
-}      surface: string;
-
-      text: string;    colors: {
-
-      textSecondary: string;
-
-      border: string;      primary: string;    colors: {
-
-      error: string;
-
-      success: string;      secondary: string;
-
-      warning: string;
-
-      info: string;      background: string;      primary: string    mode: 'light' | 'dark'
-
-    };
-
-    fonts: {      surface: string;
+      }    typography: {
 
       sizes: {
 
-        xs: string;      text: string;      secondary: string
+        xs: string      fontSize: {      background: string    colors: {declare module 'styled-components' {
 
-        sm: string;
-
-        md: string;      textSecondary: string;
-
-        lg: string;
-
-        xl: string;      border: string;      background: string    colors: {
-
-      };
-
-      weights: {      error: string;
-
-        light: number;
-
-        regular: number;      success: string;      surface: string
-
-        medium: number;
-
-        semibold: number;      warning: string;
-
-        bold: number;
-
-      };      info: string;      text: string      primary: stringdeclare module 'styled-components' {  export interface DefaultTheme {
-
-      families: {
-
-        primary: string;    };
-
-        secondary: string;
-
-      };    spacing: {      textSecondary: string
-
-    };
-
-    spacing: {      xs: string;
-
-      xs: string;
-
-      sm: string;      sm: string;      border: string      secondary: string
-
-      md: string;
-
-      lg: string;      md: string;
-
-      xl: string;
-
-    };      lg: string;      error: string
-
-    radii: {
-
-      sm: string;      xl: string;
-
-      md: string;
-
-      lg: string;    };      success: string      background: string  export interface DefaultTheme {
-
-      xl: string;
-
-    };    fontSize: {
-
-    shadows: {
-
-      sm: string;      xs: string;      warning: string
-
-      md: string;
-
-      lg: string;      sm: string;
-
-    };
-
-    breakpoints: {      md: string;      info: string      surface: string
-
-      mobile: string;
-
-      tablet: string;      lg: string;
-
-      desktop: string;
-
-      wide: string;      xl: string;    }
-
-    };
-
-    zIndices: {    };
-
-      dropdown: number;
-
-      modal: number;    fontWeight: {    spacing: {      text: string    mode: 'light' | 'dark'    colors: {import 'styled-components'
-
-      tooltip: number;
-
-      toast: number;      light: number;
-
-    };
-
-  }      regular: number;      xs: string
-
-}
-      medium: number;
-
-      semibold: number;      sm: string      textSecondary: string
-
-      bold: number;
-
-    };      md: string
-
-    fontFamily: {
-
-      primary: string;      lg: string      border: string    colors: {
-
-      secondary: string;
-
-    };      xl: string
-
-    borderRadius: {
-
-      sm: string;    }      error: string
-
-      md: string;
-
-      lg: string;    fontSize: {
-
-      xl: string;
-
-    };      xs: string      success: string      primary: string      primary: string
-
-    shadows: {
-
-      sm: string;      sm: string
-
-      md: string;
-
-      lg: string;      md: string      warning: string
-
-    };
-
-    breakpoints: {      lg: string
-
-      mobile: string;
-
-      tablet: string;      xl: string      info: string      secondary: string
-
-      desktop: string;
-
-      wide: string;    }
-
-    };
-
-    zIndex: {    fontWeight: {    }
-
-      dropdown: number;
-
-      modal: number;      light: number
-
-      tooltip: number;
-
-      toast: number;      regular: number    spacing: {      background: string      secondary: string
-
-    };
-
-  }      medium: number
-
-}
-      semibold: number      xs: string
-
-      bold: number
-
-    }      sm: string      surface: string
-
-    fontFamily: {
-
-      primary: string      md: string
-
-      secondary: string
-
-    }      lg: string      text: string      background: string
-
-    borderRadius: {
-
-      sm: string      xl: string
-
-      md: string
-
-      lg: string    }      textSecondary: string
-
-      xl: string
-
-    }    fontSize: {
-
-    shadows: {
-
-      sm: string      xs: string      border: string      surface: stringdeclare module 'styled-components' {
-
-      md: string
-
-      lg: string      sm: string
-
-    }
-
-    breakpoints: {      md: string      error: string
-
-      mobile: string
-
-      tablet: string      lg: string
-
-      desktop: string
-
-      wide: string      xl: string      success: string      text: string
-
-    }
-
-    zIndex: {    }
-
-      dropdown: number
-
-      modal: number    fontWeight: {      warning: string
-
-      tooltip: number
-
-      toast: number      light: number
-
-    }
-
-  }      regular: number      info: string      textSecondary: string  export interface DefaultTheme {declare module 'styled-components' {
-
-}
-      medium: number
-
-      semibold: number    }
-
-      bold: number
-
-    }    spacing: {      border: string
-
-    fontFamily: {
-
-      primary: string      xxs: string
-
-      secondary: string
-
-    }      xs: string      error: string    colors: {
-
-    borderRadius: {
-
-      sm: string      sm: string
-
-      md: string
-
-      lg: string      md: string      success: string
-
-      xl: string
-
-    }      lg: string
-
-    shadows: {
-
-      sm: string      xl: string      warning: string      primary: string  export interface DefaultTheme {
-
-      md: string
-
-      lg: string    }
-
-    }
-
-    breakpoints: {    typography: {      info: string
-
-      mobile: string
-
-      tablet: string      fonts: {
-
-      desktop: string
-
-      wide: string        primary: string    }      secondary: string
-
-    }
-
-    zIndex: {        secondary: string
-
-      dropdown: number
-
-      modal: number      }    typography: {
-
-      tooltip: number
-
-      toast: number      sizes: {
-
-    }
-
-  }        xs: string      fontSize: {      background: string    colors: {declare module 'styled-components' {
-
-}
         sm: string
 
         md: string        xs: string

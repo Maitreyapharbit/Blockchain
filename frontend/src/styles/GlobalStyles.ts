@@ -1,41 +1,13 @@
-import React from 'react';import React from 'react';import React from 'react';import { createGlobalStyle } from 'styled-components';
-
 import { createGlobalStyle } from 'styled-components';
 
-import type { DefaultTheme } from 'styled-components';import { createGlobalStyle } from 'styled-components';
-
-
-
-export const GlobalStyles = createGlobalStyle<{ theme: DefaultTheme }>`import { createGlobalStyle } from 'styled-components';
-
-  body {
-
-    background: ${({ theme }) => theme.colors.background};export const GlobalStyles = createGlobalStyle`
-
-    color: ${({ theme }) => theme.colors.text};
-
-    transition: all 0.3s linear;  body {export const GlobalStyles = createGlobalStyle`
-
+export const GlobalStyles = createGlobalStyle`
+  /* Reset */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
-`;    background: ${({ theme }) => theme.colors.background};
-
-    color: ${({ theme }) => theme.colors.text};export const GlobalStyles = createGlobalStyle`  /* Reset */
-
-    transition: all 0.3s linear;
-
-  }  body {  *, *::before, *::after {
-
-`;
-    background: ${({ theme }) => theme.colors.background};    box-sizing: border-box;
-
-    color: ${({ theme }) => theme.colors.text};    margin: 0;
-
-    transition: all 0.3s linear;    padding: 0;
-
-  }  }
-
-`;
   /* HTML & Body */
   html {
     font-size: 16px;

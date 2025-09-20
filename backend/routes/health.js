@@ -170,7 +170,7 @@ router.get('/', async (req, res) => {
     }
   } catch (error) {
     logger.error('Health check failed:', error);
-    
+
     healthCheck.status = 'unhealthy';
     healthCheck.error = error.message;
     healthCheck.responseTime = Date.now() - startTime;
@@ -220,7 +220,7 @@ router.get('/ready', async (req, res) => {
       s3Service.isInitialized
     ];
 
-    const allReady = checks.every(check => check === true);
+    const allReady = checks.every((check) => check === true);
 
     if (allReady) {
       sendSuccessResponse(res, {
@@ -288,7 +288,7 @@ router.get('/ready', async (req, res) => {
  */
 router.get('/live', (req, res) => {
   const uptime = process.uptime();
-  
+
   sendSuccessResponse(res, {
     status: 'alive',
     timestamp: new Date().toISOString(),

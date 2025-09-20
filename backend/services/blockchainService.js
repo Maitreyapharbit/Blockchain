@@ -16,7 +16,7 @@ class BlockchainService {
     try {
       // Initialize provider
       this.provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-      
+
       // Initialize wallet
       if (process.env.PRIVATE_KEY) {
         this.wallet = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
@@ -25,7 +25,7 @@ class BlockchainService {
 
       // Load contract addresses from deployment
       await this.loadContracts();
-      
+
       this.isInitialized = true;
       logger.info('Blockchain service initialized successfully');
     } catch (error) {
@@ -42,7 +42,7 @@ class BlockchainService {
       // Load deployment info
       const deploymentPath = require('path').join(__dirname, '../deployments/pharma-contracts.json');
       const deployment = require(deploymentPath);
-      
+
       // Contract ABIs
       const pharmaceuticalBatchABI = JSON.parse(deployment.contracts.PharmaceuticalBatch.abi);
       const batchNFTABI = JSON.parse(deployment.contracts.BatchNFT.abi);
@@ -83,12 +83,12 @@ class BlockchainService {
     if (!this.isInitialized) {
       throw new Error('Blockchain service not initialized');
     }
-    
+
     const contract = this.contracts[contractName];
     if (!contract) {
       throw new Error(`Contract ${contractName} not found`);
     }
-    
+
     return contract;
   }
 
@@ -109,7 +109,7 @@ class BlockchainService {
       const network = await this.provider.getNetwork();
       const blockNumber = await this.provider.getBlockNumber();
       const gasPrice = await this.provider.getGasPrice();
-      
+
       return {
         name: network.name,
         chainId: network.chainId.toString(),
@@ -164,11 +164,11 @@ class BlockchainService {
   async waitForTransaction(txHash, confirmations = 1) {
     try {
       const receipt = await this.provider.waitForTransaction(txHash, confirmations);
-      
+
       if (receipt.status === 0) {
         throw new Error('Transaction failed');
       }
-      
+
       logger.blockchain(txHash, 'waitForTransaction', 'success', receipt.gasUsed.toString());
       return receipt;
     } catch (error) {
@@ -185,7 +185,7 @@ class BlockchainService {
   async createBatch(batchData) {
     try {
       const contract = this.getContract('pharmaceuticalBatch');
-      
+
       const tx = await contract.createBatch(
         batchData.drugName,
         batchData.drugCode,
@@ -197,11 +197,11 @@ class BlockchainService {
         Object.keys(batchData.metadata || {}),
         Object.values(batchData.metadata || {})
       );
-      
+
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       // Extract batch ID from events
-      const event = receipt.logs.find(log => {
+      const event = receipt.logs.find((log) => {
         try {
           const parsed = contract.interface.parseLog(log);
           return parsed.name === 'BatchCreated';
@@ -209,11 +209,11 @@ class BlockchainService {
           return false;
         }
       });
-      
+
       const batchId = event ? contract.interface.parseLog(event).args.batchId.toString() : null;
-      
+
       logger.blockchain(tx.hash, 'createBatch', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         batchId,
@@ -235,7 +235,7 @@ class BlockchainService {
   async transferBatch(batchId, transferData) {
     try {
       const contract = this.getContract('pharmaceuticalBatch');
-      
+
       const tx = await contract.transferBatch(
         batchId,
         transferData.to,
@@ -243,11 +243,11 @@ class BlockchainService {
         transferData.location,
         transferData.notes || ''
       );
-      
+
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       logger.blockchain(tx.hash, 'transferBatch', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         gasUsed: receipt.gasUsed.toString(),
@@ -269,12 +269,12 @@ class BlockchainService {
   async updateBatchStatus(batchId, status, reason) {
     try {
       const contract = this.getContract('pharmaceuticalBatch');
-      
+
       const tx = await contract.updateBatchStatus(batchId, status, reason);
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       logger.blockchain(tx.hash, 'updateBatchStatus', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         gasUsed: receipt.gasUsed.toString(),
@@ -295,7 +295,7 @@ class BlockchainService {
     try {
       const contract = this.getContract('pharmaceuticalBatch');
       const batch = await contract.getBatch(batchId);
-      
+
       return {
         batchId: batch.batchId.toString(),
         drugName: batch.drugName,
@@ -324,7 +324,7 @@ class BlockchainService {
   async addComplianceCheck(complianceData) {
     try {
       const contract = this.getContract('complianceManager');
-      
+
       const tx = await contract.addComplianceCheck(
         complianceData.batchId,
         complianceData.checkType,
@@ -335,11 +335,11 @@ class BlockchainService {
         Object.keys(complianceData.additionalData || {}),
         Object.values(complianceData.additionalData || {})
       );
-      
+
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       logger.blockchain(tx.hash, 'addComplianceCheck', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         gasUsed: receipt.gasUsed.toString(),
@@ -360,18 +360,18 @@ class BlockchainService {
   async updateComplianceStatus(recordId, statusData) {
     try {
       const contract = this.getContract('complianceManager');
-      
+
       const tx = await contract.updateComplianceStatus(
         recordId,
         statusData.status,
         statusData.passed,
         statusData.updatedNotes || ''
       );
-      
+
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       logger.blockchain(tx.hash, 'updateComplianceStatus', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         gasUsed: receipt.gasUsed.toString(),
@@ -391,7 +391,7 @@ class BlockchainService {
   async mintBatchNFT(nftData) {
     try {
       const contract = this.getContract('batchNFT');
-      
+
       const tx = await contract.mintBatchNFT(
         nftData.to,
         nftData.batchId,
@@ -400,11 +400,11 @@ class BlockchainService {
         Object.keys(nftData.attributes || {}),
         Object.values(nftData.attributes || {})
       );
-      
+
       const receipt = await this.waitForTransaction(tx.hash);
-      
+
       logger.blockchain(tx.hash, 'mintBatchNFT', 'success', receipt.gasUsed.toString());
-      
+
       return {
         txHash: tx.hash,
         gasUsed: receipt.gasUsed.toString(),

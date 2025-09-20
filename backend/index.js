@@ -27,10 +27,10 @@ const app = express();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      defaultSrc: ['\'self\''],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      scriptSrc: ['\'self\''],
+      imgSrc: ['\'self\'', 'data:', 'https:'],
     },
   },
 }));
@@ -69,7 +69,7 @@ app.use(compression());
 
 // Logging middleware
 if (config.env === 'development') {
-  app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+  app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 }
 
 // Health check endpoint (before rate limiting)
@@ -86,7 +86,6 @@ app.use('/api/wallets', walletRoutes);
 if (config.env === 'development') {
   const swaggerUi = require('swagger-ui-express');
   const swaggerSpec = require('./utils/swagger');
-  
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: '.swagger-ui .topbar { display: none }',
     customSiteTitle: 'PharbitChain API Documentation',
@@ -132,7 +131,6 @@ const server = app.listen(PORT, HOST, () => {
   logger.info(`PharbitChain API Server running on http://${HOST}:${PORT}`);
   logger.info(`Environment: ${config.env}`);
   logger.info(`Health check: http://${HOST}:${PORT}/health`);
-  
   if (config.env === 'development') {
     logger.info(`API Documentation: http://${HOST}:${PORT}/api/docs`);
   }
