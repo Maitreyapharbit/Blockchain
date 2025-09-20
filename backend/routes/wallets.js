@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { ethers } = require('ethers');
 const crypto = require('crypto');
-const { authenticate, authorize } = require('../middleware/auth');
-const { validators, walletSchemas, validateJoi } = require('../middleware/validation');
+const { authenticate } = require('../middleware/auth');
+const { walletSchemas, validateJoi } = require('../middleware/validation');
 const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
 const databaseService = require('../services/databaseService');
 const logger = require('../utils/logger');
@@ -53,7 +53,7 @@ router.post('/generate',
     for (let i = 0; i < count; i++) {
       // Generate new wallet
       const wallet = ethers.Wallet.createRandom();
-      
+
       // Encrypt private key and mnemonic
       const encryptionKey = process.env.JWT_SECRET || 'default-encryption-key';
       const privateKeyEncrypted = encrypt(wallet.privateKey, encryptionKey);
@@ -82,7 +82,7 @@ router.post('/generate',
 
     logger.audit('generate_wallets', 'wallet', req.user.id, {
       count,
-      addresses: wallets.map(w => w.address)
+      addresses: wallets.map((w) => w.address)
     });
 
     sendSuccessResponse(res, wallets, 'Wallets generated successfully', 201);
@@ -129,11 +129,11 @@ router.post('/import',
   validateJoi(walletSchemas.import),
   asyncHandler(async (req, res) => {
     const { privateKey, name } = req.body;
-    
+
     try {
       // Create wallet from private key
       const wallet = new ethers.Wallet(privateKey);
-      
+
       // Check if wallet already exists
       const existingWallet = await databaseService.getWallet(wallet.address);
       if (existingWallet) {
@@ -149,7 +149,7 @@ router.post('/import',
         address: wallet.address,
         private_key_encrypted: privateKeyEncrypted,
         mnemonic_encrypted: null, // No mnemonic for imported wallet
-        name: name || `Imported Wallet`,
+        name: name || 'Imported Wallet',
         user_id: req.user.id,
         is_active: true
       };
@@ -214,7 +214,7 @@ router.get('/',
   authenticate,
   asyncHandler(async (req, res) => {
     const { active } = req.query;
-    
+
     let query = databaseService.getClient()
       .from('wallets')
       .select('id, address, name, is_active, created_at')
@@ -228,7 +228,7 @@ router.get('/',
 
     if (error) throw error;
 
-    const wallets = (data || []).map(wallet => ({
+    const wallets = (data || []).map((wallet) => ({
       id: wallet.id,
       address: wallet.address,
       name: wallet.name,
@@ -278,7 +278,7 @@ router.get('/:address',
   authenticate,
   asyncHandler(async (req, res) => {
     const { address } = req.params;
-    
+
     const wallet = await databaseService.getWallet(address);
     if (!wallet) {
       return sendErrorResponse(res, 'Wallet not found', 404, 'WALLET_NOT_FOUND');
@@ -344,7 +344,7 @@ router.get('/:address/balance',
   authenticate,
   asyncHandler(async (req, res) => {
     const { address } = req.params;
-    
+
     // Verify wallet exists and user owns it
     const wallet = await databaseService.getWallet(address);
     if (!wallet || wallet.user_id !== req.user.id) {
@@ -425,7 +425,7 @@ router.post('/:address/export',
   asyncHandler(async (req, res) => {
     const { address } = req.params;
     const { password } = req.body;
-    
+
     if (!password) {
       return sendErrorResponse(res, 'Password required for wallet export', 400, 'PASSWORD_REQUIRED');
     }
@@ -506,7 +506,7 @@ router.put('/:address',
   asyncHandler(async (req, res) => {
     const { address } = req.params;
     const { name, isActive } = req.body;
-    
+
     // Verify wallet exists and user owns it
     const wallet = await databaseService.getWallet(address);
     if (!wallet || wallet.user_id !== req.user.id) {
@@ -572,7 +572,7 @@ router.delete('/:address',
   authenticate,
   asyncHandler(async (req, res) => {
     const { address } = req.params;
-    
+
     // Verify wallet exists and user owns it
     const wallet = await databaseService.getWallet(address);
     if (!wallet || wallet.user_id !== req.user.id) {
@@ -610,7 +610,7 @@ function decrypt(encryptedText, key) {
   const textParts = encryptedText.split(':');
   const iv = Buffer.from(textParts.shift(), 'hex');
   const encrypted = textParts.join(':');
-  const decipher = crypto.createDecipher(algorithm, key);
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;

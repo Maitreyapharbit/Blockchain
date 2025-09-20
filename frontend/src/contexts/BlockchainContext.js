@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useMetaMask } from './MetaMaskContext';
@@ -30,10 +29,10 @@ export const BlockchainProvider = ({ children }) => {
     if (isConnected && provider) {
       initializeBlockchain();
     }
-  }, [isConnected, provider]);
+  }, [isConnected, provider, initializeBlockchain]);
 
   // Initialize blockchain service
-  const initializeBlockchain = async () => {
+  const initializeBlockchain = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -49,7 +48,7 @@ export const BlockchainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
 
   // Deploy PharbitCore contract
   const deployPharbitCore = async () => {

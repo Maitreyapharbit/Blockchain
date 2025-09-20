@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
 const { authenticate, generateToken } = require('../middleware/auth');
 const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
 const databaseService = require('../services/databaseService');
@@ -42,7 +41,7 @@ const logger = require('../utils/logger');
 router.post('/register',
   asyncHandler(async (req, res) => {
     const { address, role = 'user', permissions = [] } = req.body;
-    
+
     if (!address) {
       return sendErrorResponse(res, 'Address is required', 400, 'ADDRESS_REQUIRED');
     }
@@ -62,7 +61,7 @@ router.post('/register',
     };
 
     const user = await databaseService.createUser(userData);
-    
+
     // Generate JWT token
     const token = generateToken({
       id: user.id,
@@ -125,7 +124,7 @@ router.post('/register',
 router.post('/login',
   asyncHandler(async (req, res) => {
     const { address } = req.body;
-    
+
     if (!address) {
       return sendErrorResponse(res, 'Address is required', 400, 'ADDRESS_REQUIRED');
     }

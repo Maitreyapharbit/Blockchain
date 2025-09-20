@@ -41,23 +41,23 @@ class DatabaseService {
    */
   async executeWithRetry(queryFn, maxRetries = 3) {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await queryFn();
       } catch (error) {
         lastError = error;
-        logger.warn(`Database query attempt ${attempt} failed`, { 
-          error: error.message, 
-          attempt 
+        logger.warn(`Database query attempt ${attempt} failed`, {
+          error: error.message,
+          attempt
         });
-        
+
         if (attempt < maxRetries) {
           await this.delay(1000 * attempt); // Exponential backoff
         }
       }
     }
-    
+
     throw lastError;
   }
 
@@ -67,7 +67,7 @@ class DatabaseService {
    * @returns {Promise<void>}
    */
   delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // ==================== USER OPERATIONS ====================
@@ -459,8 +459,8 @@ class DatabaseService {
   async linkFileToBatch(batchId, fileId, options = {}) {
     return this.executeWithRetry(async () => {
       const { data, error } = await this.supabase
-        .from('batches')
-        .insert([batchData])
+        .from('batch_files')
+        .insert([{ batch_id: batchId, file_id: fileId, ...options }])
         .select('*')
         .single();
       if (error) throw error;
@@ -675,7 +675,7 @@ class DatabaseService {
    */
   async healthCheck() {
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('users')
         .select('count')
         .limit(1);

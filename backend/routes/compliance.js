@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const { validators, complianceSchemas, validateJoi } = require('../middleware/validation');
-const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
+const { asyncHandler, sendSuccessResponse } = require('../middleware/errorHandler');
 const blockchainService = require('../services/blockchainService');
-const databaseService = require('../services/databaseService');
 const logger = require('../utils/logger');
 
 /**
@@ -50,10 +49,10 @@ router.post('/checks',
   validateJoi(complianceSchemas.createCheck),
   asyncHandler(async (req, res) => {
     const complianceData = req.body;
-    
+
     // Add compliance check on blockchain
     const transaction = await blockchainService.addComplianceCheck(complianceData);
-    
+
     // Save compliance record to database
     const dbComplianceData = {
       record_id: parseInt(transaction.recordId || Date.now()), // Fallback if not returned
@@ -122,7 +121,7 @@ router.get('/checks/:recordId',
   validators.validateRecordId,
   asyncHandler(async (req, res) => {
     const { recordId } = req.params;
-    
+
     // PATCH: Stub compliance record for backend startup
     const data = { record_id: recordId, stub: true };
     sendSuccessResponse(res, data, 'Compliance record retrieved successfully');
@@ -181,14 +180,14 @@ router.put('/checks/:recordId/status',
   asyncHandler(async (req, res) => {
     const { recordId } = req.params;
     const { status, passed, updatedNotes } = req.body;
-    
+
     // Update compliance status on blockchain
     const transaction = await blockchainService.updateComplianceStatus(recordId, {
       status,
       passed,
       updatedNotes
     });
-    
+
     // PATCH: Stub update for backend startup
     logger.audit('update_compliance_status', 'compliance', req.user.id, {
       recordId,
@@ -196,11 +195,11 @@ router.put('/checks/:recordId/status',
       passed,
       txHash: transaction.txHash
     });
-    sendSuccessResponse(res, { 
+    sendSuccessResponse(res, {
       recordId,
       status,
       passed,
-      transaction 
+      transaction
     }, 'Compliance status updated successfully');
   })
 );
@@ -293,7 +292,7 @@ router.post('/audits',
   validateJoi(complianceSchemas.recordAudit),
   asyncHandler(async (req, res) => {
     const auditData = req.body;
-    
+
     // Record audit trail in database
     const dbAuditData = {
       audit_id: Date.now(), // Simple ID generation
@@ -378,9 +377,7 @@ router.get('/audits',
   asyncHandler(async (req, res) => {
     const {
       page = 1,
-      limit = 10,
-      batchId,
-      auditor
+      limit = 10
     } = req.query;
 
     // PATCH: Stub audit trails for backend startup
@@ -427,11 +424,11 @@ router.post('/standards',
   authorize(['regulator', 'admin']),
   asyncHandler(async (req, res) => {
     const { name, description, version, isActive, requirements } = req.body;
-    
+
     // Set compliance standard on blockchain
     const transaction = await blockchainService.getContract('complianceManager')
       .setComplianceStandard(name, description, version, isActive, requirements);
-    
+
     await transaction.wait();
 
     logger.audit('set_compliance_standard', 'compliance', req.user.id, {
@@ -441,7 +438,7 @@ router.post('/standards',
       txHash: transaction.hash
     });
 
-    sendSuccessResponse(res, { 
+    sendSuccessResponse(res, {
       transaction: {
         txHash: transaction.hash,
         gasUsed: (await transaction.wait()).gasUsed.toString()
@@ -488,7 +485,7 @@ router.get('/standards/:name',
   authenticate,
   asyncHandler(async (req, res) => {
     const { name } = req.params;
-    
+
     const standard = await blockchainService.getContract('complianceManager')
       .getComplianceStandard(name);
 

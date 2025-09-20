@@ -103,7 +103,7 @@ describe('Batch Routes', () => {
   describe('PUT /api/batches/:id/status', () => {
     it('should update batch status', async () => {
       const newStatus = 'IN_TRANSIT';
-      
+
       const response = await request(app)
         .put(`/api/batches/${testBatch.id}/status`)
         .set('Authorization', `Bearer ${authToken}`)

@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -18,7 +18,7 @@ const authenticate = (req, res, next) => {
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -29,7 +29,7 @@ const authenticate = (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Add user info to request
     req.user = {
       id: decoded.id,
@@ -42,7 +42,7 @@ const authenticate = (req, res, next) => {
     next();
   } catch (error) {
     logger.error('Authentication error:', error);
-    
+
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
@@ -50,7 +50,7 @@ const authenticate = (req, res, next) => {
         code: 'INVALID_TOKEN'
       });
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -74,14 +74,14 @@ const authenticate = (req, res, next) => {
 const optionalAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       req.user = null;
       return next();
     }
 
     const token = authHeader.substring(7);
-    
+
     if (!token) {
       req.user = null;
       return next();
@@ -89,7 +89,7 @@ const optionalAuth = (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Add user info to request
     req.user = {
       id: decoded.id,
@@ -155,7 +155,7 @@ const requirePermission = (requiredPermissions) => {
     const userPermissions = req.user.permissions || [];
     const permissions = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
 
-    const hasPermission = permissions.every(permission => 
+    const hasPermission = permissions.every((permission) =>
       userPermissions.includes(permission) || userPermissions.includes('*')
     );
 
@@ -194,7 +194,7 @@ const checkOwnership = (resourceIdParam = 'id') => {
     }
 
     const resourceId = req.params[resourceIdParam];
-    
+
     // Check if user owns the resource
     if (req.user.id === resourceId || req.user.address === resourceId) {
       return next();

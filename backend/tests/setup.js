@@ -1,6 +1,6 @@
 // Test setup file for backend tests
-const { createClient } = require('@supabase/supabase-js');
-const { ethers } = require('ethers');
+const { createClient: _createClient } = require('@supabase/supabase-js');
+const { ethers: _ethers } = require('ethers');
 
 // Mock external services for testing
 jest.mock('@supabase/supabase-js');
@@ -36,7 +36,7 @@ global.testUtils = {
     role: 'manufacturer',
     walletAddress: '0x1234567890123456789012345678901234567890'
   }),
-  
+
   createMockBatch: () => ({
     id: 'test-batch-id',
     drugName: 'Test Drug',
@@ -46,7 +46,7 @@ global.testUtils = {
     quantity: 1000,
     status: 'CREATED'
   }),
-  
+
   createMockComplianceRecord: () => ({
     id: 'test-compliance-id',
     batchId: 'test-batch-id',

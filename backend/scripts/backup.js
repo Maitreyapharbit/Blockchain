@@ -14,13 +14,13 @@ class BackupService {
       config.database.supabaseUrl,
       config.database.supabaseServiceRoleKey
     );
-    
+
     this.s3 = new AWS.S3({
       accessKeyId: config.aws.accessKeyId,
       secretAccessKey: config.aws.secretAccessKey,
       region: config.aws.region
     });
-    
+
     this.backupBucket = config.aws.s3Bucket;
     this.backupPrefix = 'backups';
   }
@@ -30,11 +30,11 @@ class BackupService {
    * @param {Object} options - Backup options
    * @returns {Promise<Object>} Backup result
    */
-  async createFullBackup(options = {}) {
+  async createFullBackup(_options = {}) {
     const backupId = uuidv4();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `full-backup-${timestamp}-${backupId}`;
-    
+
     logger.info('Starting full database backup', { backupId, backupName });
 
     try {
@@ -68,7 +68,7 @@ class BackupService {
         }
 
         backupData[table] = data || [];
-        
+
         // Save individual table backup
         const tableFile = path.join(backupDir, `${table}.json`);
         await fs.writeJson(tableFile, data || [], { spaces: 2 });
@@ -80,7 +80,7 @@ class BackupService {
         backupName,
         timestamp: new Date().toISOString(),
         version: '1.0.0',
-        tables: tables.map(table => ({
+        tables: tables.map((table) => ({
           name: table,
           recordCount: backupData[table].length,
           file: `${table}.json`
@@ -94,7 +94,7 @@ class BackupService {
       // Compress backup
       const compressedFile = `${backupName}.tar.gz`;
       const compressedPath = path.join(process.cwd(), 'backups', compressedFile);
-      
+
       await this.compressDirectory(backupDir, compressedPath);
 
       // Upload to S3
@@ -105,8 +105,8 @@ class BackupService {
       await fs.remove(backupDir);
       await fs.remove(compressedPath);
 
-      logger.info('Full database backup completed', { 
-        backupId, 
+      logger.info('Full database backup completed', {
+        backupId,
         s3Key,
         totalRecords: manifest.totalRecords
       });
@@ -131,11 +131,11 @@ class BackupService {
    * @param {Object} options - Backup options
    * @returns {Promise<Object>} Backup result
    */
-  async createIncrementalBackup(lastBackupTime, options = {}) {
+  async createIncrementalBackup(lastBackupTime, _options = {}) {
     const backupId = uuidv4();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `incremental-backup-${timestamp}-${backupId}`;
-    
+
     logger.info('Starting incremental database backup', { backupId, lastBackupTime });
 
     try {
@@ -156,7 +156,7 @@ class BackupService {
 
       for (const table of tablesWithTimestamps) {
         logger.info(`Backing up updated records from table: ${table}`);
-        
+
         const { data, error } = await this.supabase
           .from(table)
           .select('*')
@@ -167,7 +167,7 @@ class BackupService {
         }
 
         backupData[table] = data || [];
-        
+
         if (data && data.length > 0) {
           const tableFile = path.join(backupDir, `${table}.json`);
           await fs.writeJson(tableFile, data, { spaces: 2 });
@@ -183,7 +183,7 @@ class BackupService {
 
       for (const table of tablesWithoutTimestamps) {
         logger.info(`Backing up new records from table: ${table}`);
-        
+
         const { data, error } = await this.supabase
           .from(table)
           .select('*')
@@ -194,7 +194,7 @@ class BackupService {
         }
 
         backupData[table] = data || [];
-        
+
         if (data && data.length > 0) {
           const tableFile = path.join(backupDir, `${table}.json`);
           await fs.writeJson(tableFile, data, { spaces: 2 });
@@ -209,7 +209,7 @@ class BackupService {
         type: 'incremental',
         lastBackupTime,
         version: '1.0.0',
-        tables: Object.keys(backupData).map(table => ({
+        tables: Object.keys(backupData).map((table) => ({
           name: table,
           recordCount: backupData[table].length,
           file: `${table}.json`
@@ -225,7 +225,7 @@ class BackupService {
         // Compress backup
         const compressedFile = `${backupName}.tar.gz`;
         const compressedPath = path.join(process.cwd(), 'backups', compressedFile);
-        
+
         await this.compressDirectory(backupDir, compressedPath);
 
         // Upload to S3
@@ -236,8 +236,8 @@ class BackupService {
         await fs.remove(backupDir);
         await fs.remove(compressedPath);
 
-        logger.info('Incremental database backup completed', { 
-          backupId, 
+        logger.info('Incremental database backup completed', {
+          backupId,
           s3Key,
           totalRecords: manifest.totalRecords
         });
@@ -252,9 +252,9 @@ class BackupService {
       } else {
         // No changes, clean up and return
         await fs.remove(backupDir);
-        
+
         logger.info('No changes detected, skipping incremental backup', { backupId });
-        
+
         return {
           success: true,
           backupId,
@@ -278,7 +278,7 @@ class BackupService {
    * @returns {Promise<Object>} Restore result
    */
   async restoreFromBackup(backupId, options = {}) {
-    const { 
+    const {
       dryRun = false,
       tables = null, // Specific tables to restore
       skipConflicts = false
@@ -289,7 +289,7 @@ class BackupService {
     try {
       // Download backup from S3
       const backupFile = await this.downloadBackup(backupId);
-      
+
       // Extract backup
       const backupDir = path.join(process.cwd(), 'backups', `restore-${backupId}`);
       await this.extractBackup(backupFile, backupDir);
@@ -298,7 +298,7 @@ class BackupService {
       const manifestFile = path.join(backupDir, 'manifest.json');
       const manifest = await fs.readJson(manifestFile);
 
-      logger.info('Backup manifest loaded', { 
+      logger.info('Backup manifest loaded', {
         backupName: manifest.backupName,
         totalRecords: manifest.totalRecords,
         tables: manifest.tables.length
@@ -322,7 +322,7 @@ class BackupService {
         }
 
         logger.info(`Restoring table: ${tableInfo.name}`);
-        
+
         const tableFile = path.join(backupDir, tableInfo.file);
         const tableData = await fs.readJson(tableFile);
 
@@ -349,19 +349,19 @@ class BackupService {
             throw new Error(`Failed to restore table ${tableInfo.name}: ${error.message}`);
           }
 
-          restoreResults[tableInfo.name] = { 
-            records: tableData.length, 
-            status: 'success' 
+          restoreResults[tableInfo.name] = {
+            records: tableData.length,
+            status: 'success'
           };
 
-          logger.info(`Table restored successfully: ${tableInfo.name}`, { 
-            records: tableData.length 
+          logger.info(`Table restored successfully: ${tableInfo.name}`, {
+            records: tableData.length
           });
 
         } catch (error) {
           logger.error(`Failed to restore table: ${tableInfo.name}`, { error: error.message });
-          restoreResults[tableInfo.name] = { 
-            records: 0, 
+          restoreResults[tableInfo.name] = {
+            records: 0,
             status: 'failed',
             error: error.message
           };
@@ -403,8 +403,8 @@ class BackupService {
       };
 
       const result = await this.s3.listObjectsV2(params).promise();
-      
-      const backups = result.Contents.map(item => ({
+
+      const backups = result.Contents.map((item) => ({
         key: item.Key,
         size: item.Size,
         lastModified: item.LastModified,
@@ -462,7 +462,7 @@ class BackupService {
 
   async uploadToS3(filePath, s3Key) {
     const fileContent = await fs.readFile(filePath);
-    
+
     await this.s3.putObject({
       Bucket: this.backupBucket,
       Key: s3Key,
@@ -474,8 +474,8 @@ class BackupService {
   async downloadBackup(backupId) {
     // Find backup file
     const backups = await this.listBackups();
-    const backup = backups.find(b => b.name.includes(backupId));
-    
+    const backup = backups.find((b) => b.name.includes(backupId));
+
     if (!backup) {
       throw new Error(`Backup not found: ${backupId}`);
     }
@@ -490,7 +490,7 @@ class BackupService {
     }).promise();
 
     await fs.writeFile(downloadPath, result.Body);
-    
+
     return downloadPath;
   }
 }

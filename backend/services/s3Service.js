@@ -1,8 +1,6 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command, CopyObjectCommand, HeadObjectCommand, PutObjectTaggingCommand, GetObjectTaggingCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
 const path = require('path');
-const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config/env');
 const logger = require('../utils/logger');
@@ -38,7 +36,7 @@ class S3Service {
 
       // Generate unique file key
       const fileKey = this.generateFileKey(file, folder, batchId);
-      
+
       // Calculate file hash
       const fileHash = await this.calculateFileHash(file.buffer);
 
@@ -71,7 +69,7 @@ class S3Service {
       }
 
       // Upload file with progress tracking
-      const uploadResult = await this.uploadWithProgress(uploadParams, file.size);
+      const uploadResult = await this.uploadWithProgress(uploadParams);
 
       // Add tags after upload
       await this.addFileTags(fileKey, tags);
@@ -105,7 +103,7 @@ class S3Service {
    * @param {number} fileSize - File size for progress calculation
    * @returns {Promise<Object>} Upload result
    */
-  async uploadWithProgress(params, fileSize) {
+  async uploadWithProgress(params) {
     try {
       const command = new PutObjectCommand(params);
       const response = await this.client.send(command);
@@ -129,9 +127,9 @@ class S3Service {
       };
 
       const result = await this.s3.getObject(params).promise();
-      
+
       logger.info('File downloaded successfully', { fileKey, size: result.ContentLength });
-      
+
       return result.Body;
 
     } catch (error) {
@@ -165,9 +163,9 @@ class S3Service {
       }
 
       const url = await this.s3.getSignedUrlPromise(operation, params);
-      
+
       logger.info('Pre-signed URL generated', { fileKey, expiresIn, operation });
-      
+
       return url;
 
     } catch (error) {
@@ -189,9 +187,9 @@ class S3Service {
       };
 
       await this.s3.deleteObject(params).promise();
-      
+
       logger.info('File deleted successfully', { fileKey });
-      
+
       return true;
 
     } catch (error) {
@@ -215,9 +213,9 @@ class S3Service {
       };
 
       const result = await this.s3.copyObject(params).promise();
-      
+
       logger.info('File copied successfully', { sourceKey, destinationKey });
-      
+
       return result;
 
     } catch (error) {
@@ -250,7 +248,7 @@ class S3Service {
       }
 
       const result = await this.s3.listObjectsV2(params).promise();
-      const files = result.Contents.map(item => ({
+      const files = result.Contents.map((item) => ({
         key: item.Key,
         size: item.Size,
         lastModified: item.LastModified,
@@ -282,7 +280,7 @@ class S3Service {
       };
 
       const result = await this.s3.headObject(params).promise();
-      
+
       return {
         key: fileKey,
         size: result.ContentLength,
@@ -318,7 +316,7 @@ class S3Service {
       }
 
       logger.info('Backup created successfully', { backupId, fileCount: fileKeys.length });
-      
+
       return {
         success: true,
         backupId,
@@ -351,7 +349,7 @@ class S3Service {
       }
 
       logger.info('Backup restored successfully', { backupId, fileCount: results.length });
-      
+
       return {
         success: true,
         backupId,
@@ -397,11 +395,11 @@ class S3Service {
     const extension = path.extname(file.originalname);
     const fileName = path.basename(file.originalname, extension);
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9-_]/g, '_');
-    
+
     if (batchId) {
       return `${folder}/batches/${batchId}/${timestamp}_${randomId}_${sanitizedFileName}${extension}`;
     }
-    
+
     return `${folder}/${timestamp}_${randomId}_${sanitizedFileName}${extension}`;
   }
 
@@ -444,9 +442,9 @@ class S3Service {
       };
 
       await this.s3.putObjectTagging(params).promise();
-      
+
       logger.info('File tags added successfully', { fileKey, tags });
-      
+
       return { success: true };
 
     } catch (error) {
@@ -468,9 +466,9 @@ class S3Service {
       };
 
       const result = await this.s3.getObjectTagging(params).promise();
-      
+
       const tags = {};
-      result.TagSet.forEach(tag => {
+      result.TagSet.forEach((tag) => {
         tags[tag.Key] = tag.Value;
       });
 
@@ -483,7 +481,4 @@ class S3Service {
   }
 }
 
-const s3ServiceInstance = new S3Service();
-s3ServiceInstance.getUploadMiddleware = getUploadMiddleware;
-s3ServiceInstance.upload = upload;
-module.exports = s3ServiceInstance;
+module.exports = new S3Service();

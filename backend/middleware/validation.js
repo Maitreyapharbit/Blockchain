@@ -6,12 +6,12 @@ const logger = require('../utils/logger');
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    logger.warn('Validation failed', { 
+    logger.warn('Validation failed', {
       errors: errors.array(),
       path: req.path,
       method: req.method
     });
-    
+
     return res.status(400).json({
       success: false,
       error: {
@@ -40,7 +40,7 @@ const sanitize = (req, res, next) => {
     if (typeof obj === 'object') {
       const sanitized = {};
       for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
           sanitized[key] = sanitizeObject(obj[key]);
         }
       }
@@ -52,7 +52,7 @@ const sanitize = (req, res, next) => {
   req.body = sanitizeObject(req.body);
   req.query = sanitizeObject(req.query);
   req.params = sanitizeObject(req.params);
-  
+
   next();
 };
 
@@ -70,7 +70,7 @@ const schemas = {
       companyName: Joi.string().max(255).optional(),
       phone: Joi.string().max(20).optional()
     }),
-    
+
     update: Joi.object({
       email: Joi.string().email().optional(),
       firstName: Joi.string().max(100).optional(),
@@ -363,7 +363,7 @@ const customValidators = {
   validateDateRange: (startField, endField) => (req, res, next) => {
     const startDate = req.body[startField];
     const endDate = req.body[endField];
-    
+
     if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
       return res.status(400).json({
         success: false,
@@ -379,7 +379,7 @@ const customValidators = {
   // Validate quantity constraints
   validateQuantity: (req, res, next) => {
     const { quantity, remainingQuantity } = req.body;
-    
+
     if (quantity !== undefined && remainingQuantity !== undefined) {
       if (remainingQuantity > quantity) {
         return res.status(400).json({
@@ -398,18 +398,18 @@ const customValidators = {
 // Error handling middleware
 const handleValidationError = (error, req, res, next) => {
   if (error.name === 'ValidationError') {
-    logger.warn('Joi validation error', { 
+    logger.warn('Joi validation error', {
       error: error.message,
       path: req.path,
       method: req.method
     });
-    
+
     return res.status(400).json({
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid input data',
-        details: error.details.map(detail => ({
+        details: error.details.map((detail) => ({
           field: detail.path.join('.'),
           message: detail.message,
           value: detail.context?.value
@@ -417,7 +417,7 @@ const handleValidationError = (error, req, res, next) => {
       }
     });
   }
-  
+
   next(error);
 };
 
@@ -436,7 +436,7 @@ const validateJoi = (schema) => (req, res, next) => {
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid input data',
-        details: error.details.map(detail => ({
+        details: error.details.map((detail) => ({
           field: detail.path.join('.'),
           message: detail.message,
           value: detail.context?.value

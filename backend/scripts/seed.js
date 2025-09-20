@@ -21,7 +21,7 @@ class DatabaseSeeder {
    */
   async seedAll(options = {}) {
     const { clearExisting = false } = options;
-    
+
     logger.info('Starting database seeding', { clearExisting });
 
     try {

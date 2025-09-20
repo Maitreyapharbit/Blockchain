@@ -78,7 +78,7 @@ const logger = require('../utils/logger');
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/', 
+router.get('/',
   authenticate,
   validators.validatePagination,
   asyncHandler(async (req, res) => {
@@ -92,7 +92,7 @@ router.get('/',
     };
 
     const result = await databaseService.getBatches(options);
-    
+
     sendSuccessResponse(res, result, 'Batches retrieved successfully');
   })
 );
@@ -136,10 +136,10 @@ router.get('/:batchId',
   validators.validateBatchId,
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
-    
+
     // Get batch from blockchain
     const blockchainBatch = await blockchainService.getBatch(batchId);
-    
+
     // Get batch from database for additional metadata
     let dbBatch = null;
     try {
@@ -208,10 +208,10 @@ router.post('/',
   validateJoi(batchSchemas.create),
   asyncHandler(async (req, res) => {
     const batchData = req.body;
-    
+
     // Create batch on blockchain
     const transaction = await blockchainService.createBatch(batchData);
-    
+
     // Save batch to database
     const dbBatchData = {
       batch_id: parseInt(transaction.batchId),
@@ -228,10 +228,10 @@ router.post('/',
     };
 
     const dbBatch = await databaseService.createBatch(dbBatchData);
-    
+
     // Get complete batch data
     const completeBatch = await blockchainService.getBatch(transaction.batchId);
-    
+
     logger.audit('create_batch', 'batch', req.user.id, {
       batchId: transaction.batchId,
       drugName: batchData.drugName,
@@ -297,7 +297,7 @@ router.put('/:batchId/transfer',
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
     const transferData = req.body;
-    
+
     // Verify batch ownership
     const batch = await blockchainService.getBatch(batchId);
     if (batch.currentOwner.toLowerCase() !== req.user.address.toLowerCase()) {
@@ -306,7 +306,7 @@ router.put('/:batchId/transfer',
 
     // Transfer batch on blockchain
     const transaction = await blockchainService.transferBatch(batchId, transferData);
-    
+
     // Update database
     await databaseService.updateBatch(batchId, {
       current_owner: transferData.to
@@ -389,10 +389,10 @@ router.put('/:batchId/status',
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
     const { status, reason } = req.body;
-    
+
     // Update batch status on blockchain
     const transaction = await blockchainService.updateBatchStatus(batchId, status, reason);
-    
+
     // Update database
     await databaseService.updateBatch(batchId, {
       status: status
@@ -452,7 +452,7 @@ router.put('/:batchId/metadata',
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
     const { metadata } = req.body;
-    
+
     // Update metadata in database
     await databaseService.updateBatch(batchId, {
       metadata: metadata
@@ -508,7 +508,7 @@ router.get('/:batchId/transfers',
   validators.validateBatchId,
   asyncHandler(async (req, res) => {
     const { batchId } = req.params;
-    
+
     const { data, error } = await databaseService.getClient()
       .from('batch_transfers')
       .select('*')
@@ -559,7 +559,7 @@ router.get('/statistics',
   authenticate,
   asyncHandler(async (req, res) => {
     const stats = await databaseService.getStatistics();
-    
+
     sendSuccessResponse(res, stats, 'Statistics retrieved successfully');
   })
 );
