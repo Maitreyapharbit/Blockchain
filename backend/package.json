@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --exec 'node -r dotenv/config' index.js",
-    "dev": "nodemon -r dotenv/config index.js",
+    "dev": "nodemon enhanced-server.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --watchAll=false",
@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
-    "aws-sdk": "^2.1490.0",
+    "aws-sdk": "^2.1692.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -89,7 +89,13 @@
     ],
     "setupFilesAfterEnv": [
       "<rootDir>/tests/setup.js"
-    ]
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(uuid)/)"
+    ],
+    "moduleNameMapper": {
+      "^uuid$": "uuid"
+    }
   },
   "engines": {
     "node": ">=18.0.0",

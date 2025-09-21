@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../../index');
-const { testUtils } = require('../setup');
+const testUtils = require('../testUtils');
 
 describe('Compliance Routes', () => {
   let authToken;

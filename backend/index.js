@@ -11,7 +11,7 @@ const config = require('./config/env');
 const logger = require('./utils/logger');
 
 // Import middleware
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/auth');

@@ -323,6 +323,11 @@ const validators = {
     query('ownerId').optional().isUUID(),
     query('drugName').optional().isLength({ max: 255 }).trim(),
     validate
+  ],
+
+  validateFileId: [
+    param('fileId').isUUID().withMessage('Invalid file ID format'),
+    validate
   ]
 };
 
@@ -481,5 +486,14 @@ module.exports = {
   handleValidationError,
   validateJoi,
   batchSchemas,
-  complianceSchemas
+  complianceSchemas,
+  walletSchemas: {
+    generate: Joi.object({
+      count: Joi.number().integer().min(1).max(100).default(1)
+    }),
+    import: Joi.object({
+      privateKey: Joi.string().pattern(/^0x[a-fA-F0-9]{64}$/).required()
+    })
+  },
+  fileSchemas: schemas.file
 };

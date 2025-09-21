@@ -1,8 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { MetaMaskProvider } from './contexts/MetaMaskContext';
 import { BlockchainProvider } from './contexts/BlockchainContext';
+import BatchCreator from './components/BatchCreator';
+import BatchVerifier from './components/BatchVerifier';
+import BlockMiner from './components/BlockMiner';
 import styled from 'styled-components';
 
 const AppContainer = styled.div`
@@ -87,8 +91,8 @@ function App() {
                   <ServiceTitle>🚀 Services Status</ServiceTitle>
                   <div>
                     <ServiceStatus>✅ Blockchain Node Running</ServiceStatus>
-                    <ServiceLink href="http://localhost:8546" target="_blank" rel="noopener noreferrer">
-                      Hardhat Node (Port 8546)
+                    <ServiceLink href="http://localhost:8545" target="_blank" rel="noopener noreferrer">
+                      Hardhat Node (Port 8545)
                     </ServiceLink>
                   </div>
                   
@@ -107,6 +111,10 @@ function App() {
                   </div>
                 </ServiceCard>
                 
+                <BatchCreator />
+                <BatchVerifier />
+                <BlockMiner />
+                
                 <ServiceCard>
                   <ServiceTitle>🔗 Quick Links</ServiceTitle>
                   <div>
@@ -124,13 +132,24 @@ function App() {
                   <p>To connect to the local blockchain:</p>
                   <ul>
                     <li>Network Name: Hardhat Local</li>
-                    <li>RPC URL: http://localhost:8546</li>
+                    <li>RPC URL: http://localhost:8545</li>
                     <li>Chain ID: 31337</li>
                     <li>Currency Symbol: ETH</li>
                   </ul>
                 </ServiceCard>
               </Main>
             </AppContainer>
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'rgba(0, 0, 0, 0.8)',
+                  color: '#fff',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                },
+              }}
+            />
           </Router>
         </BlockchainProvider>
       </MetaMaskProvider>

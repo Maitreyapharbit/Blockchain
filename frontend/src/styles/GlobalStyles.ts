@@ -15,8 +15,8 @@ export const GlobalStyles = createGlobalStyle`
 
   body {
     font-family: ${props => props.theme.typography.fonts.primary};
-    font-size: ${props => props.theme.typography.sizes.md};
-    font-weight: ${props => props.theme.typography.weights.regular};
+    font-size: ${props => props.theme.typography.fontSize.md};
+    font-weight: ${props => props.theme.typography.fontWeight.regular};
     line-height: 1.6;
     color: ${props => props.theme.colors.text};
     background-color: ${props => props.theme.colors.background};
@@ -79,7 +79,7 @@ export const GlobalStyles = createGlobalStyle`
     font-size: 0.875em;
     background-color: ${props => props.theme.colors.surface};
     padding: 0.125rem 0.25rem;
-    border-radius: ${props => props.theme.borderRadius.sm};
+    border-radius: ${props => props.theme.radii.sm};
   }
 
   /* Pre */
@@ -87,7 +87,7 @@ export const GlobalStyles = createGlobalStyle`
     font-family: ${props => props.theme.typography.fontFamily.secondary};
     background-color: ${props => props.theme.colors.surface};
     padding: ${props => props.theme.spacing.md};
-    border-radius: ${props => props.theme.borderRadius.md};
+    border-radius: ${props => props.theme.radii.md};
     overflow-x: auto;
     margin-bottom: ${props => props.theme.spacing.md};
     border: 1px solid ${props => props.theme.colors.border};
@@ -117,7 +117,7 @@ export const GlobalStyles = createGlobalStyle`
     font-size: ${props => props.theme.typography.fontSize.md};
     padding: ${props => props.theme.spacing.sm};
     border: 1px solid ${props => props.theme.colors.border};
-    border-radius: ${props => props.theme.borderRadius.md};
+    border-radius: ${props => props.theme.radii.md};
     background-color: ${props => props.theme.colors.surface};
     color: ${props => props.theme.colors.text};
     transition: border-color 0.2s ease;
@@ -139,7 +139,7 @@ export const GlobalStyles = createGlobalStyle`
     font-size: ${props => props.theme.typography.fontSize.md};
     padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
     border: 1px solid transparent;
-    border-radius: ${props => props.theme.borderRadius.md};
+    border-radius: ${props => props.theme.radii.md};
     background-color: ${props => props.theme.colors.primary};
     color: white;
     transition: all 0.2s ease;

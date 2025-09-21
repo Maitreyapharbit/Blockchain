@@ -505,8 +505,7 @@ class S3Service {
   getUploadMiddleware(options = {}) {
     const multer = require('multer');
     const memoryStorage = multer.memoryStorage();
-    
-    return multer({
+    const upload = multer({
       storage: memoryStorage,
       limits: {
         fileSize: options.maxFileSize || this.maxFileSize
@@ -520,6 +519,7 @@ class S3Service {
         }
       }
     });
+    return upload.array('files', options.maxFiles || 10);
   }
 }
 

@@ -12,20 +12,25 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.SUPABASE_URL = 'https://test.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret';
 process.env.AWS_ACCESS_KEY_ID = 'test-access-key';
 process.env.AWS_SECRET_ACCESS_KEY = 'test-secret-key';
 process.env.AWS_S3_BUCKET = 'test-bucket';
 process.env.ETHEREUM_RPC_URL = 'http://localhost:8545';
+process.env.PRIVATE_KEY = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+process.env.SESSION_SECRET = 'test-session-secret';
+process.env.PORT = '0'; // Use random available port
 
 // Global test setup
 beforeAll(async () => {
   // Setup test database
-  console.log('Setting up test environment...');
+  // Setting up test environment...
 });
 
 afterAll(async () => {
   // Cleanup test database
-  console.log('Cleaning up test environment...');
+  // Cleaning up test environment...
 });
 
 // Global test utilities
