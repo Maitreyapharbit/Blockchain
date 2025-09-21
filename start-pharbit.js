@@ -45,6 +45,20 @@ console.log('  • Backend API server (port 3000)');
 console.log('  • Frontend React app (port 3001)');
 console.log('\nPress Ctrl+C to stop all services\n');
 
+// Check if concurrently is installed
+const concurrentlyInstalled = require('fs').existsSync('node_modules/concurrently');
+
+if (!concurrentlyInstalled) {
+    console.log('📦 Installing missing dependencies...');
+    try {
+        require('child_process').execSync('npm install concurrently --save-dev', { stdio: 'inherit' });
+        console.log('✅ Dependencies installed');
+    } catch (error) {
+        console.error('❌ Failed to install dependencies:', error.message);
+        process.exit(1);
+    }
+}
+
 // Start all services using npm run dev
 const child = spawn('npm', ['run', 'dev'], {
     stdio: 'inherit',
