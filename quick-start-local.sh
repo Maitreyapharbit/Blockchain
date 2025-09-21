@@ -68,6 +68,14 @@ install_dependencies() {
         cd contracts && npm install && cd ..
     fi
     
+    # Ensure Hardhat is installed locally in contracts directory
+    cd contracts
+    if ! npx hardhat --version > /dev/null 2>&1; then
+        print_status "Installing Hardhat locally..."
+        npm install hardhat@^2.22.0
+    fi
+    cd ..
+    
     print_success "All dependencies installed"
 }
 
