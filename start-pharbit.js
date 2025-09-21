@@ -15,6 +15,64 @@ if (!fs.existsSync('package.json')) {
     process.exit(1);
 }
 
+// Simple startup mode function
+function startSimpleMode() {
+    console.log('🔄 Starting services sequentially...');
+    
+    // Start Hardhat first
+    console.log('🔗 Starting Hardhat blockchain node...');
+    const hardhatProcess = spawn('npx', ['hardhat', 'node'], {
+        cwd: 'contracts',
+        stdio: 'inherit',
+        shell: true
+    });
+
+    // Wait a bit for Hardhat to start
+    setTimeout(() => {
+        console.log('🔧 Starting Backend API server...');
+        const backendProcess = spawn('npm', ['run', 'dev'], {
+            cwd: 'backend',
+            stdio: 'inherit',
+            shell: true
+        });
+
+        // Wait a bit for backend to start
+        setTimeout(() => {
+            console.log('🌐 Starting Frontend React app...');
+            const frontendProcess = spawn('npm', ['start'], {
+                cwd: 'frontend',
+                stdio: 'inherit',
+                shell: true
+            });
+
+            console.log('\n✅ All services started!');
+            console.log('🌐 Frontend: http://localhost:3001');
+            console.log('🔧 Backend: http://localhost:3000');
+            console.log('⛓️ Blockchain: http://localhost:8545');
+            console.log('\nPress Ctrl+C to stop all services...');
+
+            // Handle process termination
+            process.on('SIGINT', () => {
+                console.log('\n🛑 Stopping all services...');
+                hardhatProcess.kill('SIGINT');
+                backendProcess.kill('SIGINT');
+                frontendProcess.kill('SIGINT');
+                process.exit(0);
+            });
+
+            process.on('SIGTERM', () => {
+                console.log('\n🛑 Stopping all services...');
+                hardhatProcess.kill('SIGTERM');
+                backendProcess.kill('SIGTERM');
+                frontendProcess.kill('SIGTERM');
+                process.exit(0);
+            });
+
+        }, 3000); // Wait 3 seconds for backend
+
+    }, 5000); // Wait 5 seconds for Hardhat
+}
+
 // Create .env file if it doesn't exist
 if (!fs.existsSync('.env')) {
     console.log('📝 Creating .env file...');
@@ -55,7 +113,10 @@ if (!concurrentlyInstalled) {
         console.log('✅ Dependencies installed');
     } catch (error) {
         console.error('❌ Failed to install dependencies:', error.message);
-        process.exit(1);
+        console.log('🔄 Falling back to simple startup mode...');
+        // Fall back to simple startup
+        startSimpleMode();
+        return;
     }
 }
 
