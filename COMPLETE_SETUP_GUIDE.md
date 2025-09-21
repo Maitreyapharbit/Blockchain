@@ -23,13 +23,16 @@ node start-pharbit.js
 
 ### **Alternative Quick Start:**
 ```bash
-# Option 1: Shell script (Unix-like systems)
+# Option 1: Simple startup (if concurrently issues)
+node start-simple.js
+
+# Option 2: Shell script (Unix-like systems)
 ./start-pharbit.sh
 
-# Option 2: Direct NPM
+# Option 3: Direct NPM
 npm run dev
 
-# Option 3: Quick start script
+# Option 4: Quick start script
 ./quick-start-local.sh
 ```
 
@@ -224,6 +227,15 @@ npm install
 cd backend && npm install && cd ..
 cd frontend && npm install && cd ..
 cd contracts && npm install && cd ..
+```
+
+#### **"concurrently: not found" Error**
+```bash
+# Install missing dependency
+npm install concurrently --save-dev
+
+# OR use the simple startup script
+node start-simple.js
 ```
 
 #### **"Something is already running on port 3001"**
