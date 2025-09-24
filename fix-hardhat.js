@@ -1,15 +1,21 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 console.log('🔧 Fixing Hardhat installation...');
 
-// Navigate to contracts directory
-const contractsDir = path.join(__dirname, 'contracts');
+// Get current file's directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-if (!fs.existsSync(contractsDir)) {
+// Navigate to contracts directory
+const contractsDir = join(__dirname, 'contracts');
+
+if (!existsSync(contractsDir)) {
     console.error('❌ Error: contracts directory not found');
     process.exit(1);
 }

@@ -3,20 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "node": "hardhat node --port 8545"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "^3.0.2",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "ethers": "^6.8.1",
-    "hardhat": "^2.26.3"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.5.2",
+    "hardhat": "^2.26.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }

@@ -9,12 +9,8 @@ class BlockchainService {
     this.isInitialized = false;
   }
 
-  /**
-   * Initialize blockchain service
-   */
   async initialize() {
     try {
-      // Initialize provider
       this.provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
 
       // Initialize wallet
