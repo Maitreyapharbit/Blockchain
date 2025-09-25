@@ -21,28 +21,28 @@ A comprehensive blockchain-based pharmaceutical supply chain management system b
 git clone https://github.com/Maitreyapharbit/Blockchain.git
 cd pharbit-blockchain
 
-# Start everything locally
-./quick-start-local.sh
+# Start everything with one command
+./start-all.sh
 ```
 
-This will:
-- Install all dependencies
-- Start Hardhat local node
+This script will automatically:
+- Install all required system dependencies
+- Install npm packages for frontend and backend
+- Start the Hardhat blockchain node
 - Deploy smart contracts
-- Start backend server
-- Start frontend application
+- Launch the backend server
+- Start the frontend development server
+- Handle graceful shutdown when stopped
 
 ### Access the Application
 
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:3000
-- **API Health**: http://localhost:3000/api/health
-- **API Docs**: http://localhost:3000/api/docs
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Blockchain Node**: http://localhost:8545
 
 ### Stop Everything
 
-```bash
-./stop-local.sh
+Simply press `Ctrl+C` in the terminal where you ran `start-all.sh`
 ```
 
 ## 🏗️ Architecture

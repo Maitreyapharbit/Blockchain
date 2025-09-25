@@ -4,48 +4,44 @@ This guide will help you get the pharmaceutical blockchain application running l
 
 ## 🚀 Quick Start
 
-### Option 1: One-Command Setup (Recommended)
+### Unified Setup Script (Recommended)
 
 ```bash
-./quick-start-local.sh
+./start-all.sh
 ```
 
-This will:
-- Install all dependencies
-- Set up environment files
-- Start Hardhat local node
-- Deploy smart contracts
-- Start backend server
-- Start frontend application
+This script provides a complete setup and startup process:
+- Installs all system dependencies (including netcat)
+- Installs npm packages for frontend and backend
+- Checks and resolves port conflicts automatically
+- Starts the Hardhat blockchain node
+- Launches the backend server
+- Starts the frontend development server
+- Handles graceful shutdown of all services
 
-### Option 2: Manual Setup
+### Manual Setup (Alternative)
 
-If you prefer to run each step manually:
+If you need to run services separately:
 
 ```bash
-# 1. Install dependencies
-npm run install:all
+# 1. Install system dependencies
+sudo apt-get update && sudo apt-get install -y netcat-openbsd
 
-# 2. Set up environment files
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+# 2. Install project dependencies
+npm install --prefix backend
+npm install --prefix frontend
 
-# 3. Start Hardhat node (Terminal 1)
-cd contracts
-npx hardhat node
+# 3. Start blockchain server
+bash scripts/start-blockchain.sh
 
-# 4. Deploy contracts (Terminal 2)
-cd contracts
-npx hardhat run scripts/deploy.js --network localhost
+# 4. Start backend server
+bash scripts/start-server.sh
 
-# 5. Start backend (Terminal 3)
-cd backend
-npm run dev
-
-# 6. Start frontend (Terminal 4)
-cd frontend
-npm start
+# 5. Start frontend
+npm run start --prefix frontend
 ```
+
+To stop all services when using manual setup, you'll need to terminate each process separately using `Ctrl+C` in each terminal.
 
 ## 📋 Prerequisites
 

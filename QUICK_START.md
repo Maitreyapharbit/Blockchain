@@ -2,22 +2,19 @@
 
 ## One-Command Startup
 
-Choose one of these methods to start the complete application:
+To start the complete application, use our unified startup script:
 
-### 🎯 Method 1: PowerShell Script (Recommended)
-```powershell
-.\start-pharbit-blockchain.ps1
-```
-
-### 🎯 Method 2: Batch File (Simple)
-```cmd
-start-pharbit-blockchain.bat
-```
-
-### 🎯 Method 3: NPM Command
+### 🎯 Quick Start Method
 ```bash
-npm run dev
+./start-all.sh
 ```
+
+This script will:
+1. Install all required dependencies
+2. Start the blockchain node
+3. Launch the backend server
+4. Start the frontend development server
+5. Handle all cleanup when stopped
 
 ## 🌐 Access Your Application
 
