@@ -33,7 +33,23 @@ export const MetaMaskProvider = ({ children }) => {
   const connect = async () => {
     try {
       if (!isInstalled) {
-        toast.error('MetaMask is not installed');
+        toast(
+          (t) => (
+            <span>
+              MetaMask is not installed.{' '}
+              <a
+                href="https://metamask.io/download/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#4CAF50', textDecoration: 'underline' }}
+                onClick={() => toast.dismiss(t.id)}
+              >
+                Install MetaMask
+              </a>
+            </span>
+          ),
+          { icon: '🦊', duration: 10000 }
+        );
         return { success: false, error: 'MetaMask not installed' };
       }
 
