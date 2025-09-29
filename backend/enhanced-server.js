@@ -66,6 +66,9 @@ app.get('/', (req, res) => {
   });
 });
 
+// Import route modules
+const shipmentsRoutes = require('./routes/shipments');
+
 // API routes
 app.get('/api', (req, res) => {
   res.json({
@@ -78,9 +81,13 @@ app.get('/api', (req, res) => {
       compliance: '/api/compliance',
       files: '/api/files',
       wallets: '/api/wallets',
+      shipments: '/api/shipments',
     },
   });
 });
+
+// Mount route modules
+app.use('/api/shipments', shipmentsRoutes);
 
 // Test Supabase connection
 app.get('/api/test/supabase', (req, res) => {
