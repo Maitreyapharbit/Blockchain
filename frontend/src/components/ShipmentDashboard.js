@@ -16,6 +16,8 @@ import { supabase } from '../config/supabase';
 import { realtimeService } from '../services/realtimeService';
 import { alertService } from '../services/alertService';
 import ShipmentTimeline from './ShipmentTimeline';
+import EnhancedAlerts from './EnhancedAlerts';
+import ProductJourneyTimeline from './ProductJourneyTimeline';
 
 const DashboardContainer = styled.div`
   max-width: 1200px;
@@ -133,6 +135,34 @@ const ContentGrid = styled.div`
   
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
+  }
+`;
+
+const FullWidthGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  margin-top: 30px;
+`;
+
+const TabContainer = styled.div`
+  margin-bottom: 20px;
+`;
+
+const TabButton = styled.button`
+  padding: 12px 24px;
+  border: none;
+  border-bottom: 2px solid ${props => props.active ? '#3b82f6' : 'transparent'};
+  background: none;
+  color: ${props => props.active ? '#3b82f6' : '#6b7280'};
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #3b82f6;
+    background: #f8fafc;
   }
 `;
 
@@ -270,6 +300,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('timeline');
 
   useEffect(() => {
     if (shipmentId) {
@@ -475,8 +506,28 @@ const ShipmentDashboard = ({ shipmentId }) => {
 
       <ContentGrid>
         <MainContent>
-          <h3 style={{ margin: '0 0 20px 0', color: '#1f2937' }}>Journey Timeline</h3>
-          <ShipmentTimeline shipmentId={shipmentId} showFilters={true} />
+          <TabContainer>
+            <TabButton 
+              active={activeTab === 'timeline'} 
+              onClick={() => setActiveTab('timeline')}
+            >
+              Journey Timeline
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'alerts'} 
+              onClick={() => setActiveTab('alerts')}
+            >
+              Enhanced Alerts
+            </TabButton>
+          </TabContainer>
+          
+          {activeTab === 'timeline' && (
+            <ShipmentTimeline shipmentId={shipmentId} showFilters={true} />
+          )}
+          
+          {activeTab === 'alerts' && (
+            <EnhancedAlerts shipmentId={shipmentId} showControls={true} />
+          )}
         </MainContent>
 
         <Sidebar>
@@ -559,6 +610,10 @@ const ShipmentDashboard = ({ shipmentId }) => {
           </AlertsPanel>
         </Sidebar>
       </ContentGrid>
+
+      <FullWidthGrid>
+        <ProductJourneyTimeline shipmentId={shipmentId} showControls={true} />
+      </FullWidthGrid>
     </DashboardContainer>
   );
 };

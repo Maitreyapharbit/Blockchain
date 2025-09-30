@@ -9,6 +9,7 @@ import BatchCreator from './components/BatchCreator';
 import BatchVerifier from './components/BatchVerifier';
 import BlockMiner from './components/BlockMiner';
 import ShipmentTrackingApp from './components/ShipmentTrackingApp';
+import AlertDashboard from './components/AlertDashboard';
 import styled from 'styled-components';
 
 const AppContainer = styled.div`
@@ -85,6 +86,7 @@ function App() {
             <Router>
               <Routes>
                 <Route path="/shipments" element={<ShipmentTrackingApp />} />
+                <Route path="/alerts" element={<AlertDashboard />} />
                 <Route path="/" element={
                   <AppContainer>
                     <Header>

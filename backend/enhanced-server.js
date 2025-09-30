@@ -68,6 +68,7 @@ app.get('/', (req, res) => {
 
 // Import route modules
 const shipmentsRoutes = require('./routes/shipments');
+const alertsRoutes = require('./routes/alerts');
 
 // API routes
 app.get('/api', (req, res) => {
@@ -82,12 +83,14 @@ app.get('/api', (req, res) => {
       files: '/api/files',
       wallets: '/api/wallets',
       shipments: '/api/shipments',
+      alerts: '/api/alerts',
     },
   });
 });
 
 // Mount route modules
 app.use('/api/shipments', shipmentsRoutes);
+app.use('/api/alerts', alertsRoutes);
 
 // Test Supabase connection
 app.get('/api/test/supabase', (req, res) => {
