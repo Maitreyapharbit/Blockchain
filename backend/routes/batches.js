@@ -10,6 +10,48 @@ const logger = require('../utils/logger');
 
 /**
  * @swagger
+ * /api/batches/{id}/qr:
+ *   get:
+ *     summary: Get QR code for a specific batch
+ *     tags: [Batches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Batch ID
+ *     responses:
+ *       200:
+ *         description: QR code generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 qrCode:
+ *                   type: string
+ *                   description: Base64 encoded QR code image
+ */
+router.get('/:id/qr', authenticate, asyncHandler(async (req, res) => {
+    const batchId = req.params.id;
+    
+    // Get batch details
+    const batch = await databaseService.getBatchById(batchId);
+    if (!batch) {
+        return sendErrorResponse(res, 404, 'Batch not found');
+    }
+
+    // Generate QR code
+    const qrCode = await qrCodeService.generateBatchQRCode(batch);
+    
+    sendSuccessResponse(res, { qrCode });
+}));
+
+/**
+ * @swagger
  * /api/batches:
  *   get:
  *     summary: Get all batches with pagination
@@ -223,14 +265,23 @@ router.post('/',
     // Create batch on blockchain
     const transaction = await blockchainService.createBatch(batchData);
 
-    // Generate QR code for the batch
-    const qrCodeData = await qrCodeService.generateBatchQRCode({
-      batchId: transaction.batchId,
-      drugName: batchData.drugName,
-      manufacturer: batchData.manufacturer || req.user.address
-    }, process.env.BASE_URL || 'https://pharbit.com');
+    // Prepare batch data for QR code
+    const batchForQR = {
+      id: transaction.batchId,
+      name: batchData.drugName,
+      manufacturer: batchData.manufacturer || req.user.address,
+      manufacturingDate: batchData.manufactureDate,
+      expiryDate: batchData.expiryDate,
+      quantity: batchData.quantity,
+      status: 'CREATED',
+      blockchainId: transaction.batchId,
+      transactionHash: transaction.hash
+    };
 
-    // Save batch to database with QR code data
+    // Generate QR code
+    const qrCode = await qrCodeService.generateBatchQRCode(batchForQR);
+
+    // Save batch to database with QR code
     const dbBatchData = {
       batch_id: parseInt(transaction.batchId),
       drug_name: batchData.drugName,
@@ -265,8 +316,7 @@ router.post('/',
       ...completeBatch,
       ...dbBatch,
       transaction,
-      qrCode: {
-        dataUrl: qrCodeData.qrDataUrl,
+      qrCode: qrCode, // Using the newly generated QR code
         batchUrl: qrCodeData.batchUrl,
         hash: qrCodeData.qrHash
       }
