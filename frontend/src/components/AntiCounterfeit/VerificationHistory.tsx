@@ -134,7 +134,6 @@ const VerificationHistory: React.FC<VerificationHistoryProps> = ({
     dispatch(fetchVerificationResults({ 
       page: 1, 
       limit: rowsPerPage,
-      search: searchTerm,
       result: resultFilter,
       verificationType: typeFilter,
     }));
@@ -152,7 +151,6 @@ const VerificationHistory: React.FC<VerificationHistoryProps> = ({
     dispatch(fetchVerificationResults({ 
       page: 1, 
       limit: rowsPerPage,
-      search: searchTerm,
       result: filterType === 'result' ? value : resultFilter,
       verificationType: filterType === 'type' ? value : typeFilter,
     }));

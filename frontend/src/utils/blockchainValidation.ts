@@ -236,21 +236,21 @@ export class BlockchainValidator {
   private async validateQRCode(qrValue: string): Promise<boolean> {
     // In a real implementation, this would verify the QR code
     // against the blockchain or a secure database
-    return qrValue && qrValue.length > 0;
+    return Boolean(qrValue && qrValue.length > 0);
   }
 
   // Validate hologram
   private async validateHologram(hologramValue: string): Promise<boolean> {
     // In a real implementation, this would verify the hologram
     // using specialized hardware or software
-    return hologramValue && hologramValue.length > 0;
+    return Boolean(hologramValue && hologramValue.length > 0);
   }
 
   // Validate serial number
   private async validateSerialNumber(serialNumber: string): Promise<boolean> {
     // In a real implementation, this would verify the serial number
     // against a secure database
-    return serialNumber && /^[A-Z0-9]{8,12}$/.test(serialNumber);
+    return Boolean(serialNumber && /^[A-Z0-9]{8,12}$/.test(serialNumber));
   }
 
   // Validate tamper evidence

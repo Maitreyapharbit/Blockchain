@@ -150,11 +150,19 @@ const RecallManagement: React.FC = () => {
   const handleAddBatch = () => {
     if (batchForm.batchId && batchForm.productName && batchForm.lotNumber && batchForm.expiryDate && batchForm.quantity > 0) {
       const newBatch: RecallBatch = {
+        id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         batchId: batchForm.batchId,
         productName: batchForm.productName,
+        batchNumber: batchForm.lotNumber,
         lotNumber: batchForm.lotNumber,
+        manufacturingDate: new Date().toISOString(),
         expiryDate: batchForm.expiryDate,
+        quantity: batchForm.quantity,
         quantityAffected: batchForm.quantity,
+        status: 'active',
+        recallId: '',
+        affectedQuantity: batchForm.quantity,
+        actions: [],
       };
       
       setSelectedBatches([...selectedBatches, newBatch]);
@@ -279,9 +287,13 @@ const RecallManagement: React.FC = () => {
                 rows={recalls}
                 columns={recallColumns}
                 loading={loading}
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                disableSelectionOnClick
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10 },
+                  },
+                }}
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
               />
             </Box>
           </TabPanel>
@@ -289,12 +301,16 @@ const RecallManagement: React.FC = () => {
           <TabPanel value={activeTab} index={1}>
             <Box sx={{ height: 400, width: '100%' }}>
               <DataGrid
-                rows={recalls.filter(r => r.status === 'ACTIVE')}
+                rows={recalls.filter(r => r.status === 'in_progress')}
                 columns={recallColumns}
                 loading={loading}
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                disableSelectionOnClick
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10 },
+                  },
+                }}
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
               />
             </Box>
           </TabPanel>
@@ -302,12 +318,16 @@ const RecallManagement: React.FC = () => {
           <TabPanel value={activeTab} index={2}>
             <Box sx={{ height: 400, width: '100%' }}>
               <DataGrid
-                rows={recalls.filter(r => r.status === 'RESOLVED')}
+                rows={recalls.filter(r => r.status === 'completed')}
                 columns={recallColumns}
                 loading={loading}
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                disableSelectionOnClick
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10 },
+                  },
+                }}
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
               />
             </Box>
           </TabPanel>

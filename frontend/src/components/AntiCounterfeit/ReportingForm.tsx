@@ -22,6 +22,7 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
   Divider,
@@ -103,7 +104,7 @@ const ReportingForm: React.FC<ReportingFormProps> = ({
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof typeof prev],
+          ...(typeof prev[parent as keyof typeof prev] === 'object' && prev[parent as keyof typeof prev] !== null ? prev[parent as keyof typeof prev] as Record<string, any> : {}),
           [child]: value,
         },
       }));

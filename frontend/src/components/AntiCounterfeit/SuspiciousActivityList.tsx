@@ -142,7 +142,6 @@ const SuspiciousActivityList: React.FC<SuspiciousActivityListProps> = ({
     dispatch(fetchSuspiciousActivities({ 
       page: 1, 
       limit: rowsPerPage,
-      search: searchTerm,
       severity: severityFilter,
       status: statusFilter,
       activityType: activityTypeFilter,
@@ -164,7 +163,6 @@ const SuspiciousActivityList: React.FC<SuspiciousActivityListProps> = ({
     dispatch(fetchSuspiciousActivities({ 
       page: 1, 
       limit: rowsPerPage,
-      search: searchTerm,
       severity: filterType === 'severity' ? value : severityFilter,
       status: filterType === 'status' ? value : statusFilter,
       activityType: filterType === 'activityType' ? value : activityTypeFilter,

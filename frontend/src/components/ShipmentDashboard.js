@@ -9,7 +9,7 @@ import {
   FaExclamationTriangle,
   FaBell,
   FaEye,
-  FaRefresh
+  FaSync
 } from 'react-icons/fa';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../config/supabase';
@@ -441,7 +441,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
       <Header>
         <Title>Shipment Tracking - {shipment.tracking_number}</Title>
         <RefreshButton onClick={handleRefresh} disabled={refreshing}>
-          <FaRefresh className={refreshing ? 'animate-spin' : ''} />
+          <FaSync className={refreshing ? 'animate-spin' : ''} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </RefreshButton>
       </Header>

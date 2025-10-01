@@ -163,6 +163,14 @@ export const updateRecallAction = createAsyncThunk(
   }
 );
 
+export const updateBatchStatus = createAsyncThunk(
+  'recall/updateBatchStatus',
+  async ({ id, status }: { id: string; status: Batch['status'] }) => {
+    const updatedBatch = await recallService.updateBatchStatus(id, status);
+    return updatedBatch;
+  }
+);
+
 export const sendRecallNotifications = createAsyncThunk(
   'recall/sendRecallNotifications',
   async ({ recallId, nodeIds }: { recallId: string; nodeIds: string[] }) => {
@@ -225,7 +233,7 @@ const recallSlice = createSlice({
       }
     },
     updateRecallActionInList: (state, action: PayloadAction<RecallAction>) => {
-      const index = state.recallActions.findIndex(action => action.id === action.payload.id);
+      const index = state.recallActions.findIndex(recallAction => recallAction.id === action.payload.id);
       if (index !== -1) {
         state.recallActions[index] = action.payload;
       }
@@ -380,7 +388,7 @@ const recallSlice = createSlice({
     // Update recall action
     builder
       .addCase(updateRecallAction.fulfilled, (state, action) => {
-        const index = state.recallActions.findIndex(action => action.id === action.payload.id);
+        const index = state.recallActions.findIndex(recallAction => recallAction.id === action.payload.id);
         if (index !== -1) {
           state.recallActions[index] = action.payload;
         }
@@ -404,5 +412,6 @@ export const {
   updateDistributionNodeInList,
   updateRecallActionInList,
 } = recallSlice.actions;
+
 
 export default recallSlice.reducer;

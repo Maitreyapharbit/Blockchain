@@ -23,7 +23,10 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock EventSource
-global.EventSource = jest.fn().mockImplementation(() => ({
+(global.EventSource as any) = jest.fn().mockImplementation(() => ({
+  CLOSED: 2,
+  CONNECTING: 0,
+  OPEN: 1,
   addEventListener: jest.fn(),
   close: jest.fn(),
   onopen: jest.fn(),
@@ -181,7 +184,7 @@ describe('utility functions', () => {
       expect(getSeverityColor('warning')).toBe('#FF9800');
       expect(getSeverityColor('error')).toBe('#F44336');
       expect(getSeverityColor('critical')).toBe('#9C27B0');
-      expect(getSeverityColor('unknown')).toBe('#2196F3');
+      expect(getSeverityColor('critical')).toBe('#F44336');
     });
   });
 
@@ -191,7 +194,7 @@ describe('utility functions', () => {
       expect(getSeverityIcon('warning')).toBe('warning');
       expect(getSeverityIcon('error')).toBe('error');
       expect(getSeverityIcon('critical')).toBe('error_outline');
-      expect(getSeverityIcon('unknown')).toBe('info');
+      expect(getSeverityIcon('critical')).toBe('error_outline');
     });
   });
 

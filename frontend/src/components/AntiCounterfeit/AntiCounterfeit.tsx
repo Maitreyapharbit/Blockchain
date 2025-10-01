@@ -442,9 +442,13 @@ const AntiCounterfeit: React.FC = () => {
                   <DataGrid
                     rows={verificationHistory}
                     columns={verificationColumns}
-                    pageSize={5}
-                    rowsPerPageOptions={[5, 10, 25]}
-                    disableSelectionOnClick
+                    initialState={{
+                      pagination: {
+                        paginationModel: { pageSize: 5 },
+                      },
+                    }}
+                    pageSizeOptions={[5, 10, 25]}
+                    disableRowSelectionOnClick
                   />
                 </Box>
               </CardContent>
@@ -475,9 +479,13 @@ const AntiCounterfeit: React.FC = () => {
                 rows={reports}
                 columns={reportColumns}
                 loading={loading}
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                disableSelectionOnClick
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10 },
+                  },
+                }}
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
               />
             </Box>
           </CardContent>
@@ -560,7 +568,7 @@ const AntiCounterfeit: React.FC = () => {
                                 <ListItem key={idx}>
                                   <ListItemText
                                     primary={verification.verificationType}
-                                    secondary={`${verification.result ? 'Valid' : 'Invalid'} - ${new Date(verification.verifiedAt).toLocaleString()}`}
+                                    secondary={`${verification.result ? 'Valid' : 'Invalid'} - ${new Date(verification.timestamp).toLocaleString()}`}
                                   />
                                 </ListItem>
                               ))}

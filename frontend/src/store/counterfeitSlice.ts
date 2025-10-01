@@ -37,6 +37,8 @@ interface CounterfeitState {
     severity: string;
     activityType: string;
     search: string;
+    result: string;
+    verificationType: string;
   };
   stats: {
     totalReports: number;
@@ -87,6 +89,8 @@ const initialState: CounterfeitState = {
     severity: '',
     activityType: '',
     search: '',
+    result: '',
+    verificationType: '',
   },
   stats: null,
   realTimeStatus: null,

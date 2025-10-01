@@ -31,7 +31,7 @@ describe('recallService', () => {
               id: '1',
               title: 'Test Recall',
               description: 'Test description',
-              severity: 'high',
+              severity: 'high' as const,
               status: 'in_progress',
               affectedBatches: ['batch1'],
               initiatedBy: 'Test User',
@@ -70,7 +70,7 @@ describe('recallService', () => {
         id: '1',
         title: 'Test Recall',
         description: 'Test description',
-        severity: 'high',
+        severity: 'high' as const,
         status: 'in_progress',
         affectedBatches: ['batch1'],
         initiatedBy: 'Test User',
@@ -105,7 +105,7 @@ describe('recallService', () => {
       const recallData = {
         title: 'Test Recall',
         description: 'Test description',
-        severity: 'high',
+        severity: 'high' as const,
         reason: 'Test reason',
       };
 
@@ -137,7 +137,7 @@ describe('recallService', () => {
       const recallData = {
         title: 'Test Recall',
         description: 'Test description',
-        severity: 'high',
+        severity: 'high' as const,
         reason: 'Test reason',
       };
 
@@ -150,7 +150,7 @@ describe('recallService', () => {
   describe('updateRecall', () => {
     it('should update recall successfully', async () => {
       const updates = {
-        status: 'completed',
+        status: 'completed' as const,
         completionDate: '2023-01-02T00:00:00Z',
       };
 
@@ -158,8 +158,8 @@ describe('recallService', () => {
         id: '1',
         title: 'Test Recall',
         description: 'Test description',
-        severity: 'high',
-        status: 'completed',
+        severity: 'high' as const,
+        status: 'completed' as const,
         affectedBatches: ['batch1'],
         initiatedBy: 'Test User',
         initiatedDate: '2023-01-01T00:00:00Z',
@@ -184,7 +184,7 @@ describe('recallService', () => {
 
     it('should handle errors', async () => {
       const updates = {
-        status: 'completed',
+        status: 'completed' as const,
       };
 
       mockedAxios.put.mockRejectedValue(new Error('Network Error'));
@@ -327,9 +327,9 @@ describe('recallService', () => {
       const mockActions = [
         {
           id: 'action1',
-          type: 'notification',
+          type: 'notification' as const,
           description: 'Send notification',
-          status: 'completed',
+          status: 'completed' as const,
           assignedTo: 'Test User',
           dueDate: '2023-01-01T00:00:00Z',
           completedDate: '2023-01-01T00:00:00Z',
@@ -360,7 +360,7 @@ describe('recallService', () => {
   describe('createRecallAction', () => {
     it('should create recall action successfully', async () => {
       const actionData = {
-        type: 'notification',
+        type: 'notification' as const,
         description: 'Send notification',
         assignedTo: 'Test User',
         dueDate: '2023-01-01T00:00:00Z',
@@ -388,7 +388,7 @@ describe('recallService', () => {
 
     it('should handle errors', async () => {
       const actionData = {
-        type: 'notification',
+        type: 'notification' as const,
         description: 'Send notification',
         assignedTo: 'Test User',
         dueDate: '2023-01-01T00:00:00Z',
@@ -403,15 +403,15 @@ describe('recallService', () => {
   describe('updateRecallAction', () => {
     it('should update recall action successfully', async () => {
       const updates = {
-        status: 'completed',
+        status: 'completed' as const,
         completedDate: '2023-01-01T00:00:00Z',
       };
 
       const mockAction = {
         id: 'action1',
-        type: 'notification',
+        type: 'notification' as const,
         description: 'Send notification',
-        status: 'completed',
+        status: 'completed' as const,
         assignedTo: 'Test User',
         dueDate: '2023-01-01T00:00:00Z',
         completedDate: '2023-01-01T00:00:00Z',
@@ -433,7 +433,7 @@ describe('recallService', () => {
 
     it('should handle errors', async () => {
       const updates = {
-        status: 'completed',
+        status: 'completed' as const,
       };
 
       mockedAxios.put.mockRejectedValue(new Error('Network Error'));

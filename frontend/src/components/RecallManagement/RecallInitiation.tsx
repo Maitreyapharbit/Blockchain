@@ -50,7 +50,7 @@ const RecallInitiation: React.FC<RecallInitiationProps> = ({
   error,
 }) => {
   const dispatch = useAppDispatch();
-  const { batches } = useAppSelector((state) => state.recall);
+  const { affectedBatches: batches } = useAppSelector((state) => state.recall);
   
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -60,8 +60,10 @@ const RecallInitiation: React.FC<RecallInitiationProps> = ({
     severity: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     affectedBatches: [] as string[],
     actions: [] as Array<{
+      id: string;
       type: 'notification' | 'quarantine' | 'return' | 'destroy';
       description: string;
+      status: 'pending' | 'completed' | 'failed';
       assignedTo: string;
       dueDate: string;
     }>,
@@ -159,6 +161,11 @@ const RecallInitiation: React.FC<RecallInitiationProps> = ({
         status: 'initiated' as const,
         initiatedBy: 'Current User', // This would come from auth context
         initiatedDate: new Date().toISOString(),
+        actions: formData.actions.map(action => ({
+          ...action,
+          id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          status: 'pending' as const,
+        })),
       };
       
       await dispatch(createRecall(recallData)).unwrap();

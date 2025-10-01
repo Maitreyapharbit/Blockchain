@@ -283,7 +283,9 @@ export class RecallService implements RecallServiceInterface {
         recall_id: recallId,
         severity_level: severity as any,
         reason,
-        initiated_by: initiatedBy
+        initiated_by: initiatedBy,
+        initiated_at: new Date(),
+        status: 'ACTIVE'
       });
 
       // Add batches to recall in database
@@ -327,7 +329,7 @@ export class RecallService implements RecallServiceInterface {
       };
     } catch (error) {
       logger.error('Error initiating recall:', error);
-      throw new Error(`Failed to initiate recall: ${error.message}`);
+      throw new Error(`Failed to initiate recall: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -342,7 +344,7 @@ export class RecallService implements RecallServiceInterface {
         include: [Recall]
       });
 
-      const isRecalled = recallBatches.some(rb => rb.Recall?.status === 'ACTIVE');
+      const isRecalled = recallBatches.some(rb => (rb as any).status === 'ACTIVE');
 
       return {
         batchId,
@@ -357,17 +359,17 @@ export class RecallService implements RecallServiceInterface {
         })),
         isRecalled,
         activeRecalls: recallBatches
-          .filter(rb => rb.Recall?.status === 'ACTIVE')
+          .filter(rb => (rb as any).status === 'ACTIVE')
           .map(rb => ({
-            recallId: rb.Recall?.recall_id,
-            severity: rb.Recall?.severity_level,
-            reason: rb.Recall?.reason,
-            initiatedAt: rb.Recall?.initiated_at
+            recallId: (rb as any).recall_id,
+            severity: (rb as any).severity_level,
+            reason: (rb as any).reason,
+            initiatedAt: (rb as any).initiated_at
           }))
       };
     } catch (error) {
       logger.error('Error tracking distribution:', error);
-      throw new Error(`Failed to track distribution: ${error.message}`);
+      throw new Error(`Failed to track distribution: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -389,7 +391,7 @@ export class RecallService implements RecallServiceInterface {
       }
     } catch (error) {
       logger.error('Error notifying stakeholders:', error);
-      throw new Error(`Failed to notify stakeholders: ${error.message}`);
+      throw new Error(`Failed to notify stakeholders: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -417,7 +419,7 @@ export class RecallService implements RecallServiceInterface {
         initiatedAt: recall.initiated_at,
         resolvedAt: recall.resolved_at,
         resolutionNotes: recall.resolution_notes,
-        batches: recall.RecallBatches?.map(rb => ({
+        batches: (recall as any).RecallBatches?.map((rb: any) => ({
           batchId: rb.batch_id,
           productName: rb.product_name,
           lotNumber: rb.lot_number,
@@ -437,7 +439,7 @@ export class RecallService implements RecallServiceInterface {
       };
     } catch (error) {
       logger.error('Error getting recall status:', error);
-      throw new Error(`Failed to get recall status: ${error.message}`);
+      throw new Error(`Failed to get recall status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -456,11 +458,11 @@ export class RecallService implements RecallServiceInterface {
         initiatedBy: recall.initiated_by,
         initiatedAt: recall.initiated_at,
         resolvedAt: recall.resolved_at,
-        batchCount: recall.RecallBatches?.length || 0
+        batchCount: (recall as any).RecallBatches?.length || 0
       }));
     } catch (error) {
       logger.error('Error getting all recalls:', error);
-      throw new Error(`Failed to get recalls: ${error.message}`);
+      throw new Error(`Failed to get recalls: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -505,7 +507,7 @@ export class RecallService implements RecallServiceInterface {
       };
     } catch (error) {
       logger.error('Error updating recall status:', error);
-      throw new Error(`Failed to update recall status: ${error.message}`);
+      throw new Error(`Failed to update recall status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -553,7 +555,7 @@ export class RecallService implements RecallServiceInterface {
       };
     } catch (error) {
       logger.error('Error adding batch to recall:', error);
-      throw new Error(`Failed to add batch to recall: ${error.message}`);
+      throw new Error(`Failed to add batch to recall: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

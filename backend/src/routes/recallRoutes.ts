@@ -38,7 +38,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error in recall initiation API:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -57,7 +57,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error getting recall status:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -75,7 +75,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error getting all recalls:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -102,7 +102,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error updating recall status:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -152,7 +152,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error adding batch to recall:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -171,7 +171,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error tracking distribution:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -192,7 +192,7 @@ export function createRecallRoutes(recallService: RecallService) {
       logger.error('Error notifying stakeholders:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

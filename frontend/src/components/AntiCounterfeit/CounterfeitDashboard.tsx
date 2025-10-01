@@ -47,6 +47,8 @@ import {
   Security,
   QrCode,
   CameraAlt,
+  Schedule,
+  Assignment,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
