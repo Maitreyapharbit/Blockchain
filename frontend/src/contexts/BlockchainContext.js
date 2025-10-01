@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useMetaMask } from './MetaMaskContext';
+import QRCode from 'qrcode';
 
 const BlockchainContext = createContext();
 
@@ -27,38 +28,31 @@ export const BlockchainProvider = ({ children }) => {
   // Helper function to generate QR code
   const generateQRCode = async (data) => {
     try {
-      // For now, we'll create a simple QR code using a canvas
-      // In a real implementation, you'd use a library like qrcode
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 200;
-      canvas.height = 200;
+      console.log('Generating QR code for data:', data);
       
-      // Create a simple QR-like pattern (placeholder)
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, 200, 200);
+      // Ensure data is a string
+      const stringData = typeof data === 'object' ? JSON.stringify(data) : String(data);
       
-      // Add some pattern to make it look like a QR code
-      for (let i = 0; i < 20; i++) {
-        for (let j = 0; j < 20; j++) {
-          if ((i + j) % 2 === 0) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(i * 10, j * 10, 10, 10);
-          }
+      console.log('Converting data to QR code...');
+      const qrCodeDataUrl = await QRCode.toDataURL(stringData, {
+        errorCorrectionLevel: 'H',
+        type: 'image/png',
+        quality: 0.92,
+        margin: 1,
+        width: 200,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
         }
-      }
+      });
       
-      // Add batch ID text
-      ctx.fillStyle = '#000';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('BATCH QR', 100, 100);
-      
-      return canvas.toDataURL('image/png');
+      console.log('QR code generated successfully');
+      return qrCodeDataUrl;
     } catch (error) {
       console.error('QR code generation error:', error);
-      // Return a placeholder image
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      toast.error('Failed to generate QR code: ' + error.message);
+      // Return a placeholder image with red background to indicate error
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpUUqDnYQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQqPMNKtrHNB020wl4mImuyoGXxGCAPoQRkBmljEnSUl0HF/38PH1LsazOp/7c/SrOYsBPpF4lhmmTbxBPL1pG5z3iSOsKKvE58RjJl2Q+JHrisdvnAsuCzwzYqZT88QRYrHQxkobs6KpEU8RR1VNp3wh47HKeYuzVq6y5j35C0M5fWWZ6zSHkcAiliBBhIIqSijDRox2nRQLKTqP+/iHXL9ELoVcJTByLKACDbLrB/+D391a+ckJLykUBzpfHOdjFAjuAo2a43wfO07jBAg+A1d6y1+pAzOfpNdaWvQI6N0GLq5bmrIHXO4AA0+GbMquFKQp5PPA+xl9UxbovwV61morr3k+RxgYStQoXvfwCBha3Ku32LvTm9s/bzr9/QBBYXKj7xEi6wAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+QIDwgMB1Y5qoYAAAGeSURBVHja7dgxEQAgDMAwwAb+RaGDhHeLZO54A6DlPgcAFgkQAQJAgAABIEAACBAAAv5HAAgQAAJAgAAQIAAECAABAkCACABAgAAQIAAECAABAkCAABAgAAQIAAECQIAAECAABAh7AAgQAAIEgAABIEAACBAAAkSAABAgAAQIAAECQIAAECAAfJYAAYAAASBAAAgQAAIEgAABIEAAeC0BAkCAAPBCAAQIAAECQIAAECAA/BwAAgSAAAEgQAAIEAACBIAAEQACBIAAASBAAAgQAAIEgAABIEAACBABIEAACBAAAkSACBAAAgSAAAEgQAAIEAACBIAAAeC5BAgAAQJAgAAQIAAECAABAkCACABAgAAQIAAECAABAkCAABAgAAQIAAECQIAAECAA1gIgQAAIEAACBIAAASBAAAgQAQJAgAAQIAAECAABAkCAABAgALwWAAECQIAAECAABAgAAQJAgAAQIBYJgAABIEAACBAAAkSAABAgAAQIAAECQIAAECAABAgAuyVABAhzAXL9dV3gZb/CAAAAAElFTkSuQmCC';
     }
   };
 
@@ -304,6 +298,11 @@ export const BlockchainProvider = ({ children }) => {
         txHash: '0x' + Math.random().toString(16).substr(2, 64),
         blockNumber: Math.floor(Math.random() * 100) + 1,
         createdAt: Date.now(),
+        qrCode: {
+          dataUrl: qrCodeBase64,
+          batchUrl: `${window.location.origin}/verify/${batchId}`,
+          hash: qrHash,
+        },
         verified: true,
         qrCode: {
           dataUrl: qrCodeBase64,
