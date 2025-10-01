@@ -1,22 +1,28 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
   realtime: {
     params: {
-      eventsPerSecond: 10, // Optimize for free tier
-    },
-  },
-});
+      eventsPerSecond: 10
+    }
+  }
+})
 
 // Realtime configuration for free tier optimization
 export const realtimeConfig = {
-  // Limit concurrent subscriptions
   maxSubscriptions: 5,
-  // Batch events to reduce API calls
   batchEvents: true,
-  // Connection timeout
-  timeout: 30000,
-};
+  timeout: 30000
+}

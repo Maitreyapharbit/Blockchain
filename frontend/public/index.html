@@ -5,101 +5,24 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="PharbitChain - Pharmaceutical Blockchain Management System" />
+    <meta
+      name="description"
+      content="Pharmaceutical Blockchain System - Recall Management and Anti-Counterfeiting"
+    />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    
-    <!-- Preconnect to external domains for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Meta tags for better SEO and social sharing -->
-    <meta property="og:title" content="PharbitChain - Pharmaceutical Blockchain Management" />
-    <meta property="og:description" content="Secure, transparent, and compliant pharmaceutical supply chain management powered by blockchain technology." />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://pharbitchain.com" />
-    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
-    
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="PharbitChain - Pharmaceutical Blockchain Management" />
-    <meta name="twitter:description" content="Secure, transparent, and compliant pharmaceutical supply chain management powered by blockchain technology." />
-    <meta name="twitter:image" content="%PUBLIC_URL%/og-image.png" />
-    
-    <title>PharbitChain - Pharmaceutical Blockchain Management</title>
-    
-    <style>
-      /* Loading screen styles */
-      #loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        color: white;
-        font-family: 'Inter', sans-serif;
-      }
-      
-      .loading-logo {
-        width: 80px;
-        height: 80px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-top: 3px solid white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
-      }
-      
-      .loading-text {
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 10px;
-      }
-      
-      .loading-subtext {
-        font-size: 16px;
-        opacity: 0.8;
-      }
-      
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      
-      /* Hide loading screen when app loads */
-      .app-loaded #loading-screen {
-        display: none;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <title>Pharmaceutical Blockchain System</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    
-    <!-- Loading screen -->
-    <div id="loading-screen">
-      <div class="loading-logo"></div>
-      <div class="loading-text">PharbitChain</div>
-      <div class="loading-subtext">Loading pharmaceutical blockchain management system...</div>
-    </div>
-    
-    <!-- React app root -->
     <div id="root"></div>
-    
-    <script>
-      // Hide loading screen when React app loads
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          document.body.classList.add('app-loaded');
-        }, 1000);
-      });
-    </script>
   </body>
 </html>

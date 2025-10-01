@@ -1,292 +1,341 @@
-# PharbitChain - Pharmaceutical Blockchain Supply Chain
+# Pharmaceutical Blockchain System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
-[![Solidity Version](https://img.shields.io/badge/solidity-%5E0.8.20-blue)](https://soliditylang.org/)
-[![React Version](https://img.shields.io/badge/react-18.2.0-blue)](https://reactjs.org/)
+A comprehensive Recall Management and Anti-Counterfeiting system for pharmaceutical blockchain applications built with React, TypeScript, Node.js, Express, Solidity, and PostgreSQL.
 
-A comprehensive blockchain-based pharmaceutical supply chain management system built with Ethereum smart contracts, Node.js backend, and React frontend. PharbitChain ensures transparency, traceability, and compliance in pharmaceutical supply chains.
+## Features
 
-## 🚀 Quick Start
+### 🔄 Recall Management System
+- **Quick Recall Initiation**: Create recalls with severity levels (LOW, MEDIUM, HIGH, CRITICAL)
+- **Batch Search & Selection**: Search and select multiple batches for recall
+- **Distribution Chain Tracking**: Track affected distribution channels
+- **Real-time Notifications**: Notify stakeholders automatically
+- **Status Management**: Track recall status from initiation to resolution
+
+### 🛡️ Anti-Counterfeiting System
+- **Visual Security Features**: QR code and hologram verification
+- **Authenticity Checking**: Multi-layer verification system
+- **Suspicious Activity Reporting**: Report and investigate counterfeit activities
+- **Real-time Verification**: Instant verification status updates
+- **Security Feature Generation**: Create unique security identifiers
+
+### 🔗 Blockchain Integration
+- **Smart Contracts**: Solidity contracts for immutable record keeping
+- **Event Emission**: Real-time blockchain events for recalls and suspicious activities
+- **Transparent Audit Trail**: Complete transaction history
+- **Decentralized Verification**: Distributed verification system
+
+## Tech Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Material-UI** for modern UI components
+- **Web3.js** for blockchain integration
+- **QR Code** generation and scanning
+- **Data Grid** for tabular data display
+
+### Backend
+- **Node.js** with Express
+- **TypeScript** for type safety
+- **PostgreSQL** database
+- **Sequelize** ORM
+- **Winston** logging
+- **Joi** validation
+
+### Blockchain
+- **Solidity** smart contracts
+- **Hardhat** development framework
+- **Web3.js** for blockchain interaction
+- **OpenZeppelin** security libraries
+
+### Testing
+- **Jest** for unit testing
+- **Hardhat** for smart contract testing
+- **Comprehensive test coverage**
+
+## Project Structure
+
+```
+pharma-blockchain-system/
+├── frontend/                 # React frontend application
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   │   ├── RecallManagement/
+│   │   │   └── AntiCounterfeit/
+│   │   ├── services/        # API services
+│   │   ├── types/           # TypeScript type definitions
+│   │   └── App.tsx
+│   └── package.json
+├── backend/                  # Node.js backend API
+│   ├── src/
+│   │   ├── services/        # Business logic services
+│   │   ├── routes/          # API routes
+│   │   ├── database/        # Database schema and models
+│   │   ├── utils/           # Utility functions
+│   │   └── index.ts
+│   └── package.json
+├── contracts/                # Solidity smart contracts
+│   ├── contracts/           # Smart contract source code
+│   ├── test/                # Smart contract tests
+│   ├── scripts/             # Deployment scripts
+│   └── hardhat.config.js
+└── README.md
+```
+
+## Quick Start
 
 ### Prerequisites
-- **Node.js** 18.0.0 or higher
-- **npm** 8.0.0 or higher
-- **MetaMask** browser extension
+- Node.js 16+ and npm
+- PostgreSQL 12+
+- Git
 
-### One-Command Setup
-
+### 1. Clone the Repository
 ```bash
-# Clone the repository
-git clone https://github.com/Maitreyapharbit/Blockchain.git
-cd pharbit-blockchain
-
-# Start everything with one command
-./start-all.sh
+git clone <repository-url>
+cd pharma-blockchain-system
 ```
 
-This script will automatically:
-- Install all required system dependencies
-- Install npm packages for frontend and backend
-- Start the Hardhat blockchain node
-- Deploy smart contracts
-- Launch the backend server
-- Start the frontend development server
-- Handle graceful shutdown when stopped
-
-### Access the Application
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001
-- **Blockchain Node**: http://localhost:8545
-
-### Stop Everything
-
-Simply press `Ctrl+C` in the terminal where you ran `start-all.sh`
-```
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Frontend │    │  Node.js Backend │    │  Smart Contracts │
-│                 │    │                 │    │                 │
-│  - Dashboard    │◄──►│  - REST API     │◄──►│  - Batch Mgmt   │
-│  - Batch Mgmt   │    │  - Auth Service │    │  - Compliance   │
-│  - Compliance   │    │  - File Storage │    │  - NFT Tracking │
-│  - Wallet Mgmt  │    │  - Database     │    │  - Access Control│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   MetaMask      │    │   Local Storage │    │   Hardhat       │
-│   Wallet        │    │   (Optional)    │    │   Local Node    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-## ✨ Features
-
-### Smart Contracts
-- **Batch Management**: Create, transfer, and track pharmaceutical batches
-- **Compliance Tracking**: FDA compliance and regulatory features
-- **NFT Integration**: ERC721 tokens for batch tokenization
-- **Access Control**: Role-based permissions for different stakeholders
-- **Emergency Pause**: Safety mechanisms for critical situations
-
-### Backend API
-- **RESTful API**: Complete CRUD operations for all entities
-- **Authentication**: JWT-based authentication with role management
-- **File Management**: Local file storage with S3 integration option
-- **Database**: Local storage with Supabase integration option
-- **Blockchain Integration**: Ethers.js for smart contract interaction
-
-### Frontend Application
-- **Modern UI**: React with TypeScript and styled-components
-- **Web3 Integration**: MetaMask connection and transaction management
-- **Real-time Updates**: Live transaction and batch status updates
-- **Responsive Design**: Mobile and desktop optimized
-- **Dashboard**: Comprehensive overview and analytics
-
-## 📁 Project Structure
-
-```
-pharbit-blockchain/
-├── contracts/                 # Smart contracts
-│   ├── contracts/            # Solidity contracts
-│   ├── scripts/              # Deployment scripts
-│   ├── test/                 # Contract tests
-│   └── hardhat.config.js     # Hardhat configuration
-├── backend/                  # Node.js backend
-│   ├── routes/               # API routes
-│   ├── services/             # Business logic
-│   ├── middleware/           # Express middleware
-│   ├── migrations/           # Database migrations
-│   └── index.js              # Entry point
-├── frontend/                 # React frontend
-│   ├── src/                  # Source code
-│   │   ├── components/       # React components
-│   │   ├── pages/            # Page components
-│   │   ├── services/         # API services
-│   │   └── contexts/         # React contexts
-│   └── public/               # Static assets
-├── scripts/                  # Utility scripts
-├── docs/                     # Documentation
-├── quick-start-local.sh      # Local startup script
-└── stop-local.sh            # Local shutdown script
-```
-
-## 🔧 Configuration
-
-### Backend Configuration
-
-Edit `backend/.env` with your settings:
-
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=3000
-HOST=localhost
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRES_IN=24h
-
-# Blockchain Configuration
-Contract Configuration
-ETHEREUM_RPC_URL=http://localhost:8545
-PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-
-# Optional: Database (Supabase)
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Optional: AWS S3
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_S3_BUCKET=your_s3_bucket
-```
-
-### Frontend Configuration
-
-Edit `frontend/.env` with your settings:
-
-```env
-# API Configuration
-REACT_APP_API_URL=http://localhost:3000/api
-
-# Blockchain Configuration
-REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
-REACT_APP_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
-REACT_APP_CHAIN_ID=31337
-```
-
-## 🧪 Testing
-
-### Run All Tests
-
+### 2. Install Dependencies
 ```bash
-npm test
+# Install root dependencies
+npm install
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# Install backend dependencies
+cd backend && npm install && cd ..
+
+# Install contract dependencies
+cd contracts && npm install && cd ..
 ```
 
-### Run Specific Test Suites
-
+### 3. Database Setup
 ```bash
-# Smart contracts
-npm run test:contracts
+# Create PostgreSQL database
+createdb pharma_blockchain
 
-# Backend API
-npm run test:backend
-
-# Frontend components
-npm run test:frontend
+# Run database schema
+psql -d pharma_blockchain -f backend/src/database/schema.sql
 ```
 
-## 📚 Documentation
-
-- **[Local Setup Guide](LOCAL_SETUP.md)** - Detailed local development setup
-- **[API Documentation](docs/API.md)** - Complete API reference
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
-
-## 🛠️ Development
-
-### Manual Setup
-
-If you prefer to run each step manually:
-
+### 4. Environment Configuration
 ```bash
-# 1. Install dependencies
-npm run install:all
-
-# 2. Set up environment files
+# Copy environment files
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-# 3. Start Docker container with Hardhat node (Terminal 1)
-docker run -v $(pwd)/contracts:/app -w /app -p 8545:8545 node:18 npx hardhat node
-
-# 4. Deploy contracts (Terminal 2)
-docker run -v $(pwd)/contracts:/app -w /app node:18 bash -c "npm install --save-dev hardhat@2.19.1 @nomicfoundation/hardhat-ethers@3.0.2 ethers@6.8.1 --legacy-peer-deps && npx hardhat compile && npx hardhat run scripts/deploy.js --network hardhat"
-
-# 5. Start backend (Terminal 3)
-cd backend
-npm run dev
-
-# 6. Start frontend (Terminal 4)
-cd frontend
-npm start
+# Edit the environment files with your configuration
 ```
 
-### Code Quality
-
+### 5. Deploy Smart Contracts
 ```bash
-# Lint code
-npm run lint
+cd contracts
 
-# Format code
-npm run format
+# Start local blockchain (in one terminal)
+npx hardhat node
 
-# Type checking (frontend)
-cd frontend && npm run type-check
+# Deploy contracts (in another terminal)
+npx hardhat run scripts/deploy.js --network localhost
 ```
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Port already in use**
-   ```bash
-   # Kill processes on specific ports
-   lsof -ti :3000 | xargs kill -9
-   lsof -ti :3001 | xargs kill -9
-   lsof -ti :8545 | xargs kill -9
-   ```
-
-2. **Node modules not found**
-   ```bash
-   # Reinstall dependencies
-   rm -rf node_modules backend/node_modules frontend/node_modules
-   npm run install:all
-   ```
-
-3. **MetaMask connection issues**
-   - Make sure you're on the correct network (Hardhat Local)
-   - Check that the RPC URL is correct
-   - Try refreshing the page
-
-### Logs
-
-Check the logs directory for detailed error information:
-
+### 6. Start the Application
 ```bash
-# View all logs
-tail -f logs/*.log
+# Start backend (in one terminal)
+cd backend && npm run dev
 
-# View specific logs
-tail -f logs/backend.log
-tail -f logs/frontend.log
-tail -f logs/hardhat.log
+# Start frontend (in another terminal)
+cd frontend && npm start
 ```
 
-## 🤝 Contributing
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
+
+## API Documentation
+
+### Recall Management Endpoints
+
+#### Initiate Recall
+```http
+POST /api/recalls/initiate
+Content-Type: application/json
+
+{
+  "batchIds": ["BATCH-001", "BATCH-002"],
+  "severity": "HIGH",
+  "reason": "Contaminated batch detected",
+  "initiatedBy": "manufacturer@pharma.com"
+}
+```
+
+#### Get Recall Status
+```http
+GET /api/recalls/{recallId}/status
+```
+
+#### Update Recall Status
+```http
+PATCH /api/recalls/{recallId}/status
+Content-Type: application/json
+
+{
+  "status": "RESOLVED",
+  "resolutionNotes": "All affected batches recovered"
+}
+```
+
+### Anti-Counterfeiting Endpoints
+
+#### Verify Authenticity
+```http
+POST /api/counterfeit/verify
+Content-Type: application/json
+
+{
+  "batchId": "BATCH-001",
+  "verificationType": "QR_SCAN",
+  "providedData": "qr_code_data"
+}
+```
+
+#### Report Suspicious Activity
+```http
+POST /api/counterfeit/report
+Content-Type: application/json
+
+{
+  "batchId": "BATCH-001",
+  "reporterName": "John Doe",
+  "reporterEmail": "john@example.com",
+  "reportType": "SUSPICIOUS_PACKAGING",
+  "description": "Packaging appears tampered with",
+  "evidenceUrls": ["https://example.com/evidence.jpg"],
+  "location": "New York, NY"
+}
+```
+
+## Smart Contracts
+
+### RecallManagement Contract
+- `initiateRecall()`: Create new recall
+- `addBatchToRecall()`: Add batch to existing recall
+- `updateRecallStatus()`: Update recall status
+- `recordDistribution()`: Record distribution information
+- `getRecall()`: Get recall details
+- `isBatchInRecall()`: Check if batch is recalled
+
+### AntiCounterfeitVerification Contract
+- `createSecurityFeature()`: Generate security features
+- `verifyAuthenticity()`: Verify product authenticity
+- `reportSuspiciousActivity()`: Report suspicious activities
+- `updateReportStatus()`: Update report investigation status
+- `getSecurityFeature()`: Get security feature details
+- `getFlaggedBatches()`: Get list of flagged batches
+
+## Database Schema
+
+### Core Tables
+- **recalls**: Recall information and metadata
+- **recall_batches**: Batches affected by recalls
+- **distribution_tracking**: Distribution chain tracking
+- **security_features**: Product security features
+- **counterfeit_reports**: Suspicious activity reports
+- **verification_logs**: Authentication verification history
+
+## Testing
+
+### Run All Tests
+```bash
+# Run frontend tests
+cd frontend && npm test
+
+# Run backend tests
+cd backend && npm test
+
+# Run smart contract tests
+cd contracts && npm test
+```
+
+### Test Coverage
+- Unit tests for all services
+- Integration tests for API endpoints
+- Smart contract functionality tests
+- End-to-end user flow tests
+
+## Security Features
+
+### Smart Contract Security
+- Access control with role-based permissions
+- Reentrancy protection
+- Input validation and sanitization
+- Event emission for transparency
+
+### API Security
+- Input validation with Joi
+- SQL injection prevention with Sequelize
+- CORS configuration
+- Helmet security headers
+- Rate limiting (recommended for production)
+
+### Frontend Security
+- Input sanitization
+- XSS protection
+- Secure API communication
+- Environment variable protection
+
+## Deployment
+
+### Production Deployment
+1. Set up production database
+2. Deploy smart contracts to mainnet/testnet
+3. Configure environment variables
+4. Set up reverse proxy (nginx)
+5. Enable HTTPS
+6. Set up monitoring and logging
+
+### Docker Deployment
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+```
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## Support
 
-- **Documentation**: [LOCAL_SETUP.md](LOCAL_SETUP.md)
-- **Issues**: [GitHub Issues](https://github.com/Maitreyapharbit/Blockchain/issues)
-- **Email**: support@pharbitchain.com
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the documentation
 
----
+## Roadmap
 
-**Built with ❤️ by the PharbitChain Team**
+### Phase 1 (Current)
+- ✅ Basic recall management
+- ✅ Anti-counterfeiting verification
+- ✅ Smart contract implementation
+- ✅ Web interface
+
+### Phase 2 (Planned)
+- 🔄 Mobile application
+- 🔄 Advanced analytics dashboard
+- 🔄 Integration with existing pharma systems
+- 🔄 Machine learning for counterfeit detection
+
+### Phase 3 (Future)
+- 🔄 IoT device integration
+- 🔄 Supply chain optimization
+- 🔄 Regulatory compliance automation
+- 🔄 Multi-blockchain support
