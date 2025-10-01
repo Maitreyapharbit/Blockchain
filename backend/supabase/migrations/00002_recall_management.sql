@@ -46,7 +46,7 @@ create policy "Only manufacturers and regulators can create recalls"
     on public.recalls for insert
     with check (
         auth.jwt() ? 'role' and 
-        auth.jwt()->>'role' in ('manufacturer', 'regulator', 'admin')
+        (auth.jwt()->>'role')::text in ('manufacturer', 'regulator', 'admin')
     );
 
 -- Recall batches table
@@ -72,14 +72,8 @@ create policy "Users can view all recall batches"
 create policy "Only recall initiators can add batches"
     on public.recall_batches for insert
     with check (
-        exists (
-            select 1 from public.recalls r
-            where r.id = recall_id
-            and r.initiated_by = auth.uid()
-        )
-    );
-
--- Distribution tracking table
+        (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text = 'manufacturer')
+    );-- Distribution tracking table
 create table public.distribution_tracking (
     id uuid primary key default uuid_generate_v4(),
     batch_id uuid not null references public.batches(id) on delete restrict,
@@ -102,30 +96,21 @@ alter table public.distribution_tracking enable row level security;
 create policy "Users can view distributions they're involved in"
     on public.distribution_tracking for select
     using (
-        auth.uid() = distributor_id or
-        exists (
-            select 1 from public.batches b
-            where b.id = batch_id
-            and (b.manufacturer_id = auth.uid() or b.current_owner_id = auth.uid())
-        ) or
-        (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator'))
+        (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text in ('admin', 'regulator', 'manufacturer', 'distributor'))
     );
 
 create policy "Only distributors can create distribution records"
     on public.distribution_tracking for insert
     with check (
-        auth.uid() = distributor_id and
-        (auth.jwt() ? 'role' and auth.jwt()->>'role' = 'distributor')
+        (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text = 'distributor')
     );
 
 -- Create indexes for better performance
 create index idx_recalls_recall_id on public.recalls(recall_id);
 create index idx_recalls_initiated_by on public.recalls(initiated_by);
 create index idx_recalls_status on public.recalls(status);
-
 create index idx_recall_batches_recall_id on public.recall_batches(recall_id);
 create index idx_recall_batches_batch_id on public.recall_batches(batch_id);
-
 create index idx_distribution_tracking_batch_id on public.distribution_tracking(batch_id);
 create index idx_distribution_tracking_distributor_id on public.distribution_tracking(distributor_id);
 create index idx_distribution_tracking_status on public.distribution_tracking(status);

@@ -57,7 +57,7 @@ alter table public.users enable row level security;
 -- Create RLS policies for users
 create policy "Users can view their own profile"
     on public.users for select
-    using (auth.uid() = id);
+    using (auth.uid_to_uuid() = id);
 
 create policy "Only admin can insert users"
     on public.users for insert

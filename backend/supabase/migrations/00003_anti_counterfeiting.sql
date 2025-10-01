@@ -1,3 +1,5 @@
+-- Begin anti-counterfeiting schema
+
 -- Create enums for anti-counterfeiting
 create type report_type as enum (
     'SUSPICIOUS_PACKAGING',
@@ -39,28 +41,21 @@ create table public.security_features (
 alter table public.security_features enable row level security;
 
 -- Create RLS policies for security_features
+create policy "Only manufacturers can add security features"
+    on public.security_features for insert
+    with check (
+        (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text = 'manufacturer')
+    );
+
 create policy "Users can view security features they're authorized for"
     on public.security_features for select
     using (
         exists (
             select 1 from public.batches b
-            where b.id = batch_id
-            and (
-                b.manufacturer_id = auth.uid() or
-                b.current_owner_id = auth.uid() or
-                (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator'))
-            )
-        )
-    );
-
-create policy "Only manufacturers can create security features"
-    on public.security_features for insert
-    with check (
-        exists (
-            select 1 from public.batches b
-            where b.id = batch_id
-            and b.manufacturer_id = auth.uid()
-        )
+            where b.id = batch_id::uuid
+            and (b.manufacturer_id = auth.uid_to_uuid() or b.current_owner_id = auth.uid_to_uuid())
+        ) or
+        (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text in ('admin', 'regulator'))
     );
 
 -- Counterfeit reports table
@@ -88,21 +83,6 @@ create policy "Anyone can create counterfeit reports"
     on public.counterfeit_reports for insert
     with check (true);
 
-create policy "Authorized users can view counterfeit reports"
-    on public.counterfeit_reports for select
-    using (
-        exists (
-            select 1 from public.batches b
-            where b.id = batch_id
-            and (
-                b.manufacturer_id = auth.uid() or
-                b.current_owner_id = auth.uid() or
-                (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator'))
-            )
-        ) or
-        (auth.uid() = investigator_id)
-    );
-
 -- Verification logs table
 create table public.verification_logs (
     id uuid primary key default uuid_generate_v4(),
@@ -117,6 +97,13 @@ create table public.verification_logs (
     location jsonb
 );
 
+create policy "Authenticated users can add verifications"
+    on public.verification_logs for insert
+    with check (
+        auth.uid_to_uuid() = verified_by and
+        auth.jwt() ? 'role'
+    );
+
 -- Enable Row Level Security
 alter table public.verification_logs enable row level security;
 
@@ -130,14 +117,14 @@ create policy "Authorized users can view verification logs"
     using (
         exists (
             select 1 from public.batches b
-            where b.id = batch_id
+            where b.id = batch_id::uuid
             and (
-                b.manufacturer_id = auth.uid() or
-                b.current_owner_id = auth.uid() or
-                (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator'))
+                b.manufacturer_id = auth.uid_to_uuid() or
+                b.current_owner_id = auth.uid_to_uuid() or
+                (auth.jwt() ? 'role' and (auth.jwt()->>'role')::text in ('admin', 'regulator'))
             )
         ) or
-        (auth.uid() = verified_by)
+        (auth.uid_to_uuid() = verified_by)
     );
 
 -- Create indexes for better performance

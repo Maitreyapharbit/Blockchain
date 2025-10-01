@@ -34,20 +34,20 @@ create policy "Authorized users can view compliance logs"
     using (
         exists (
             select 1 from public.batches b
-            where b.id = batch_id
+            where b.id = batch_id::uuid
             and (
-                b.manufacturer_id = auth.uid() or
-                b.current_owner_id = auth.uid() or
+                b.manufacturer_id = auth.uid_to_uuid() or
+                b.current_owner_id = auth.uid_to_uuid() or
                 (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator', 'auditor'))
             )
         ) or
-        (auth.uid() = auditor_id)
+        (auth.uid_to_uuid() = auditor_id)
     );
 
 create policy "Only auditors can create compliance logs"
     on public.compliance_logs for insert
     with check (
-        auth.uid() = auditor_id and
+        auth.uid_to_uuid() = auditor_id and
         (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('auditor', 'regulator'))
     );
 
@@ -71,10 +71,10 @@ create policy "Users can view batch files they have access to"
     using (
         exists (
             select 1 from public.batches b
-            where b.id = batch_id
+            where b.id = batch_id::uuid
             and (
-                b.manufacturer_id = auth.uid() or
-                b.current_owner_id = auth.uid() or
+                b.manufacturer_id = auth.uid_to_uuid() or
+                b.current_owner_id = auth.uid_to_uuid() or
                 (auth.jwt() ? 'role' and auth.jwt()->>'role' in ('admin', 'regulator', 'auditor'))
             )
         )
@@ -85,8 +85,8 @@ create policy "Only batch owners can add batch files"
     with check (
         exists (
             select 1 from public.batches b
-            where b.id = batch_id
-            and (b.manufacturer_id = auth.uid() or b.current_owner_id = auth.uid())
+            where b.id = batch_id::uuid
+            and (b.manufacturer_id = auth.uid_to_uuid() or b.current_owner_id = auth.uid_to_uuid())
         )
     );
 
