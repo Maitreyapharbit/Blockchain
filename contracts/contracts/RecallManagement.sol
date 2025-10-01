@@ -1,126 +1,220 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract RecallManagement is AccessControl, Pausable {
-    bytes32 public constant RECALL_MANAGER_ROLE = keccak256("RECALL_MANAGER_ROLE");
-    
-    enum RecallSeverity { Low, Medium, High, Critical }
-    enum RecallStatus { Initiated, InProgress, Completed, Cancelled }
-    
+contract RecallManagement is Ownable, ReentrancyGuard {
+    enum SeverityLevel { LOW, MEDIUM, HIGH, CRITICAL }
+    enum RecallStatus { ACTIVE, RESOLVED, CANCELLED }
+
     struct Recall {
-        uint256 recallId;
-        address initiator;
-        uint256[] batchIds;
-        RecallSeverity severity;
+        string recallId;
+        SeverityLevel severity;
         string reason;
-        RecallStatus status;
+        address initiatedBy;
         uint256 initiatedAt;
-        uint256 completedAt;
-        string additionalInfo;
+        RecallStatus status;
+        string[] batchIds;
+        mapping(string => bool) affectedBatches;
     }
+
+    struct DistributionRecord {
+        string batchId;
+        address distributor;
+        uint256 quantity;
+        uint256 shippedAt;
+        bool isRecalled;
+    }
+
+    mapping(string => Recall) public recalls;
+    mapping(string => DistributionRecord) public distributionRecords;
+    mapping(address => bool) public authorizedStakeholders;
     
-    mapping(uint256 => Recall) public recalls;
-    uint256 private _recallCounter;
-    
+    string[] public recallIds;
+    uint256 public totalRecalls;
+
     event RecallInitiated(
-        uint256 indexed recallId,
-        address indexed initiator,
-        uint256[] batchIds,
-        RecallSeverity severity,
-        string reason
+        string indexed recallId,
+        SeverityLevel severity,
+        string reason,
+        address indexed initiatedBy,
+        string[] batchIds
     );
-    
+
+    event BatchAddedToRecall(
+        string indexed recallId,
+        string indexed batchId
+    );
+
     event RecallStatusUpdated(
-        uint256 indexed recallId,
-        RecallStatus newStatus,
-        uint256 timestamp
+        string indexed recallId,
+        RecallStatus newStatus
     );
-    
+
+    event DistributionRecorded(
+        string indexed batchId,
+        address indexed distributor,
+        uint256 quantity
+    );
+
+    event StakeholderAuthorized(address indexed stakeholder);
+    event StakeholderRevoked(address indexed stakeholder);
+
+    modifier onlyAuthorized() {
+        require(
+            authorizedStakeholders[msg.sender] || msg.sender == owner(),
+            "Not authorized"
+        );
+        _;
+    }
+
+    modifier recallExists(string memory recallId) {
+        require(recalls[recallId].initiatedAt > 0, "Recall does not exist");
+        _;
+    }
+
     constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(RECALL_MANAGER_ROLE, msg.sender);
+        authorizedStakeholders[msg.sender] = true;
     }
-    
+
+    function authorizeStakeholder(address stakeholder) external onlyOwner {
+        authorizedStakeholders[stakeholder] = true;
+        emit StakeholderAuthorized(stakeholder);
+    }
+
+    function revokeStakeholder(address stakeholder) external onlyOwner {
+        authorizedStakeholders[stakeholder] = false;
+        emit StakeholderRevoked(stakeholder);
+    }
+
     function initiateRecall(
-        uint256[] memory batchIds,
-        RecallSeverity severity,
+        string memory recallId,
+        SeverityLevel severity,
         string memory reason,
-        string memory additionalInfo
-    ) public onlyRole(RECALL_MANAGER_ROLE) whenNotPaused returns (uint256) {
-        require(batchIds.length > 0, "Must specify at least one batch");
-        require(bytes(reason).length > 0, "Must provide a reason");
-        
-        uint256 recallId = _recallCounter++;
-        
-        recalls[recallId] = Recall({
-            recallId: recallId,
-            initiator: msg.sender,
-            batchIds: batchIds,
-            severity: severity,
-            reason: reason,
-            status: RecallStatus.Initiated,
-            initiatedAt: block.timestamp,
-            completedAt: 0,
-            additionalInfo: additionalInfo
-        });
-        
-        emit RecallInitiated(recallId, msg.sender, batchIds, severity, reason);
-        return recallId;
-    }
-    
-    function updateRecallStatus(uint256 recallId, RecallStatus newStatus) 
-        public 
-        onlyRole(RECALL_MANAGER_ROLE) 
-        whenNotPaused 
-    {
-        require(recalls[recallId].recallId == recallId, "Recall does not exist");
-        require(newStatus != RecallStatus.Initiated, "Cannot revert to initiated status");
-        
-        recalls[recallId].status = newStatus;
-        if (newStatus == RecallStatus.Completed) {
-            recalls[recallId].completedAt = block.timestamp;
-        }
-        
-        emit RecallStatusUpdated(recallId, newStatus, block.timestamp);
-    }
-    
-    function getRecall(uint256 recallId) 
-        public 
-        view 
-        returns (
-            address initiator,
-            uint256[] memory batchIds,
-            RecallSeverity severity,
-            string memory reason,
-            RecallStatus status,
-            uint256 initiatedAt,
-            uint256 completedAt,
-            string memory additionalInfo
-        ) 
-    {
+        string[] memory batchIds
+    ) external onlyAuthorized nonReentrant {
+        require(recalls[recallId].initiatedAt == 0, "Recall ID already exists");
+        require(batchIds.length > 0, "At least one batch required");
+
         Recall storage recall = recalls[recallId];
-        require(recall.recallId == recallId, "Recall does not exist");
+        recall.recallId = recallId;
+        recall.severity = severity;
+        recall.reason = reason;
+        recall.initiatedBy = msg.sender;
+        recall.initiatedAt = block.timestamp;
+        recall.status = RecallStatus.ACTIVE;
+
+        for (uint256 i = 0; i < batchIds.length; i++) {
+            recall.batchIds.push(batchIds[i]);
+            recall.affectedBatches[batchIds[i]] = true;
+            emit BatchAddedToRecall(recallId, batchIds[i]);
+        }
+
+        recallIds.push(recallId);
+        totalRecalls++;
+
+        emit RecallInitiated(recallId, severity, reason, msg.sender, batchIds);
+    }
+
+    function addBatchToRecall(
+        string memory recallId,
+        string memory batchId
+    ) external onlyAuthorized recallExists(recallId) {
+        Recall storage recall = recalls[recallId];
+        require(recall.status == RecallStatus.ACTIVE, "Recall not active");
+        require(!recall.affectedBatches[batchId], "Batch already in recall");
+
+        recall.batchIds.push(batchId);
+        recall.affectedBatches[batchId] = true;
+        emit BatchAddedToRecall(recallId, batchId);
+    }
+
+    function updateRecallStatus(
+        string memory recallId,
+        RecallStatus newStatus
+    ) external onlyAuthorized recallExists(recallId) {
+        Recall storage recall = recalls[recallId];
+        recall.status = newStatus;
+        emit RecallStatusUpdated(recallId, newStatus);
+    }
+
+    function recordDistribution(
+        string memory batchId,
+        address distributor,
+        uint256 quantity
+    ) external onlyAuthorized {
+        require(quantity > 0, "Quantity must be positive");
+        
+        distributionRecords[batchId] = DistributionRecord({
+            batchId: batchId,
+            distributor: distributor,
+            quantity: quantity,
+            shippedAt: block.timestamp,
+            isRecalled: false
+        });
+
+        emit DistributionRecorded(batchId, distributor, quantity);
+    }
+
+    function markBatchAsRecalled(string memory batchId) external onlyAuthorized {
+        require(distributionRecords[batchId].shippedAt > 0, "Distribution record not found");
+        distributionRecords[batchId].isRecalled = true;
+    }
+
+    function getRecall(string memory recallId) external view returns (
+        string memory,
+        SeverityLevel,
+        string memory,
+        address,
+        uint256,
+        RecallStatus,
+        string[] memory
+    ) {
+        Recall storage recall = recalls[recallId];
+        require(recall.initiatedAt > 0, "Recall does not exist");
         
         return (
-            recall.initiator,
-            recall.batchIds,
+            recall.recallId,
             recall.severity,
             recall.reason,
-            recall.status,
+            recall.initiatedBy,
             recall.initiatedAt,
-            recall.completedAt,
-            recall.additionalInfo
+            recall.status,
+            recall.batchIds
         );
     }
-    
-    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _pause();
+
+    function isBatchInRecall(string memory batchId) external view returns (bool) {
+        for (uint256 i = 0; i < recallIds.length; i++) {
+            if (recalls[recallIds[i]].affectedBatches[batchId] && 
+                recalls[recallIds[i]].status == RecallStatus.ACTIVE) {
+                return true;
+            }
+        }
+        return false;
     }
-    
-    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _unpause();
+
+    function getDistributionRecord(string memory batchId) external view returns (
+        string memory,
+        address,
+        uint256,
+        uint256,
+        bool
+    ) {
+        DistributionRecord memory record = distributionRecords[batchId];
+        require(record.shippedAt > 0, "Distribution record not found");
+        
+        return (
+            record.batchId,
+            record.distributor,
+            record.quantity,
+            record.shippedAt,
+            record.isRecalled
+        );
+    }
+
+    function getAllRecalls() external view returns (string[] memory) {
+        return recallIds;
     }
 }
