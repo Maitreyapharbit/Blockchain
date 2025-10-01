@@ -206,8 +206,13 @@ router.get('/:batchId',
 
     // Add QR code information if available
     if (dbBatch && dbBatch.qr_code_data && dbBatch.qr_code_hash) {
+      const storedQr = dbBatch.qr_code_data;
+      const dataUrl = (typeof storedQr === 'string' && storedQr.startsWith('data:'))
+        ? storedQr
+        : `data:image/png;base64,${typeof storedQr === 'string' ? storedQr : Buffer.from(storedQr).toString('base64')}`;
+
       batch.qrCode = {
-        dataUrl: `data:image/png;base64,${Buffer.from(dbBatch.qr_code_data).toString('base64')}`,
+        dataUrl,
         batchUrl: `${process.env.BASE_URL || 'https://pharbit.com'}/verify/${batchId}`,
         hash: dbBatch.qr_code_hash,
         generatedAt: dbBatch.qr_code_generated_at
@@ -669,8 +674,13 @@ router.get('/:batchId/qr-code',
 
     // If QR code already exists, return it
     if (dbBatch.qr_code_data && dbBatch.qr_code_hash) {
+      const storedQr = dbBatch.qr_code_data;
+      const dataUrl = (typeof storedQr === 'string' && storedQr.startsWith('data:'))
+        ? storedQr
+        : `data:image/png;base64,${typeof storedQr === 'string' ? storedQr : Buffer.from(storedQr).toString('base64')}`;
+
       const qrCodeData = {
-        dataUrl: `data:image/png;base64,${Buffer.from(dbBatch.qr_code_data).toString('base64')}`,
+        dataUrl,
         batchUrl: `${process.env.BASE_URL || 'https://pharbit.com'}/verify/${batchId}`,
         hash: dbBatch.qr_code_hash
       };
