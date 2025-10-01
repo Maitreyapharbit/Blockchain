@@ -1,129 +1,338 @@
-# PharbitChain Web Interface
+# Pharmaceutical Blockchain Frontend
 
-A comprehensive web interface for pharmaceutical blockchain supply chain management.
+A comprehensive React frontend application for pharmaceutical blockchain systems, featuring recall management and anti-counterfeiting capabilities.
 
-## 🚀 Features
+## Features
 
-### 💊 Batch Creator
-- Create new pharmaceutical batches with detailed information
-- Real-time form validation
-- MetaMask wallet integration
-- Automatic block mining on batch creation
+### Recall Management
+- **Recall Dashboard**: Overview of all recalls with statistics and filtering
+- **Recall Initiation**: Multi-step form for creating new recalls
+- **Affected Batch List**: Management of batches affected by recalls
+- **Distribution Tracker**: Real-time tracking of distribution nodes with map view
+- **Notification Center**: Centralized notification management
+- **Recall Status Cards**: Detailed recall information with progress tracking
 
-### 🔍 Batch Verifier
-- Search and verify batches by ID
-- Real-time blockchain verification
-- Complete batch information display
-- Verification status indicators
+### Anti-Counterfeit System
+- **Counterfeit Dashboard**: Overview of counterfeit reports and suspicious activities
+- **Security Feature Verifier**: Multi-step verification process for product authenticity
+- **Reporting Form**: Comprehensive form for reporting counterfeit products
+- **Batch Authenticity**: Detailed batch verification with blockchain integration
+- **Suspicious Activity List**: Management of detected suspicious activities
+- **Verification History**: Complete history of all verification attempts
 
-### ⛏️ Block Miner
-- Real-time blockchain statistics
-- Single block mining
-- Continuous mining mode
-- Recent block history
-- Network monitoring
+## Technology Stack
 
-## 🛠️ Technology Stack
+- **React 18** with TypeScript
+- **Material-UI (MUI)** for UI components
+- **Redux Toolkit** for state management
+- **React Router** for navigation
+- **Framer Motion** for animations
+- **Leaflet** for maps
+- **React Query** for data fetching
+- **Jest** and **React Testing Library** for testing
 
-- **Frontend**: React 18 with Hooks
-- **Styling**: Styled Components
-- **Blockchain**: Ethers.js
-- **Wallet**: MetaMask Integration
-- **Notifications**: React Hot Toast
-- **State Management**: React Context API
+## Project Structure
 
-## 🚀 Getting Started
-
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Start Development Server**:
-   ```bash
-   npm start
-   ```
-
-3. **Open Browser**:
-   Navigate to `http://localhost:3001`
-
-## 🔧 Configuration
-
-### MetaMask Setup
-To connect to the local blockchain:
-- **Network Name**: Hardhat Local
-- **RPC URL**: `http://localhost:8545`
-- **Chain ID**: `31337`
-- **Currency Symbol**: `ETH`
-
-### Environment Variables
-Create a `.env` file in the root directory:
-```env
-REACT_APP_API_URL=http://localhost:3000/api
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── RecallManagement/
+│   │   │   ├── RecallDashboard.tsx
+│   │   │   ├── RecallInitiation.tsx
+│   │   │   ├── AffectedBatchList.tsx
+│   │   │   ├── DistributionTracker.tsx
+│   │   │   ├── NotificationCenter.tsx
+│   │   │   └── RecallStatusCard.tsx
+│   │   └── AntiCounterfeit/
+│   │       ├── CounterfeitDashboard.tsx
+│   │       ├── SecurityFeatureVerifier.tsx
+│   │       ├── ReportingForm.tsx
+│   │       ├── BatchAuthenticity.tsx
+│   │       ├── SuspiciousActivityList.tsx
+│   │       └── VerificationHistory.tsx
+│   ├── store/
+│   │   ├── recallSlice.ts
+│   │   ├── counterfeitSlice.ts
+│   │   ├── notificationSlice.ts
+│   │   ├── index.ts
+│   │   └── hooks.ts
+│   ├── utils/
+│   │   ├── recallService.ts
+│   │   ├── counterfeitService.ts
+│   │   ├── blockchainValidation.ts
+│   │   └── notificationService.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── hooks/
+│   └── __tests__/
+│       ├── components/
+│       └── utils/
+├── package.json
+└── README.md
 ```
 
-## 📱 Usage
+## Installation
 
-### Creating a Batch
-1. Connect your MetaMask wallet
-2. Fill out the batch creation form
-3. Click "Create Batch & Mine Block"
-4. Wait for blockchain confirmation
+1. Install dependencies:
+```bash
+npm install
+```
 
-### Verifying a Batch
-1. Enter a batch ID in the verification form
-2. Click "Verify Batch"
-3. View verification results and batch details
+2. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-### Mining Blocks
-1. Monitor blockchain statistics
-2. Click "Mine Single Block" for individual mining
-3. Use "Start Mining" for continuous mining
-4. View recent blocks in the history
+3. Configure the following environment variables:
+```env
+REACT_APP_API_BASE_URL=http://localhost:3001/api
+REACT_APP_BLOCKCHAIN_API_URL=http://localhost:8545
+REACT_APP_NOTIFICATION_URL=http://localhost:3001
+```
 
-## 🎨 UI Components
+## Development
 
-- **Glassmorphism Design**: Modern translucent cards
-- **Responsive Layout**: Works on desktop and mobile
-- **Real-time Updates**: Live blockchain data
-- **Toast Notifications**: User feedback
-- **Loading States**: Visual progress indicators
+Start the development server:
+```bash
+npm start
+```
 
-## 🔗 Integration
+The application will be available at `http://localhost:3000`.
 
-- **Backend API**: `http://localhost:3000`
-- **Blockchain Node**: `http://localhost:8545`
-- **Supabase**: Database integration
-- **AWS S3**: File storage
-- **EC2**: Cloud infrastructure
+## Testing
 
-## 🐛 Troubleshooting
+Run tests:
+```bash
+npm test
+```
 
-### Common Issues
-1. **MetaMask Not Connected**: Click "Connect Wallet" button
-2. **Network Error**: Ensure Hardhat node is running
-3. **API Error**: Check backend server status
-4. **Styling Issues**: Clear browser cache
+Run tests with coverage:
+```bash
+npm test -- --coverage
+```
 
-### Development
-- **Hot Reload**: Changes reflect immediately
-- **Error Overlay**: Detailed error information
-- **React DevTools**: Enhanced debugging experience
+## Building for Production
 
-## 📄 License
+Build the application:
+```bash
+npm run build
+```
 
-MIT License - see LICENSE file for details
+## Key Features
 
-## 🤝 Contributing
+### Real-time Updates
+- WebSocket integration for real-time notifications
+- Live status updates for recalls and verifications
+- Real-time distribution tracking
+
+### Blockchain Integration
+- QR code scanning and verification
+- Hologram verification
+- Serial number validation
+- Blockchain transaction verification
+- Tamper evidence checking
+
+### Advanced UI/UX
+- Responsive design for all screen sizes
+- Dark/light theme support
+- Smooth animations and transitions
+- Accessibility features (WCAG 2.1 compliant)
+- Interactive maps for distribution tracking
+
+### Data Management
+- Redux for centralized state management
+- Optimistic updates for better UX
+- Caching with React Query
+- Offline support with service workers
+
+### Security
+- JWT token authentication
+- Role-based access control
+- Input validation and sanitization
+- Secure file upload handling
+
+## Component Architecture
+
+### Recall Management Components
+
+#### RecallDashboard
+- Displays recall statistics and metrics
+- Filterable and searchable recall list
+- Real-time updates
+- Quick action buttons
+
+#### RecallInitiation
+- Multi-step form wizard
+- Batch selection and management
+- Action planning and assignment
+- Validation and error handling
+
+#### AffectedBatchList
+- Batch management interface
+- Status updates and actions
+- Search and filtering
+- Bulk operations
+
+#### DistributionTracker
+- Interactive map view
+- Node status management
+- Real-time tracking
+- Compliance monitoring
+
+#### NotificationCenter
+- Centralized notification hub
+- Real-time updates
+- Action management
+- Settings and preferences
+
+#### RecallStatusCard
+- Detailed recall information
+- Progress tracking
+- Action buttons
+- Status indicators
+
+### Anti-Counterfeit Components
+
+#### CounterfeitDashboard
+- Report overview and statistics
+- Suspicious activity monitoring
+- Verification metrics
+- Quick actions
+
+#### SecurityFeatureVerifier
+- Multi-step verification process
+- QR code scanning
+- Hologram verification
+- Blockchain validation
+
+#### ReportingForm
+- Comprehensive reporting interface
+- Evidence upload
+- Location tracking
+- Contact information
+
+#### BatchAuthenticity
+- Batch verification interface
+- Security feature display
+- Verification history
+- Real-time status
+
+#### SuspiciousActivityList
+- Activity monitoring
+- Status management
+- Filtering and search
+- Action handling
+
+#### VerificationHistory
+- Complete verification log
+- Statistics and analytics
+- Export capabilities
+- Detailed reporting
+
+## State Management
+
+The application uses Redux Toolkit for state management with the following slices:
+
+### Recall Slice
+- Manages recall data and operations
+- Handles batch management
+- Distribution node tracking
+- Action management
+
+### Counterfeit Slice
+- Manages counterfeit reports
+- Suspicious activity tracking
+- Verification results
+- Evidence management
+
+### Notification Slice
+- Real-time notifications
+- User preferences
+- Connection status
+- Local storage management
+
+## API Integration
+
+### Recall Service
+- CRUD operations for recalls
+- Batch management
+- Distribution tracking
+- Action management
+
+### Counterfeit Service
+- Report management
+- Verification processes
+- Evidence handling
+- Activity monitoring
+
+### Blockchain Validation
+- Transaction verification
+- Ownership chain validation
+- Security feature verification
+- Real-time status updates
+
+### Notification Service
+- Real-time notifications
+- WebSocket integration
+- Local storage management
+- User preferences
+
+## Testing
+
+The application includes comprehensive tests:
+
+### Unit Tests
+- Component testing with React Testing Library
+- Service testing with Jest
+- Utility function testing
+- Redux slice testing
+
+### Integration Tests
+- API integration testing
+- User flow testing
+- Error handling testing
+
+### E2E Tests
+- Complete user journey testing
+- Cross-browser compatibility
+- Performance testing
+
+## Performance Optimization
+
+- Code splitting with React.lazy
+- Memoization with React.memo
+- Virtual scrolling for large lists
+- Image optimization
+- Bundle size optimization
+
+## Accessibility
+
+- WCAG 2.1 AA compliance
+- Keyboard navigation
+- Screen reader support
+- High contrast mode
+- Focus management
+
+## Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Add tests
+5. Submit a pull request
 
-## 📞 Support
+## License
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the troubleshooting guide
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions, please contact the development team or create an issue in the repository.
