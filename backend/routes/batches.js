@@ -286,7 +286,7 @@ router.post('/',
     // Generate QR code
     const qrCode = await qrCodeService.generateBatchQRCode(batchForQR);
 
-    // Save batch to database with QR code
+    // Save batch to database
     const dbBatchData = {
       batch_id: parseInt(transaction.batchId),
       drug_name: batchData.drugName,
@@ -298,11 +298,7 @@ router.post('/',
       status: 0, // CREATED
       current_owner: req.user.address,
       serial_numbers: batchData.serialNumbers,
-      metadata: batchData.metadata || {},
-      qr_code_data: qrCodeData.qrData,
-      qr_code_image_path: qrCodeData.imagePath,
-      qr_code_hash: qrCodeData.qrHash,
-      qr_code_generated_at: qrCodeData.generatedAt
+      metadata: batchData.metadata || {}
     };
 
     const dbBatch = await databaseService.createBatch(dbBatchData);
@@ -313,18 +309,14 @@ router.post('/',
     logger.audit('create_batch', 'batch', req.user.id, {
       batchId: transaction.batchId,
       drugName: batchData.drugName,
-      txHash: transaction.txHash,
-      qrHash: qrCodeData.qrHash
+      txHash: transaction.txHash
     });
 
     sendSuccessResponse(res, {
       ...completeBatch,
       ...dbBatch,
       transaction,
-      qrCode: qrCode, // Using the newly generated QR code
-        batchUrl: qrCodeData.batchUrl,
-        hash: qrCodeData.qrHash
-      }
+      qrCode: qrCode
     }, 'Batch created successfully', 201);
   })
 );
