@@ -1,97 +1,241 @@
-// Common types for the pharmaceutical blockchain system
+// Core types for pharmaceutical blockchain system
 
-export interface Recall {
-  recallId: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  reason: string;
-  status: 'ACTIVE' | 'RESOLVED' | 'CANCELLED';
-  initiatedBy: string;
-  initiatedAt: string;
-  resolvedAt?: string;
-  resolutionNotes?: string;
-  batchCount: number;
-  batches?: RecallBatch[];
-}
-
-export interface RecallBatch {
-  batchId: string;
+export interface Batch {
+  id: string;
   productName: string;
-  lotNumber: string;
+  batchNumber: string;
+  manufacturingDate: string;
   expiryDate: string;
-  quantityAffected: number;
-}
-
-export interface DistributionRecord {
-  distributorName: string;
-  distributorAddress: string;
-  quantityShipped: number;
-  shippedDate: string;
-  receivedDate?: string;
-  status: 'SHIPPED' | 'IN_TRANSIT' | 'DELIVERED' | 'RETURNED';
-  blockchainTxHash?: string;
+  quantity: number;
+  location: string;
+  status: 'active' | 'recalled' | 'quarantined' | 'destroyed';
+  blockchainHash: string;
+  securityFeatures: SecurityFeature[];
 }
 
 export interface SecurityFeature {
-  batchId: string;
-  qrCodeHash: string;
-  hologramId: string;
-  serialNumber: string;
-  securityPattern: string;
-  createdAt: string;
-  isActive: boolean;
+  id: string;
+  type: 'qr_code' | 'hologram' | 'serial_number' | 'tamper_evident';
+  value: string;
+  verified: boolean;
+  verificationDate?: string;
 }
 
-export interface VerificationRecord {
+export interface Recall {
   id: string;
-  verificationType: 'QR_SCAN' | 'HOLOGRAM_CHECK' | 'SERIAL_VERIFICATION';
-  result: boolean;
-  details: any;
-  verifiedBy?: string;
-  verifiedAt: string;
-  ipAddress?: string;
-  userAgent?: string;
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'initiated' | 'in_progress' | 'completed' | 'cancelled';
+  affectedBatches: string[];
+  initiatedBy: string;
+  initiatedDate: string;
+  completionDate?: string;
+  reason: string;
+  actions: RecallAction[];
+}
+
+export interface RecallAction {
+  id: string;
+  type: 'notification' | 'quarantine' | 'return' | 'destroy';
+  description: string;
+  status: 'pending' | 'completed' | 'failed';
+  assignedTo: string;
+  dueDate: string;
+  completedDate?: string;
+}
+
+export interface DistributionNode {
+  id: string;
+  name: string;
+  type: 'manufacturer' | 'distributor' | 'pharmacy' | 'hospital' | 'clinic';
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  contactInfo: {
+    phone: string;
+    email: string;
+    contactPerson: string;
+  };
+  affectedBatches: string[];
+  status: 'notified' | 'responding' | 'completed' | 'non_compliant';
+}
+
+export interface Notification {
+  id: string;
+  type: 'recall' | 'counterfeit' | 'verification' | 'system';
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  timestamp: string;
+  read: boolean;
+  actionRequired: boolean;
+  relatedId?: string;
 }
 
 export interface CounterfeitReport {
   id: string;
   batchId: string;
-  reporterName: string;
-  reporterEmail: string;
-  reportType: 'SUSPICIOUS_PACKAGING' | 'INVALID_QR' | 'MISSING_HOLOGRAM' | 'OTHER';
+  productName: string;
+  reportedBy: string;
+  reportDate: string;
   description: string;
-  evidenceUrls: string[];
-  location?: string;
-  status: 'PENDING' | 'INVESTIGATING' | 'CONFIRMED' | 'FALSE_ALARM';
-  investigatorNotes?: string;
-  reportedAt: string;
-  resolvedAt?: string;
+  evidence: EvidenceFile[];
+  status: 'pending' | 'investigating' | 'verified' | 'false_positive' | 'resolved';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  verificationResults?: VerificationResult[];
 }
 
-export interface FlaggedBatch {
+export interface EvidenceFile {
+  id: string;
+  filename: string;
+  type: 'image' | 'video' | 'document';
+  url: string;
+  uploadedAt: string;
+  size: number;
+}
+
+export interface VerificationResult {
+  id: string;
   batchId: string;
-  securityFeature?: SecurityFeature;
-  recentVerifications: VerificationRecord[];
-  reports: CounterfeitReport[];
+  verificationType: 'qr_scan' | 'hologram_check' | 'serial_validation' | 'blockchain_verify';
+  result: 'authentic' | 'counterfeit' | 'suspicious' | 'error';
+  confidence: number;
+  timestamp: string;
+  details: string;
+  verifiedBy: string;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-export interface NotificationSettings {
-  email: boolean;
-  sms: boolean;
-  push: boolean;
-  webhook: boolean;
+export interface SuspiciousActivity {
+  id: string;
+  batchId: string;
+  activityType: 'unusual_pattern' | 'failed_verification' | 'location_mismatch' | 'timing_anomaly';
+  description: string;
+  detectedAt: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'new' | 'investigating' | 'resolved' | 'false_positive';
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  metadata: Record<string, any>;
 }
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'MANUFACTURER' | 'DISTRIBUTOR' | 'PHARMACIST' | 'INVESTIGATOR';
+  role: 'admin' | 'manufacturer' | 'distributor' | 'pharmacy' | 'regulator';
+  organization: string;
   permissions: string[];
-  notificationSettings: NotificationSettings;
+  lastLogin: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// Component Props Types
+export interface RecallDashboardProps {
+  recalls: Recall[];
+  loading: boolean;
+  error?: string;
+  onRefresh: () => void;
+  onRecallClick: (recallId: string) => void;
+}
+
+export interface RecallInitiationProps {
+  onSubmit: (recallData: Partial<Recall>) => void;
+  loading: boolean;
+  error?: string;
+}
+
+export interface AffectedBatchListProps {
+  batches: Batch[];
+  recallId: string;
+  onBatchSelect: (batchId: string) => void;
+  onBatchAction: (batchId: string, action: string) => void;
+  loading: boolean;
+}
+
+export interface DistributionTrackerProps {
+  nodes: DistributionNode[];
+  affectedBatches: string[];
+  onNodeClick: (nodeId: string) => void;
+  onStatusUpdate: (nodeId: string, status: DistributionNode['status']) => void;
+  loading: boolean;
+}
+
+export interface NotificationCenterProps {
+  notifications: Notification[];
+  onMarkAsRead: (notificationId: string) => void;
+  onActionClick: (notificationId: string, action: string) => void;
+  loading: boolean;
+}
+
+export interface RecallStatusCardProps {
+  recall: Recall;
+  onActionClick: (action: string) => void;
+  compact?: boolean;
+}
+
+export interface CounterfeitDashboardProps {
+  reports: CounterfeitReport[];
+  activities: SuspiciousActivity[];
+  loading: boolean;
+  error?: string;
+  onRefresh: () => void;
+  onReportClick: (reportId: string) => void;
+}
+
+export interface SecurityFeatureVerifierProps {
+  batchId: string;
+  onVerificationComplete: (result: VerificationResult) => void;
+  loading: boolean;
+}
+
+export interface ReportingFormProps {
+  onSubmit: (reportData: Partial<CounterfeitReport>) => void;
+  loading: boolean;
+  error?: string;
+}
+
+export interface BatchAuthenticityProps {
+  batch: Batch;
+  verificationHistory: VerificationResult[];
+  onVerify: () => void;
+  loading: boolean;
+}
+
+export interface SuspiciousActivityListProps {
+  activities: SuspiciousActivity[];
+  onActivityClick: (activityId: string) => void;
+  onStatusUpdate: (activityId: string, status: SuspiciousActivity['status']) => void;
+  loading: boolean;
+}
+
+export interface VerificationHistoryProps {
+  verifications: VerificationResult[];
+  onVerificationClick: (verificationId: string) => void;
+  loading: boolean;
 }
