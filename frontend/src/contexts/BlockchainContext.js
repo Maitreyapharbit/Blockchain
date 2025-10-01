@@ -24,6 +24,59 @@ export const BlockchainProvider = ({ children }) => {
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
+  // Helper function to generate QR code
+  const generateQRCode = async (data) => {
+    try {
+      // For now, we'll create a simple QR code using a canvas
+      // In a real implementation, you'd use a library like qrcode
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 200;
+      canvas.height = 200;
+      
+      // Create a simple QR-like pattern (placeholder)
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 200, 200);
+      
+      // Add some pattern to make it look like a QR code
+      for (let i = 0; i < 20; i++) {
+        for (let j = 0; j < 20; j++) {
+          if ((i + j) % 2 === 0) {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(i * 10, j * 10, 10, 10);
+          }
+        }
+      }
+      
+      // Add batch ID text
+      ctx.fillStyle = '#000';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('BATCH QR', 100, 100);
+      
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('QR code generation error:', error);
+      // Return a placeholder image
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    }
+  };
+
+  // Helper function to generate hash
+  const generateHash = async (data) => {
+    try {
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(data);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (error) {
+      console.error('Hash generation error:', error);
+      // Return a simple hash based on data length and content
+      return data.length.toString(16) + data.charCodeAt(0).toString(16);
+    }
+  };
+
   // Initialize blockchain service
   const initializeBlockchain = useCallback(async () => {
     try {
@@ -219,7 +272,25 @@ export const BlockchainProvider = ({ children }) => {
       // Generate a unique batch ID
       const batchId = Math.floor(Math.random() * 1000000) + 1000;
       
-      // Create the batch object with all provided data
+      // Generate QR code data
+      const qrCodeData = {
+        batchId: batchId,
+        drugName: batchData.drugName,
+        manufacturer: batchData.manufacturer,
+        quantity: batchData.quantity,
+        lotNumber: batchData.lotNumber,
+        timestamp: Date.now(),
+        verificationUrl: `${window.location.origin}/verify/${batchId}`
+      };
+
+      // Generate QR code as base64 data URL
+      const qrCodeString = JSON.stringify(qrCodeData);
+      const qrCodeBase64 = await generateQRCode(qrCodeString);
+      
+      // Create hash for verification
+      const qrHash = await generateHash(qrCodeString);
+      
+      // Create the batch object with all provided data including QR code
       const newBatch = {
         batchId: batchId,
         drugName: batchData.drugName,
@@ -233,7 +304,13 @@ export const BlockchainProvider = ({ children }) => {
         txHash: '0x' + Math.random().toString(16).substr(2, 64),
         blockNumber: Math.floor(Math.random() * 100) + 1,
         createdAt: Date.now(),
-        verified: true
+        verified: true,
+        qrCode: {
+          dataUrl: qrCodeBase64,
+          batchUrl: qrCodeData.verificationUrl,
+          hash: qrHash,
+          generatedAt: new Date().toISOString()
+        }
       };
 
       // Store the batch in localStorage for persistence
