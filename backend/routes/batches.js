@@ -286,7 +286,16 @@ router.post('/',
     // Generate QR code
     const qrCode = await qrCodeService.generateBatchQRCode(batchForQR);
 
-    // Save batch to database
+    // Generate QR code data for database storage
+    const qrCodeData = {
+      qrData: qrCode,
+      imagePath: `/uploads/qr-codes/batch_${transaction.batchId}_qr.png`,
+      qrHash: require('crypto').createHash('sha256').update(qrCode).digest('hex'),
+      generatedAt: new Date().toISOString(),
+      batchUrl: `${process.env.BASE_URL || 'https://pharbit.com'}/verify/${transaction.batchId}`
+    };
+
+    // Save batch to database with QR code
     const dbBatchData = {
       batch_id: parseInt(transaction.batchId),
       drug_name: batchData.drugName,
@@ -298,7 +307,11 @@ router.post('/',
       status: 0, // CREATED
       current_owner: req.user.address,
       serial_numbers: batchData.serialNumbers,
-      metadata: batchData.metadata || {}
+      metadata: batchData.metadata || {},
+      qr_code_data: qrCodeData.qrData,
+      qr_code_image_path: qrCodeData.imagePath,
+      qr_code_hash: qrCodeData.qrHash,
+      qr_code_generated_at: qrCodeData.generatedAt
     };
 
     const dbBatch = await databaseService.createBatch(dbBatchData);
@@ -309,14 +322,20 @@ router.post('/',
     logger.audit('create_batch', 'batch', req.user.id, {
       batchId: transaction.batchId,
       drugName: batchData.drugName,
-      txHash: transaction.txHash
+      txHash: transaction.txHash,
+      qrHash: qrCodeData.qrHash
     });
 
     sendSuccessResponse(res, {
       ...completeBatch,
       ...dbBatch,
       transaction,
-      qrCode: qrCode
+      qrCode: {
+        dataUrl: qrCode,
+        batchUrl: qrCodeData.batchUrl,
+        hash: qrCodeData.qrHash,
+        generatedAt: qrCodeData.generatedAt
+      }
     }, 'Batch created successfully', 201);
   })
 );
