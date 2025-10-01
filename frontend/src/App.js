@@ -7,6 +7,7 @@ import { BlockchainProvider } from './contexts/BlockchainContext';
 import { SupabaseProvider } from './contexts/SupabaseContext';
 import BatchCreator from './components/BatchCreator';
 import BatchVerifier from './components/BatchVerifier';
+import QRCodeScanner from './components/QRCodeScanner';
 import BlockMiner from './components/BlockMiner';
 import ShipmentTrackingApp from './components/ShipmentTrackingApp';
 import AlertDashboard from './components/AlertDashboard';
@@ -129,6 +130,7 @@ function App() {
                       
                       <BatchCreator />
                       <BatchVerifier />
+                      <QRCodeScanner />
                       <BlockMiner />
                       
                       <ServiceCard>

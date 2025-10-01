@@ -5,6 +5,7 @@ const { validators, batchSchemas, validateJoi } = require('../middleware/validat
 const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
 const blockchainService = require('../services/blockchainService');
 const databaseService = require('../services/databaseService');
+const qrCodeService = require('../services/qrCodeService');
 const logger = require('../utils/logger');
 
 /**
@@ -161,6 +162,16 @@ router.get('/:batchId',
       status: blockchainBatch.status
     };
 
+    // Add QR code information if available
+    if (dbBatch && dbBatch.qr_code_data && dbBatch.qr_code_hash) {
+      batch.qrCode = {
+        dataUrl: `data:image/png;base64,${Buffer.from(dbBatch.qr_code_data).toString('base64')}`,
+        batchUrl: `${process.env.BASE_URL || 'https://pharbit.com'}/verify/${batchId}`,
+        hash: dbBatch.qr_code_hash,
+        generatedAt: dbBatch.qr_code_generated_at
+      };
+    }
+
     sendSuccessResponse(res, batch, 'Batch retrieved successfully');
   })
 );
@@ -212,7 +223,14 @@ router.post('/',
     // Create batch on blockchain
     const transaction = await blockchainService.createBatch(batchData);
 
-    // Save batch to database
+    // Generate QR code for the batch
+    const qrCodeData = await qrCodeService.generateBatchQRCode({
+      batchId: transaction.batchId,
+      drugName: batchData.drugName,
+      manufacturer: batchData.manufacturer || req.user.address
+    }, process.env.BASE_URL || 'https://pharbit.com');
+
+    // Save batch to database with QR code data
     const dbBatchData = {
       batch_id: parseInt(transaction.batchId),
       drug_name: batchData.drugName,
@@ -224,7 +242,11 @@ router.post('/',
       status: 0, // CREATED
       current_owner: req.user.address,
       serial_numbers: batchData.serialNumbers,
-      metadata: batchData.metadata || {}
+      metadata: batchData.metadata || {},
+      qr_code_data: qrCodeData.qrData,
+      qr_code_image_path: qrCodeData.imagePath,
+      qr_code_hash: qrCodeData.qrHash,
+      qr_code_generated_at: qrCodeData.generatedAt
     };
 
     const dbBatch = await databaseService.createBatch(dbBatchData);
@@ -235,13 +257,19 @@ router.post('/',
     logger.audit('create_batch', 'batch', req.user.id, {
       batchId: transaction.batchId,
       drugName: batchData.drugName,
-      txHash: transaction.txHash
+      txHash: transaction.txHash,
+      qrHash: qrCodeData.qrHash
     });
 
     sendSuccessResponse(res, {
       ...completeBatch,
       ...dbBatch,
-      transaction
+      transaction,
+      qrCode: {
+        dataUrl: qrCodeData.qrDataUrl,
+        batchUrl: qrCodeData.batchUrl,
+        hash: qrCodeData.qrHash
+      }
     }, 'Batch created successfully', 201);
   })
 );
@@ -518,6 +546,99 @@ router.get('/:batchId/transfers',
     if (error) throw error;
 
     sendSuccessResponse(res, data || [], 'Transfer history retrieved successfully');
+  })
+);
+
+/**
+ * @swagger
+ * /api/batches/{batchId}/qr-code:
+ *   get:
+ *     summary: Get QR code for a batch
+ *     tags: [Batches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: batchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Batch ID
+ *     responses:
+ *       200:
+ *         description: QR code retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     qrCode:
+ *                       type: object
+ *                       properties:
+ *                         dataUrl:
+ *                           type: string
+ *                         batchUrl:
+ *                           type: string
+ *                         hash:
+ *                           type: string
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:batchId/qr-code',
+  authenticate,
+  validators.validateBatchId,
+  asyncHandler(async (req, res) => {
+    const { batchId } = req.params;
+
+    // Get batch from database to check if QR code exists
+    const dbBatch = await databaseService.getBatch(batchId);
+    
+    if (!dbBatch) {
+      return sendErrorResponse(res, 'Batch not found', 404, 'BATCH_NOT_FOUND');
+    }
+
+    // If QR code already exists, return it
+    if (dbBatch.qr_code_data && dbBatch.qr_code_hash) {
+      const qrCodeData = {
+        dataUrl: `data:image/png;base64,${Buffer.from(dbBatch.qr_code_data).toString('base64')}`,
+        batchUrl: `${process.env.BASE_URL || 'https://pharbit.com'}/verify/${batchId}`,
+        hash: dbBatch.qr_code_hash
+      };
+
+      return sendSuccessResponse(res, { qrCode: qrCodeData }, 'QR code retrieved successfully');
+    }
+
+    // Generate new QR code if it doesn't exist
+    const qrCodeData = await qrCodeService.generateBatchQRCode({
+      batchId: batchId,
+      drugName: dbBatch.drug_name,
+      manufacturer: dbBatch.manufacturer
+    }, process.env.BASE_URL || 'https://pharbit.com');
+
+    // Update database with QR code data
+    await databaseService.updateBatch(batchId, {
+      qr_code_data: qrCodeData.qrData,
+      qr_code_image_path: qrCodeData.imagePath,
+      qr_code_hash: qrCodeData.qrHash,
+      qr_code_generated_at: qrCodeData.generatedAt
+    });
+
+    sendSuccessResponse(res, {
+      qrCode: {
+        dataUrl: qrCodeData.qrDataUrl,
+        batchUrl: qrCodeData.batchUrl,
+        hash: qrCodeData.qrHash
+      }
+    }, 'QR code generated successfully');
   })
 );
 
