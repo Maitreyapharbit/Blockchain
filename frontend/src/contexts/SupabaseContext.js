@@ -54,22 +54,41 @@ export const SupabaseProvider = ({ children }) => {
         setLoading(false);
 
         if (session?.user) {
-        // User signed in, fetch their data
-        await fetchUserData();
-        setupRealtimeSubscriptions();
-      } else {
-        // User signed out, clear data
-        setShipments([]);
-        setAlerts([]);
-        realtimeService.unsubscribeAll();
-      }
-    });
+          // User signed in, fetch their data
+          await fetchUserData();
+          setupRealtimeSubscriptions();
+        } else {
+          // User signed out, clear data
+          setShipments([]);
+          setAlerts([]);
+          realtimeService.unsubscribeAll();
+        }
+      });
+      subscription = sub;
+    } catch (error) {
+      console.warn('Supabase auth state change error:', error);
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   const fetchUserData = async () => {
     if (!user) return;
+
+    // Check if Supabase is properly configured
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl === 'https://placeholder.supabase.co' || 
+        supabaseAnonKey === 'placeholder-key') {
+      console.warn('Supabase not configured, skipping user data fetch');
+      return;
+    }
 
     try {
       // Fetch user's shipments
@@ -96,13 +115,28 @@ export const SupabaseProvider = ({ children }) => {
   const setupRealtimeSubscriptions = () => {
     if (!user) return;
 
-    // Subscribe to user's alerts
-    realtimeService.subscribeToUserAlerts(user.id, (payload) => {
-      console.log('New alert received:', payload);
-      const newAlert = payload.new;
-      setAlerts(prev => [newAlert, ...prev]);
-      alertService.processAlert(newAlert);
-    });
+    // Check if Supabase is properly configured
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl === 'https://placeholder.supabase.co' || 
+        supabaseAnonKey === 'placeholder-key') {
+      console.warn('Supabase not configured, skipping realtime subscriptions');
+      return;
+    }
+
+    try {
+      // Subscribe to user's alerts
+      realtimeService.subscribeToUserAlerts(user.id, (payload) => {
+        console.log('New alert received:', payload);
+        const newAlert = payload.new;
+        setAlerts(prev => [newAlert, ...prev]);
+        alertService.processAlert(newAlert);
+      });
+    } catch (error) {
+      console.error('Error setting up realtime subscriptions:', error);
+    }
   };
 
   const signUp = async (email, password, userData = {}) => {
