@@ -27,34 +27,18 @@ export const BlockchainProvider = ({ children }) => {
   // Helper function to generate QR code
   const generateQRCode = async (data) => {
     try {
-      // For now, we'll create a simple QR code using a canvas
-      // In a real implementation, you'd use a library like qrcode
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 200;
-      canvas.height = 200;
+      // Import QRCode dynamically to avoid SSR issues
+      const QRCode = (await import('qrcode')).default;
       
-      // Create a simple QR-like pattern (placeholder)
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, 200, 200);
-      
-      // Add some pattern to make it look like a QR code
-      for (let i = 0; i < 20; i++) {
-        for (let j = 0; j < 20; j++) {
-          if ((i + j) % 2 === 0) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(i * 10, j * 10, 10, 10);
-          }
-        }
-      }
-      
-      // Add batch ID text
-      ctx.fillStyle = '#000';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('BATCH QR', 100, 100);
-      
-      return canvas.toDataURL('image/png');
+      // Generate QR code with proper settings
+      const qrCodeDataUrl = await QRCode.toDataURL(data, {
+        errorCorrectionLevel: 'H', // Highest error correction level
+        type: 'image/png',
+        quality: 0.92,
+        margin: 1,
+        width: 300 // Size of QR code
+      });
+      return qrCodeDataUrl;
     } catch (error) {
       console.error('QR code generation error:', error);
       // Return a placeholder image
