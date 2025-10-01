@@ -51,6 +51,8 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "multer-s3": "^3.0.1",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^13.0.0",

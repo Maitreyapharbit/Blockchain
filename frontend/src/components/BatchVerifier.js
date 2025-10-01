@@ -196,6 +196,61 @@ const BatchItemSubtext = styled.div`
   margin-top: 0.25rem;
 `;
 
+const QRCodeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const QRCodeImage = styled.img`
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+`;
+
+const QRCodeInfo = styled.div`
+  text-align: center;
+  color: #fff;
+`;
+
+const QRCodeTitle = styled.h4`
+  margin: 0 0 0.5rem 0;
+  color: #4CAF50;
+  font-size: 1rem;
+`;
+
+const QRCodeText = styled.p`
+  margin: 0.25rem 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  word-break: break-all;
+`;
+
+const DownloadButton = styled.button`
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  }
+`;
+
 const BatchVerifier = () => {
   const { getBatch, loading, batches } = useBlockchain();
   const [searchId, setSearchId] = useState('');
@@ -363,6 +418,38 @@ const BatchVerifier = () => {
               <DetailValue>{batch.packaging || 'N/A'}</DetailValue>
             </DetailItem>
           </BatchDetails>
+          
+          {batch.qrCode && (
+            <QRCodeContainer>
+              <QRCodeTitle>🔍 Batch QR Code</QRCodeTitle>
+              <QRCodeImage 
+                src={batch.qrCode.dataUrl} 
+                alt="Batch QR Code"
+                title="Scan this QR code to verify the batch"
+              />
+              <QRCodeInfo>
+                <QRCodeText>
+                  <strong>Batch URL:</strong> {batch.qrCode.batchUrl}
+                </QRCodeText>
+                <QRCodeText>
+                  <strong>QR Hash:</strong> {batch.qrCode.hash.substring(0, 16)}...
+                </QRCodeText>
+                <QRCodeText>
+                  <strong>Generated:</strong> {new Date(batch.qrCode.generatedAt).toLocaleString()}
+                </QRCodeText>
+                <DownloadButton 
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = batch.qrCode.dataUrl;
+                    link.download = `batch_${batch.batchId || searchId}_qr.png`;
+                    link.click();
+                  }}
+                >
+                  📥 Download QR Code
+                </DownloadButton>
+              </QRCodeInfo>
+            </QRCodeContainer>
+          )}
         </BatchCard>
       )}
     </Container>
