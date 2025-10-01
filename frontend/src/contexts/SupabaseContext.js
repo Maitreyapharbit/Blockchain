@@ -21,22 +21,39 @@ export const SupabaseProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    // Check if Supabase is properly configured
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl === 'https://placeholder.supabase.co' || 
+        supabaseAnonKey === 'placeholder-key') {
+      console.warn('Supabase not configured, skipping authentication');
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+    }).catch((error) => {
+      console.warn('Supabase session error:', error);
+      setLoading(false);
     });
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    let subscription;
+    try {
+      const {
+        data: { subscription: sub },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
 
-      if (session?.user) {
+        if (session?.user) {
         // User signed in, fetch their data
         await fetchUserData();
         setupRealtimeSubscriptions();
