@@ -311,7 +311,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       return isValid;
     } catch (error) {
       logger.error('Error verifying authenticity:', error);
-      throw new Error(`Failed to verify authenticity: ${error.message}`);
+      throw new Error(`Failed to verify authenticity: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -348,7 +348,8 @@ export class CounterfeitService implements CounterfeitServiceInterface {
         report_type: reportType as any,
         description,
         evidence_urls: evidenceUrls,
-        location
+        location,
+        status: 'PENDING'
       });
 
       // Report on blockchain
@@ -376,7 +377,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       };
     } catch (error) {
       logger.error('Error reporting suspicious activity:', error);
-      throw new Error(`Failed to report suspicious activity: ${error.message}`);
+      throw new Error(`Failed to report suspicious activity: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -429,7 +430,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       return results;
     } catch (error) {
       logger.error('Error getting flagged batches:', error);
-      throw new Error(`Failed to get flagged batches: ${error.message}`);
+      throw new Error(`Failed to get flagged batches: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -484,7 +485,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       };
     } catch (error) {
       logger.error('Error generating security features:', error);
-      throw new Error(`Failed to generate security features: ${error.message}`);
+      throw new Error(`Failed to generate security features: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -521,7 +522,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       };
     } catch (error) {
       logger.error('Error getting security feature:', error);
-      throw new Error(`Failed to get security feature: ${error.message}`);
+      throw new Error(`Failed to get security feature: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -568,7 +569,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       };
     } catch (error) {
       logger.error('Error updating report status:', error);
-      throw new Error(`Failed to update report status: ${error.message}`);
+      throw new Error(`Failed to update report status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -591,7 +592,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       }));
     } catch (error) {
       logger.error('Error getting verification history:', error);
-      throw new Error(`Failed to get verification history: ${error.message}`);
+      throw new Error(`Failed to get verification history: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -617,7 +618,7 @@ export class CounterfeitService implements CounterfeitServiceInterface {
       }));
     } catch (error) {
       logger.error('Error getting all reports:', error);
-      throw new Error(`Failed to get reports: ${error.message}`);
+      throw new Error(`Failed to get reports: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

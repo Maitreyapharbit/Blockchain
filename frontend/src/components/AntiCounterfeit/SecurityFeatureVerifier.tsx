@@ -28,6 +28,10 @@ import {
   Divider,
   Avatar,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   LinearProgress,
   Badge,
 } from '@mui/material';
@@ -67,10 +71,9 @@ const SecurityFeatureVerifier: React.FC<SecurityFeatureVerifierProps> = ({
   loading,
 }) => {
   const dispatch = useAppDispatch();
-  const { 
+  const {
     currentBatch, 
     securityFeatures, 
-    verificationResults, 
     realTimeStatus 
   } = useAppSelector((state) => state.counterfeit);
   

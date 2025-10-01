@@ -133,6 +133,10 @@ async function initializeServices() {
     await sequelize.sync({ alter: true });
     logger.info('Database models synchronized');
 
+    // Register API routes
+    app.use('/api/recalls', createRecallRoutes(recallService));
+    app.use('/api/counterfeit', createCounterfeitRoutes(counterfeitService));
+
     logger.info('Services initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize services:', error);
@@ -149,9 +153,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/recalls', createRecallRoutes(recallService));
-app.use('/api/counterfeit', createCounterfeitRoutes(counterfeitService));
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

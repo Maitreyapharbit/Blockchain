@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ReportingForm } from '../components/AntiCounterfeit/ReportingForm';
+import ReportingForm from '../components/AntiCounterfeit/ReportingForm';
 
 // Mock store
 const mockStore = configureStore({
@@ -20,7 +20,7 @@ const mockStore = configureStore({
 const defaultProps = {
   onSubmit: jest.fn(),
   loading: false,
-  error: null,
+  error: undefined,
 };
 
 const renderWithProvider = (props = {}) => {

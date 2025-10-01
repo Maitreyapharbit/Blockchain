@@ -239,3 +239,64 @@ export interface VerificationHistoryProps {
   onVerificationClick: (verificationId: string) => void;
   loading: boolean;
 }
+
+// Additional missing types
+export interface VerificationRecord {
+  id: string;
+  batchId: string;
+  verificationType: 'qr_scan' | 'hologram_check' | 'serial_validation' | 'blockchain_verify';
+  result: 'authentic' | 'counterfeit' | 'suspicious' | 'error';
+  confidence: number;
+  timestamp: string;
+  details: string;
+  verifiedBy: string;
+}
+
+export interface FlaggedBatch {
+  id: string;
+  batchId: string;
+  productName: string;
+  reason: string;
+  flaggedAt: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'pending' | 'investigating' | 'resolved' | 'false_positive';
+  verificationResults: VerificationResult[];
+  securityFeature?: {
+    qrCodeHash: string;
+    hologramId: string;
+    serialNumber: string;
+  };
+  recentVerifications: VerificationResult[];
+}
+
+export interface RecallBatch {
+  id: string;
+  batchId: string;
+  productName: string;
+  batchNumber: string;
+  lotNumber: string;
+  manufacturingDate: string;
+  expiryDate: string;
+  quantity: number;
+  quantityAffected: number;
+  status: 'active' | 'recalled' | 'quarantined' | 'destroyed';
+  recallId: string;
+  affectedQuantity: number;
+  actions: RecallAction[];
+}
+
+export interface DistributionRecord {
+  id: string;
+  batchId: string;
+  nodeId: string;
+  nodeName: string;
+  nodeType: 'manufacturer' | 'distributor' | 'pharmacy' | 'hospital' | 'clinic';
+  quantity: number;
+  receivedDate: string;
+  status: 'received' | 'quarantined' | 'returned' | 'destroyed';
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { SecurityFeatureVerifier } from '../components/AntiCounterfeit/SecurityFeatureVerifier';
+import SecurityFeatureVerifier from '../components/AntiCounterfeit/SecurityFeatureVerifier';
 import { Batch, SecurityFeature } from '../types';
 
 // Mock store

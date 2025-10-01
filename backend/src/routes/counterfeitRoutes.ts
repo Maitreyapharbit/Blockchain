@@ -46,7 +46,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error verifying authenticity:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -108,7 +108,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error reporting suspicious activity:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -126,7 +126,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error getting flagged batches:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -174,7 +174,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error generating security features:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -193,7 +193,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error getting security feature:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -224,7 +224,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error updating report status:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -243,7 +243,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error getting verification history:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -261,7 +261,7 @@ export function createCounterfeitRoutes(counterfeitService: CounterfeitService) 
       logger.error('Error getting all reports:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

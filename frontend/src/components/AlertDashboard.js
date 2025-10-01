@@ -10,7 +10,7 @@ import {
   FaChartLine,
   FaFilter,
   FaDownload,
-  FaRefresh,
+  FaSync,
   FaVolumeUp,
   FaVolumeMute,
   FaCog,
@@ -548,7 +548,7 @@ const AlertDashboard = () => {
         </Title>
         <ControlsContainer>
           <ControlButton onClick={handleRefresh} disabled={refreshing}>
-            <FaRefresh className={refreshing ? 'animate-spin' : ''} />
+            <FaSync className={refreshing ? 'animate-spin' : ''} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </ControlButton>
           <ControlButton>

@@ -59,6 +59,7 @@ import {
   Assignment,
   People,
   Inventory,
+  Info,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';

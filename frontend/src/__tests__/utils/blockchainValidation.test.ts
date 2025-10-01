@@ -169,8 +169,8 @@ describe('blockchainValidator', () => {
         {
           id: '1',
           batchId: 'batch1',
-          verificationType: 'qr_scan',
-          result: 'authentic',
+          verificationType: 'qr_scan' as const,
+          result: 'authentic' as const,
           confidence: 95,
           timestamp: '2023-01-01T00:00:00Z',
           details: 'QR code verified',
@@ -212,8 +212,8 @@ describe('blockchainValidator', () => {
       const mockVerification = {
         id: '1',
         batchId: 'batch1',
-        verificationType: 'qr_scan',
-        result: 'authentic',
+        verificationType: 'qr_scan' as const,
+        result: 'authentic' as const,
         confidence: 95,
         timestamp: '2023-01-01T00:00:00Z',
         details: 'QR code verified',
@@ -239,8 +239,8 @@ describe('blockchainValidator', () => {
       const mockVerification = {
         id: '1',
         batchId: 'batch1',
-        verificationType: 'qr_scan',
-        result: 'authentic',
+        verificationType: 'qr_scan' as const,
+        result: 'authentic' as const,
         confidence: 95,
         timestamp: '2023-01-01T00:00:00Z',
         details: 'QR code verified',
@@ -262,8 +262,8 @@ describe('blockchainValidator', () => {
       const mockVerification = {
         id: '1',
         batchId: 'batch1',
-        verificationType: 'qr_scan',
-        result: 'authentic',
+        verificationType: 'qr_scan' as const,
+        result: 'authentic' as const,
         confidence: 95,
         timestamp: '2023-01-01T00:00:00Z',
         details: 'QR code verified',

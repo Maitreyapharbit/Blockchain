@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { RecallDashboard } from '../components/RecallManagement/RecallDashboard';
+import RecallDashboard from '../components/RecallManagement/RecallDashboard';
 import { Recall } from '../types';
 
 // Mock store
@@ -56,7 +56,7 @@ const mockStats = {
 const defaultProps = {
   recalls: mockRecalls,
   loading: false,
-  error: null,
+  error: undefined,
   onRefresh: jest.fn(),
   onRecallClick: jest.fn(),
 };

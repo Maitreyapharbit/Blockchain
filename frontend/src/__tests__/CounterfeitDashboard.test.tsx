@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { CounterfeitDashboard } from '../components/AntiCounterfeit/CounterfeitDashboard';
+import CounterfeitDashboard from '../components/AntiCounterfeit/CounterfeitDashboard';
 import { CounterfeitReport, SuspiciousActivity } from '../types';
 
 // Mock store
@@ -96,7 +96,7 @@ const defaultProps = {
   reports: mockReports,
   activities: mockActivities,
   loading: false,
-  error: null,
+  error: undefined,
   onRefresh: jest.fn(),
   onReportClick: jest.fn(),
 };
