@@ -232,6 +232,15 @@ EOF
         print_success ".env file found, using existing configuration"
     fi
 
+    # Copy root .env to backend if it exists and backend doesn't have one
+    if [ -f "../.env" ] && [ ! -f ".env" ]; then
+        print_status "Copying root .env to backend directory..."
+        cp ../.env .env
+    fi
+
+    # Ensure port 3001 is free for backend
+    check_and_free_port 3001
+
     # Start backend server
     print_status "Starting backend with simple-server.js..."
     node simple-server.js > ../logs/backend.log 2>&1 &
@@ -257,8 +266,15 @@ EOF
             print_warning "Backend log file not found"
         fi
         
-        print_error "Backend startup failed. Please check the logs and try again."
-        exit 1
+        # Check if backend is actually running on a different port
+        print_status "Checking if backend is running on alternative ports..."
+        if curl -s http://localhost:3000/health >/dev/null 2>&1; then
+            print_warning "Backend appears to be running on port 3000 instead of 3001"
+            print_status "This might be due to a port conflict. Continuing with port 3000..."
+        else
+            print_error "Backend startup failed. Please check the logs and try again."
+            exit 1
+        fi
     fi
 
     # Start frontend
@@ -322,8 +338,10 @@ EOF
     # Check backend
     if port_in_use 3001; then
         print_success "✅ Backend API is running on port 3001"
+    elif port_in_use 3000; then
+        print_warning "⚠️ Backend API is running on port 3000 (port conflict with frontend)"
     else
-        print_error "❌ Backend API is not running on port 3001"
+        print_error "❌ Backend API is not running on expected ports"
     fi
     
     # Check frontend
