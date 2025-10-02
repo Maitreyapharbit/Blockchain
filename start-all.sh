@@ -255,8 +255,20 @@ main() {
 
     # Deploy to local network
     print_status "Deploying to local network..."
-    if npx hardhat run scripts/deploy.js --network localhost > ../logs/contract-deploy.log 2>&1; then
+    if npx hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
         print_success "Smart contracts deployed successfully"
+        
+        # Extract contract addresses from deployment log
+        RECALL_CONTRACT=$(grep "RecallManagement deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
+        COUNTERFEIT_CONTRACT=$(grep "AntiCounterfeitVerification deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
+        
+        if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
+            print_success "Contract addresses extracted:"
+            print_success "  - Recall Management: $RECALL_CONTRACT"
+            print_success "  - Anti-Counterfeiting: $COUNTERFEIT_CONTRACT"
+        else
+            print_warning "Could not extract contract addresses from deployment log"
+        fi
     else
         print_error "Contract deployment failed"
         print_status "Check logs/contract-deploy.log for details"
@@ -279,9 +291,9 @@ main() {
             cat > .env << EOF
 # Backend Configuration
 NODE_ENV=development
-PORT=3000
+PORT=3001
 HOST=localhost
-CORS_ORIGIN=http://localhost:3001
+CORS_ORIGIN=http://localhost:3000
 
 # Database Configuration
 DATABASE_URL=postgresql://localhost:5432/pharbit
@@ -320,11 +332,11 @@ EOF
     cd ..
 
     # Wait for backend to be ready
-    if wait_for_service localhost 3000 "Backend Server"; then
+    if wait_for_service localhost 3001 "Backend Server"; then
         print_success "Backend server started successfully (PID: $BACKEND_PID)"
-        print_feature "✅ Recall Management API: http://localhost:3000/api/recalls"
-        print_feature "✅ Anti-Counterfeiting API: http://localhost:3000/api/counterfeit"
-        print_feature "✅ Health Check: http://localhost:3000/api/health"
+        print_feature "✅ Recall Management API: http://localhost:3001/api/recalls"
+        print_feature "✅ Anti-Counterfeiting API: http://localhost:3001/api/counterfeit"
+        print_feature "✅ Health Check: http://localhost:3001/api/health"
     else
         print_error "Failed to start backend server"
         print_status "Check logs/backend.log for details"
@@ -335,6 +347,17 @@ EOF
     print_service "Starting frontend application with new features..."
     cd frontend
     
+    # Ensure frontend dependencies are installed
+    if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/react-scripts" ]; then
+        print_status "Installing frontend dependencies..."
+        if ! npm install > ../logs/frontend-install.log 2>&1; then
+            print_error "Failed to install frontend dependencies"
+            print_status "Check logs/frontend-install.log for details"
+            exit 1
+        fi
+        print_success "Frontend dependencies installed"
+    fi
+    
     # Check if .env exists
     if [ ! -f ".env" ]; then
         print_warning ".env file not found. Creating from .env.example..."
@@ -344,17 +367,21 @@ EOF
             # Create a basic .env file
             cat > .env << EOF
 # Frontend Configuration
-REACT_APP_API_URL=http://localhost:3000/api
-REACT_APP_WS_URL=ws://localhost:3000
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_WS_URL=ws://localhost:3001
 
 # Supabase Configuration (optional)
 REACT_APP_SUPABASE_URL=https://your-project.supabase.co
 REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Blockchain Configuration
+REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
 REACT_APP_CHAIN_ID=1337
 REACT_APP_CHAIN_NAME="Hardhat Local"
-REACT_APP_RPC_URL=http://localhost:8545
+
+# Contract Addresses (will be updated after deployment)
+REACT_APP_RECALL_CONTRACT_ADDRESS=${RECALL_CONTRACT:-}
+REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=${COUNTERFEIT_CONTRACT:-}
 
 # Development Configuration
 REACT_APP_ENVIRONMENT=development
@@ -362,6 +389,14 @@ REACT_APP_DEBUG=true
 EOF
         fi
         print_warning "Please update .env file with your actual configuration"
+    else
+        # Update existing .env with contract addresses if they exist
+        if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
+            print_status "Updating .env with deployed contract addresses..."
+            sed -i "s/REACT_APP_RECALL_CONTRACT_ADDRESS=.*/REACT_APP_RECALL_CONTRACT_ADDRESS=$RECALL_CONTRACT/" .env
+            sed -i "s/REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=.*/REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=$COUNTERFEIT_CONTRACT/" .env
+            print_success "Contract addresses updated in .env file"
+        fi
     fi
 
     # Start frontend
@@ -370,7 +405,7 @@ EOF
     cd ..
 
     # Wait for frontend to be ready
-    if wait_for_service localhost 3001 "Frontend Application"; then
+    if wait_for_service localhost 3000 "Frontend Application"; then
         print_success "Frontend application started successfully (PID: $FRONTEND_PID)"
     else
         print_error "Failed to start frontend application"
@@ -394,17 +429,17 @@ EOF
     fi
     
     # Check backend
-    if port_in_use 3000; then
-        print_success "✅ Backend API is running on port 3000"
+    if port_in_use 3001; then
+        print_success "✅ Backend API is running on port 3001"
     else
-        print_error "❌ Backend API is not running on port 3000"
+        print_error "❌ Backend API is not running on port 3001"
     fi
     
     # Check frontend
-    if port_in_use 3001; then
-        print_success "✅ Frontend App is running on port 3001"
+    if port_in_use 3000; then
+        print_success "✅ Frontend App is running on port 3000"
     else
-        print_error "❌ Frontend App is not running on port 3001"
+        print_error "❌ Frontend App is not running on port 3000"
     fi
 
     # Display success message
@@ -413,12 +448,12 @@ EOF
     echo ""
     print_service "🔗 Services:"
     print_service "  - Hardhat Node: http://localhost:8545"
-    print_service "  - Backend API: http://localhost:3000"
-    print_service "  - Frontend App: http://localhost:3001"
+    print_service "  - Backend API: http://localhost:3001"
+    print_service "  - Frontend App: http://localhost:3000"
     print_service "  - Contract Explorer: http://localhost:8545 (use MetaMask)"
     echo ""
     print_feature "🚨 Recall Management Features:"
-    print_feature "  - Quick recall initiation: http://localhost:3001 (scroll down)"
+    print_feature "  - Quick recall initiation: http://localhost:3000 (scroll down)"
     print_feature "  - Affected batch identification"
     print_feature "  - Distribution tracking for rapid response"
     print_feature "  - Stakeholder notification system"
