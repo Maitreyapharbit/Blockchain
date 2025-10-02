@@ -6,20 +6,20 @@ async function main() {
   // Deploy RecallManagement contract
   const RecallManagement = await hre.ethers.getContractFactory("RecallManagement");
   const recallManagement = await RecallManagement.deploy();
-  await recallManagement.deployed();
-  console.log("RecallManagement deployed to:", recallManagement.address);
+  await recallManagement.waitForDeployment();
+  console.log("RecallManagement deployed to:", await recallManagement.getAddress());
 
   // Deploy AntiCounterfeitVerification contract
   const AntiCounterfeitVerification = await hre.ethers.getContractFactory("AntiCounterfeitVerification");
   const antiCounterfeitVerification = await AntiCounterfeitVerification.deploy();
-  await antiCounterfeitVerification.deployed();
-  console.log("AntiCounterfeitVerification deployed to:", antiCounterfeitVerification.address);
+  await antiCounterfeitVerification.waitForDeployment();
+  console.log("AntiCounterfeitVerification deployed to:", await antiCounterfeitVerification.getAddress());
 
   // Save contract addresses to a file
   const fs = require("fs");
   const contractAddresses = {
-    RecallManagement: recallManagement.address,
-    AntiCounterfeitVerification: antiCounterfeitVerification.address,
+    RecallManagement: await recallManagement.getAddress(),
+    AntiCounterfeitVerification: await antiCounterfeitVerification.getAddress(),
     network: hre.network.name,
     timestamp: new Date().toISOString(),
   };
@@ -40,7 +40,7 @@ async function main() {
     console.log("Verifying contracts on Etherscan...");
     try {
       await hre.run("verify:verify", {
-        address: recallManagement.address,
+        address: await recallManagement.getAddress(),
         constructorArguments: [],
       });
       console.log("RecallManagement verified on Etherscan");
@@ -50,7 +50,7 @@ async function main() {
 
     try {
       await hre.run("verify:verify", {
-        address: antiCounterfeitVerification.address,
+        address: await antiCounterfeitVerification.getAddress(),
         constructorArguments: [],
       });
       console.log("AntiCounterfeitVerification verified on Etherscan");
