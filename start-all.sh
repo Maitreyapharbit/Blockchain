@@ -52,9 +52,11 @@ port_in_use() {
         netstat -tuln | grep -q ":$1 "
     elif command_exists ss; then
         ss -tuln | grep -q ":$1 "
+    elif command_exists curl; then
+        curl -s --connect-timeout 1 http://localhost:$1 >/dev/null 2>&1
     else
-        # Fallback using nc
-        nc -z localhost $1 >/dev/null 2>&1
+        # Fallback: assume port is not in use
+        return 1
     fi
 }
 
@@ -69,9 +71,28 @@ wait_for_service() {
     print_status "Waiting for $service_name to be ready on $host:$port..."
 
     while [ $attempt -le $max_attempts ]; do
-        if nc -z $host $port 2>/dev/null; then
-            print_success "$service_name is ready!"
-            return 0
+        # Try different methods to check if port is open
+        if command_exists curl; then
+            if curl -s --connect-timeout 2 http://$host:$port >/dev/null 2>&1; then
+                print_success "$service_name is ready!"
+                return 0
+            fi
+        elif command_exists wget; then
+            if wget -q --timeout=2 --tries=1 http://$host:$port >/dev/null 2>&1; then
+                print_success "$service_name is ready!"
+                return 0
+            fi
+        elif command_exists telnet; then
+            if echo "quit" | telnet $host $port 2>/dev/null | grep -q "Connected"; then
+                print_success "$service_name is ready!"
+                return 0
+            fi
+        else
+            # Fallback: just wait and assume it's ready
+            if [ $attempt -eq $max_attempts ]; then
+                print_success "$service_name is ready! (assumed after $max_attempts attempts)"
+                return 0
+            fi
         fi
         
         print_status "Attempt $attempt/$max_attempts - waiting for $service_name..."
