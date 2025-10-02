@@ -121,15 +121,15 @@ main() {
     fi
 
     # Check if port is already in use
-    if port_in_use 3000; then
-        print_warning "Port 3000 is already in use. Backend server might already be running."
+    if port_in_use 3001; then
+        print_warning "Port 3001 is already in use. Backend server might already be running."
         print_status "Checking if backend is responding..."
         
-        if curl -f http://localhost:3000/api/health >/dev/null 2>&1; then
+        if curl -f http://localhost:3001/api/health >/dev/null 2>&1; then
             print_success "Backend server is already running and responding!"
             exit 0
         else
-            print_error "Port 3000 is in use but backend is not responding. Please free the port and try again."
+            print_error "Port 3001 is in use but backend is not responding. Please free the port and try again."
             exit 1
         fi
     fi
@@ -151,7 +151,7 @@ main() {
     fi
 
     # Wait for backend to be ready
-    if wait_for_service localhost 3000 "Backend Server"; then
+    if wait_for_service localhost 3001 "Backend Server"; then
         print_success "Backend server started successfully (PID: $BACKEND_PID)"
     else
         print_error "Failed to start backend server"
@@ -163,9 +163,9 @@ main() {
     echo $BACKEND_PID > ../logs/backend.pid
 
     print_success "PharbitChain Backend Server is now running!"
-    print_status "Backend API: http://localhost:3000"
-    print_status "Health Check: http://localhost:3000/api/health"
-    print_status "API Documentation: http://localhost:3000/api/docs"
+    print_status "Backend API: http://localhost:3001"
+    print_status "Health Check: http://localhost:3001/api/health"
+    print_status "API Documentation: http://localhost:3001/api/docs"
     print_status "Logs: logs/backend.log"
     print_status "PID: $BACKEND_PID"
     

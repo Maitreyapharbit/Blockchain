@@ -96,8 +96,8 @@ main() {
 
     # Stop services by port (fallback)
     kill_by_port 8545 "Hardhat Node"
-    kill_by_port 3000 "Backend Server"
-    kill_by_port 3001 "Frontend Application"
+    kill_by_port 3001 "Backend Server"
+    kill_by_port 3000 "Frontend Application"
 
     # Kill any remaining Node.js processes related to this project
     print_status "Cleaning up remaining processes..."
