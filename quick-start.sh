@@ -47,8 +47,8 @@ sleep 5
 
 # Check status
 echo -e "${GREEN}✅ All services started!${NC}"
-echo -e "${GREEN}Frontend: http://localhost:3001${NC}"
-echo -e "${GREEN}Backend: http://localhost:3000${NC}"
+echo -e "${GREEN}Frontend: http://localhost:3000${NC}"
+echo -e "${GREEN}Backend: http://localhost:3001${NC}"
 echo -e "${GREEN}Blockchain: http://localhost:8545${NC}"
 echo ""
 echo -e "${BLUE}In Codespaces, check the 'Ports' tab for forwarded URLs${NC}"

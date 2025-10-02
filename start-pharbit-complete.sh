@@ -189,7 +189,7 @@ main() {
     
     # Test backend health
     for i in {1..10}; do
-        if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+        if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
             print_success "Backend server started and healthy (PID: $BACKEND_PID)"
             echo $BACKEND_PID > logs/backend.pid
             break
@@ -217,7 +217,7 @@ main() {
     
     # Test frontend accessibility
     for i in {1..15}; do
-        if curl -s http://localhost:3001 > /dev/null 2>&1; then
+        if curl -s http://localhost:3000 > /dev/null 2>&1; then
             print_success "Frontend application started (PID: $FRONTEND_PID)"
             echo $FRONTEND_PID > logs/frontend.pid
             break
@@ -236,13 +236,13 @@ main() {
     echo ""
     print_success "Services Status:"
     print_status "  🔗 Hardhat Node: http://localhost:8545 (PID: $HARDHAT_PID)"
-    print_status "  🚀 Backend API: http://localhost:3000 (PID: $BACKEND_PID)"
-    print_status "  🌐 Frontend App: http://localhost:3001 (PID: $FRONTEND_PID)"
+    print_status "  🚀 Backend API: http://localhost:3001 (PID: $BACKEND_PID)"
+    print_status "  🌐 Frontend App: http://localhost:3000 (PID: $FRONTEND_PID)"
     echo ""
     print_success "In GitHub Codespaces:"
     print_status "  Look for the 'Ports' tab and click on the forwarded URLs:"
-    print_status "  • Frontend: https://your-codespace-3001.preview.app.github.dev"
-    print_status "  • Backend: https://your-codespace-3000.preview.app.github.dev"
+    print_status "  • Frontend: https://your-codespace-3000.preview.app.github.dev"
+    print_status "  • Backend: https://your-codespace-3001.preview.app.github.dev"
     print_status "  • Blockchain: https://your-codespace-8545.preview.app.github.dev"
     echo ""
     print_success "Features Available:"

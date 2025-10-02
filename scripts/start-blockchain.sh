@@ -178,7 +178,7 @@ main() {
     cd ..
 
     # Wait for backend to be ready
-    if wait_for_service localhost 3000 "Backend Server"; then
+    if wait_for_service localhost 3001 "Backend Server"; then
         print_success "Backend server started successfully (PID: $BACKEND_PID)"
     else
         print_error "Failed to start backend server"
@@ -202,7 +202,7 @@ main() {
     cd ..
 
     # Wait for frontend to be ready
-    if wait_for_service localhost 3001 "Frontend Application"; then
+    if wait_for_service localhost 3000 "Frontend Application"; then
         print_success "Frontend application started successfully (PID: $FRONTEND_PID)"
     else
         print_error "Failed to start frontend application"
@@ -220,8 +220,8 @@ main() {
     print_success "PharbitChain Blockchain is now running!"
     print_status "Services:"
     print_status "  - Hardhat Node: http://localhost:8545"
-    print_status "  - Backend API: http://localhost:3000"
-    print_status "  - Frontend App: http://localhost:3001"
+    print_status "  - Backend API: http://localhost:3001"
+    print_status "  - Frontend App: http://localhost:3000"
     print_status "  - Contract Explorer: http://localhost:8545 (use MetaMask)"
     
     print_status "Logs are available in the logs/ directory"

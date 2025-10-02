@@ -107,15 +107,15 @@ function App() {
                         
                         <div>
                           <ServiceStatus>✅ Backend API Running</ServiceStatus>
-                          <ServiceLink href="http://localhost:3000" target="_blank" rel="noopener noreferrer">
-                            Backend API (Port 3000)
+                          <ServiceLink href="http://localhost:3001" target="_blank" rel="noopener noreferrer">
+                            Backend API (Port 3001)
                           </ServiceLink>
                         </div>
                         
                         <div>
                           <ServiceStatus>✅ Frontend App Running</ServiceStatus>
-                          <ServiceLink href="http://localhost:3001" target="_blank" rel="noopener noreferrer">
-                            Frontend App (Port 3001)
+                          <ServiceLink href="http://localhost:3000" target="_blank" rel="noopener noreferrer">
+                            Frontend App (Port 3000)
                           </ServiceLink>
                         </div>
                       </ServiceCard>
@@ -136,10 +136,10 @@ function App() {
                       <ServiceCard>
                         <ServiceTitle>🔗 Quick Links</ServiceTitle>
                         <div>
-                          <ServiceLink href="http://localhost:3000/api/health" target="_blank" rel="noopener noreferrer">
+                          <ServiceLink href="http://localhost:3001/api/health" target="_blank" rel="noopener noreferrer">
                             API Health Check
                           </ServiceLink>
-                          <ServiceLink href="http://localhost:3000/api/docs" target="_blank" rel="noopener noreferrer">
+                          <ServiceLink href="http://localhost:3001/api/docs" target="_blank" rel="noopener noreferrer">
                             API Documentation
                           </ServiceLink>
                         </div>

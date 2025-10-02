@@ -50,7 +50,7 @@ const envSchema = Joi.object({
   LOG_FILE: Joi.string().default('./logs/app.log'),
 
   // CORS
-  CORS_ORIGIN: Joi.string().default('http://localhost:3001'),
+  CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
   CORS_CREDENTIALS: Joi.boolean().default(true),
 
   // Health Check
