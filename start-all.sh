@@ -46,7 +46,16 @@ command_exists() {
 
 # Function to check if port is in use
 port_in_use() {
-    lsof -i :$1 >/dev/null 2>&1
+    if command_exists lsof; then
+        lsof -i :$1 >/dev/null 2>&1
+    elif command_exists netstat; then
+        netstat -tuln | grep -q ":$1 "
+    elif command_exists ss; then
+        ss -tuln | grep -q ":$1 "
+    else
+        # Fallback using nc
+        nc -z localhost $1 >/dev/null 2>&1
+    fi
 }
 
 # Function to wait for service to be ready
@@ -79,8 +88,31 @@ check_and_free_port() {
     local port=$1
     if port_in_use $port; then
         print_warning "Port $port is in use. Freeing it..."
-        lsof -ti :$port | xargs kill -9 2>/dev/null || true
+        if command_exists lsof; then
+            lsof -ti :$port | xargs kill -9 2>/dev/null || true
+        elif command_exists fuser; then
+            fuser -k $port/tcp 2>/dev/null || true
+        fi
         sleep 2
+    fi
+}
+
+# Function to check if required files exist
+check_required_files() {
+    local missing_files=()
+    
+    # Check for essential files
+    [ ! -f "contracts/package.json" ] && missing_files+=("contracts/package.json")
+    [ ! -f "backend/package.json" ] && missing_files+=("backend/package.json")
+    [ ! -f "frontend/package.json" ] && missing_files+=("frontend/package.json")
+    [ ! -f "contracts/scripts/deploy.js" ] && missing_files+=("contracts/scripts/deploy.js")
+    
+    if [ ${#missing_files[@]} -gt 0 ]; then
+        print_error "Missing required files:"
+        for file in "${missing_files[@]}"; do
+            print_error "  - $file"
+        done
+        exit 1
     fi
 }
 
@@ -95,6 +127,11 @@ main() {
         print_error "Please run this script from the project root directory"
         exit 1
     fi
+
+    # Check for required files
+    print_status "Checking required files..."
+    check_required_files
+    print_success "All required files found"
 
     # Check system requirements
     print_status "Checking system requirements..."
@@ -134,17 +171,40 @@ main() {
     
     if [ ! -d "node_modules" ]; then
         print_status "Installing root dependencies..."
-        npm install >/dev/null 2>&1
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install root dependencies"
+            exit 1
+        fi
     fi
 
     if [ ! -d "backend/node_modules" ]; then
         print_status "Installing backend dependencies..."
-        cd backend && npm install >/dev/null 2>&1 && cd ..
+        cd backend
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install backend dependencies"
+            exit 1
+        fi
+        cd ..
     fi
 
     if [ ! -d "frontend/node_modules" ]; then
         print_status "Installing frontend dependencies..."
-        cd frontend && npm install >/dev/null 2>&1 && cd ..
+        cd frontend
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install frontend dependencies"
+            exit 1
+        fi
+        cd ..
+    fi
+
+    if [ ! -d "contracts/node_modules" ]; then
+        print_status "Installing contracts dependencies..."
+        cd contracts
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install contracts dependencies"
+            exit 1
+        fi
+        cd ..
     fi
 
     print_success "Dependencies installed"
@@ -159,6 +219,10 @@ main() {
     print_service "Starting Hardhat blockchain node..."
     if port_in_use 8545; then
         print_warning "Port 8545 is already in use. Hardhat node might already be running."
+        HARDHAT_PID=$(lsof -ti :8545 | head -1)
+        if [ -n "$HARDHAT_PID" ]; then
+            print_success "Using existing Hardhat node (PID: $HARDHAT_PID)"
+        fi
     else
         cd contracts
         npx hardhat node > ../logs/hardhat-node.log 2>&1 &
@@ -170,6 +234,7 @@ main() {
             print_success "Hardhat node started successfully (PID: $HARDHAT_PID)"
         else
             print_error "Failed to start Hardhat node"
+            print_status "Check logs/hardhat-node.log for details"
             exit 1
         fi
     fi
@@ -180,14 +245,25 @@ main() {
     
     # Compile contracts
     print_status "Compiling contracts..."
-    npx hardhat compile >/dev/null 2>&1
+    if npx hardhat compile > ../logs/contract-compile.log 2>&1; then
+        print_success "Contracts compiled successfully"
+    else
+        print_error "Contract compilation failed"
+        print_status "Check logs/contract-compile.log for details"
+        exit 1
+    fi
 
     # Deploy to local network
     print_status "Deploying to local network..."
-    npx hardhat run scripts/deploy.js --network localhost >/dev/null 2>&1
+    if npx hardhat run scripts/deploy.js --network localhost > ../logs/contract-deploy.log 2>&1; then
+        print_success "Smart contracts deployed successfully"
+    else
+        print_error "Contract deployment failed"
+        print_status "Check logs/contract-deploy.log for details"
+        exit 1
+    fi
     
     cd ..
-    print_success "Smart contracts deployed"
 
     # Start backend server with new features
     print_service "Starting backend server with Recall Management & Anti-Counterfeiting APIs..."
@@ -232,8 +308,15 @@ EOF
     fi
 
     # Start backend server
-    node simple-server.js > ../logs/backend.log 2>&1 &
-    BACKEND_PID=$!
+    if [ -f "simple-server.js" ]; then
+        print_status "Starting backend with simple-server.js..."
+        node simple-server.js > ../logs/backend.log 2>&1 &
+        BACKEND_PID=$!
+    else
+        print_status "Starting backend with npm run dev..."
+        npm run dev > ../logs/backend.log 2>&1 &
+        BACKEND_PID=$!
+    fi
     cd ..
 
     # Wait for backend to be ready
@@ -269,7 +352,7 @@ REACT_APP_SUPABASE_URL=https://your-project.supabase.co
 REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Blockchain Configuration
-REACT_APP_CHAIN_ID=31337
+REACT_APP_CHAIN_ID=1337
 REACT_APP_CHAIN_NAME="Hardhat Local"
 REACT_APP_RPC_URL=http://localhost:8545
 
@@ -300,6 +383,30 @@ EOF
     echo $BACKEND_PID > logs/backend.pid
     echo $FRONTEND_PID > logs/frontend.pid
 
+    # Verify all services are running
+    print_status "Verifying all services are running..."
+    
+    # Check Hardhat node
+    if port_in_use 8545; then
+        print_success "✅ Hardhat Node is running on port 8545"
+    else
+        print_error "❌ Hardhat Node is not running on port 8545"
+    fi
+    
+    # Check backend
+    if port_in_use 3000; then
+        print_success "✅ Backend API is running on port 3000"
+    else
+        print_error "❌ Backend API is not running on port 3000"
+    fi
+    
+    # Check frontend
+    if port_in_use 3001; then
+        print_success "✅ Frontend App is running on port 3001"
+    else
+        print_error "❌ Frontend App is not running on port 3001"
+    fi
+
     # Display success message
     echo ""
     echo -e "${GREEN}✨ PharbitChain Complete Development Environment is now running!${NC}"
@@ -328,7 +435,7 @@ EOF
     print_status "  - Health Check: /api/health"
     echo ""
     print_status "📝 Logs are available in the logs/ directory"
-    print_status "🛑 To stop all services, run: ./scripts/stop-blockchain.sh"
+    print_status "🛑 To stop all services, run: ./stop-all.sh or press Ctrl+C"
     echo ""
     print_status "Press Ctrl+C to stop all services..."
     
@@ -336,9 +443,30 @@ EOF
     cleanup() {
         echo ""
         print_status "🛑 Stopping all services..."
-        kill $FRONTEND_PID 2>/dev/null || true
-        kill $BACKEND_PID 2>/dev/null || true
-        kill $HARDHAT_PID 2>/dev/null || true
+        
+        # Stop frontend
+        if [ -n "$FRONTEND_PID" ] && kill -0 $FRONTEND_PID 2>/dev/null; then
+            print_status "Stopping frontend (PID: $FRONTEND_PID)..."
+            kill $FRONTEND_PID 2>/dev/null || true
+        fi
+        
+        # Stop backend
+        if [ -n "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
+            print_status "Stopping backend (PID: $BACKEND_PID)..."
+            kill $BACKEND_PID 2>/dev/null || true
+        fi
+        
+        # Stop Hardhat node
+        if [ -n "$HARDHAT_PID" ] && kill -0 $HARDHAT_PID 2>/dev/null; then
+            print_status "Stopping Hardhat node (PID: $HARDHAT_PID)..."
+            kill $HARDHAT_PID 2>/dev/null || true
+        fi
+        
+        # Clean up any remaining processes on our ports
+        check_and_free_port 3000
+        check_and_free_port 3001
+        check_and_free_port 8545
+        
         print_success "All services stopped"
         exit 0
     }
