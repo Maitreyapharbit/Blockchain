@@ -10,7 +10,10 @@
     "build": "cd frontend && npm run build",
     "test": "jest",
     "test:contracts": "cd contracts && npx hardhat test",
-    "deploy:contracts": "cd contracts && npx hardhat run scripts/deploy.js --network localhost"
+    "deploy:contracts": "cd contracts && npx hardhat run scripts/deploy.js --network localhost",
+    "sync-env": "node sync-env.js",
+    "sync-env:frontend": "node sync-env.js --frontend-only",
+    "sync-env:contracts": "node sync-env.js --contracts-only"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
