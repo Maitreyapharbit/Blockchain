@@ -232,6 +232,12 @@ EOF
         print_success ".env file found, using existing configuration"
     fi
 
+    # Copy root .env to backend if it exists and backend doesn't have one
+    if [ -f "../.env" ] && [ ! -f ".env" ]; then
+        print_status "Copying root .env to backend directory..."
+        cp ../.env .env
+    fi
+
     # Ensure port 3001 is free for backend
     check_and_free_port 3001
 
