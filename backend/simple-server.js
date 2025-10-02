@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+// Import route modules
+const recallRoutes = require('./routes/recalls');
+const counterfeitRoutes = require('./routes/counterfeit');
+
 const app = express();
 
 // Basic middleware
@@ -49,6 +53,10 @@ app.get('/', (req, res) => {
   });
 });
 
+// API Routes
+app.use('/api/recalls', recallRoutes);
+app.use('/api/counterfeit', counterfeitRoutes);
+
 // Basic API routes
 app.get('/api', (req, res) => {
   res.json({
@@ -61,6 +69,8 @@ app.get('/api', (req, res) => {
       compliance: '/api/compliance',
       files: '/api/files',
       wallets: '/api/wallets',
+      recalls: '/api/recalls',
+      counterfeit: '/api/counterfeit',
     },
   });
 });

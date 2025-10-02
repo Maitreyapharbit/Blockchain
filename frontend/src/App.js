@@ -11,6 +11,7 @@ import QRCodeScanner from './components/QRCodeScanner';
 import BlockMiner from './components/BlockMiner';
 import ShipmentTrackingApp from './components/ShipmentTrackingApp';
 import AlertDashboard from './components/AlertDashboard';
+import RecallAndAntiCounterfeitDemo from './components/RecallAndAntiCounterfeitDemo';
 import styled from 'styled-components';
 
 const AppContainer = styled.div`
@@ -132,6 +133,12 @@ function App() {
                       <BatchVerifier />
                       <QRCodeScanner />
                       <BlockMiner />
+                      
+                      <ServiceCard>
+                        <ServiceTitle>🚨 Recall Management & Anti-Counterfeiting</ServiceTitle>
+                        <p>Comprehensive recall management system with anti-counterfeiting tools for pharmaceutical supply chain security.</p>
+                        <RecallAndAntiCounterfeitDemo />
+                      </ServiceCard>
                       
                       <ServiceCard>
                         <ServiceTitle>🔗 Quick Links</ServiceTitle>
