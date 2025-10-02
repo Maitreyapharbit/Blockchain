@@ -228,6 +228,8 @@ JWT_EXPIRY=24h
 ETHEREUM_RPC_URL=http://localhost:8545
 PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 EOF
+    else
+        print_success ".env file found, using existing configuration"
     fi
 
     # Start backend server
@@ -284,6 +286,8 @@ REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=${COUNTERFEIT_CONTRACT:-}
 REACT_APP_ENVIRONMENT=development
 REACT_APP_DEBUG=true
 EOF
+    else
+        print_success ".env file found, using existing configuration"
     fi
 
     # Start frontend
