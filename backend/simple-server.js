@@ -6,11 +6,22 @@ const path = require('path');
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
 
+// Add error handling for missing dependencies
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 const app = express();
 
 // Basic middleware
 app.use(cors({
-  origin: 'http://localhost:3001',
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -120,14 +131,38 @@ app.use('*', (req, res) => {
   });
 });
 
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  res.status(500).json({
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }
+  });
+});
+
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || 'localhost';
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`PharbitChain API Server running on http://${HOST}:${PORT}`);
   console.log(`Health check: http://${HOST}:${PORT}/health`);
   console.log(`API Documentation: http://${HOST}:${PORT}/api`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Please free the port or use a different port.`);
+  } else {
+    console.error('Server error:', error);
+  }
+  process.exit(1);
 });
 
 // Graceful shutdown

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# PharbitChain Simple Startup Script
-# This script starts all services assuming dependencies are already installed
+# PharbitChain Complete Development Environment Startup Script
+# This script starts all services including the new Recall Management and Anti-Counterfeiting features
 
 set -e
 
@@ -97,9 +97,28 @@ check_and_free_port() {
     fi
 }
 
+# Function to check if required files exist
+check_required_files() {
+    local missing_files=()
+    
+    # Check for essential files
+    [ ! -f "contracts/package.json" ] && missing_files+=("contracts/package.json")
+    [ ! -f "backend/package.json" ] && missing_files+=("backend/package.json")
+    [ ! -f "frontend/package.json" ] && missing_files+=("frontend/package.json")
+    [ ! -f "contracts/scripts/deploy.js" ] && missing_files+=("contracts/scripts/deploy.js")
+    
+    if [ ${#missing_files[@]} -gt 0 ]; then
+        print_error "Missing required files:"
+        for file in "${missing_files[@]}"; do
+            print_error "  - $file"
+        done
+        exit 1
+    fi
+}
+
 # Main execution
 main() {
-    echo -e "${GREEN}🚀 Starting PharbitChain Development Environment...${NC}"
+    echo -e "${GREEN}🚀 Starting PharbitChain Complete Development Environment...${NC}"
     echo -e "${PURPLE}📋 Including Recall Management & Anti-Counterfeiting Features${NC}"
     echo ""
 
@@ -109,10 +128,86 @@ main() {
         exit 1
     fi
 
+    # Check for required files
+    print_status "Checking required files..."
+    check_required_files
+    print_success "All required files found"
+
+    # Check system requirements
+    print_status "Checking system requirements..."
+    
+    if ! command_exists node; then
+        print_error "Node.js is not installed. Please install Node.js 18+ first."
+        exit 1
+    fi
+
+    if ! command_exists npm; then
+        print_error "npm is not installed. Please install npm first."
+        exit 1
+    fi
+
+    # Check Node.js version
+    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [ "$NODE_VERSION" -lt 18 ]; then
+        print_error "Node.js version 18+ is required. Current version: $(node -v)"
+        exit 1
+    fi
+
+    print_success "System requirements check passed"
+
+    # Install system dependencies
+    print_status "Installing system dependencies..."
+    if command_exists apt-get; then
+        sudo apt-get update >/dev/null 2>&1 && sudo apt-get install -y netcat-openbsd >/dev/null 2>&1 || true
+    fi
+
     # Create necessary directories
     mkdir -p logs
     mkdir -p backend/logs
     mkdir -p frontend/logs
+
+    # Install project dependencies
+    print_status "Installing project dependencies..."
+    
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing root dependencies..."
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install root dependencies"
+            exit 1
+        fi
+    fi
+
+    if [ ! -d "backend/node_modules" ]; then
+        print_status "Installing backend dependencies..."
+        cd backend
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install backend dependencies"
+            exit 1
+        fi
+        cd ..
+    fi
+
+    if [ ! -d "frontend/node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        cd frontend
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install frontend dependencies"
+            exit 1
+        fi
+        cd ..
+    fi
+
+    if [ ! -d "contracts/node_modules" ]; then
+        print_status "Installing contracts dependencies..."
+        cd contracts
+        if ! npm install >/dev/null 2>&1; then
+            print_error "Failed to install contracts dependencies"
+            exit 1
+        fi
+        cd ..
+    fi
+
+    print_success "Dependencies installed"
 
     # Free up commonly used ports
     print_status "Checking and freeing up ports..."
@@ -182,14 +277,40 @@ main() {
     
     cd ..
 
-    # Start backend server
+    # Start backend server with new features
     print_service "Starting backend server with Recall Management & Anti-Counterfeiting APIs..."
     cd backend
     
+    # Verify backend dependencies are installed
+    if [ ! -d "node_modules" ]; then
+        print_error "Backend dependencies not installed. Please run 'npm install' in the backend directory first."
+        exit 1
+    fi
+    
+    # Check if required files exist
+    if [ ! -f "simple-server.js" ]; then
+        print_error "simple-server.js not found in backend directory"
+        exit 1
+    fi
+    
+    if [ ! -f "routes/recalls.js" ]; then
+        print_error "recalls.js route file not found"
+        exit 1
+    fi
+    
+    if [ ! -f "routes/counterfeit.js" ]; then
+        print_error "counterfeit.js route file not found"
+        exit 1
+    fi
+    
     # Check if .env exists
     if [ ! -f ".env" ]; then
-        print_warning ".env file not found. Creating basic configuration..."
-        cat > .env << EOF
+        print_warning ".env file not found. Creating from .env.example..."
+        if [ -f ".env.example" ]; then
+            cp .env.example .env
+        else
+            # Create a basic .env file
+            cat > .env << EOF
 # Backend Configuration
 NODE_ENV=development
 PORT=3001
@@ -206,14 +327,37 @@ JWT_EXPIRY=24h
 # Blockchain Configuration
 ETHEREUM_RPC_URL=http://localhost:8545
 PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+# Supabase Configuration (optional)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# AWS Configuration (optional)
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
 EOF
+        fi
+        print_warning "Please update .env file with your actual configuration"
     fi
 
     # Start backend server
-    print_status "Starting backend with simple-server.js..."
-    node simple-server.js > ../logs/backend.log 2>&1 &
-    BACKEND_PID=$!
-    print_status "Backend server started with PID: $BACKEND_PID"
+    if [ -f "simple-server.js" ]; then
+        print_status "Starting backend with simple-server.js..."
+        # Create logs directory if it doesn't exist
+        mkdir -p ../logs
+        # Start the server and capture both stdout and stderr
+        node simple-server.js > ../logs/backend.log 2>&1 &
+        BACKEND_PID=$!
+        print_status "Backend server started with PID: $BACKEND_PID"
+    else
+        print_status "Starting backend with npm run dev..."
+        # Create logs directory if it doesn't exist
+        mkdir -p ../logs
+        npm run dev > ../logs/backend.log 2>&1 &
+        BACKEND_PID=$!
+        print_status "Backend server started with PID: $BACKEND_PID"
+    fi
     cd ..
 
     # Wait for backend to be ready
@@ -226,6 +370,13 @@ EOF
         print_error "Failed to start backend server"
         print_status "Checking backend logs for details..."
         
+        # Check if the process is still running
+        if kill -0 $BACKEND_PID 2>/dev/null; then
+            print_warning "Backend process is running but not responding on port 3001"
+        else
+            print_warning "Backend process has stopped"
+        fi
+        
         # Show last few lines of the log
         if [ -f "logs/backend.log" ]; then
             print_status "Last 10 lines of backend.log:"
@@ -234,28 +385,59 @@ EOF
             print_warning "Backend log file not found"
         fi
         
+        # Try to get more information about what went wrong
+        print_status "Checking if port 3001 is available..."
+        if port_in_use 3001; then
+            print_warning "Port 3001 is in use by another process"
+            if command_exists lsof; then
+                print_status "Process using port 3001:"
+                lsof -i :3001 | sed 's/^/  /'
+            fi
+        else
+            print_warning "Port 3001 is not in use"
+        fi
+        
         print_error "Backend startup failed. Please check the logs and try again."
         exit 1
     fi
 
     # Start frontend
-    print_service "Starting frontend application..."
+    print_service "Starting frontend application with new features..."
     cd frontend
+    
+    # Ensure frontend dependencies are installed
+    if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/react-scripts" ]; then
+        print_status "Installing frontend dependencies..."
+        if ! npm install > ../logs/frontend-install.log 2>&1; then
+            print_error "Failed to install frontend dependencies"
+            print_status "Check logs/frontend-install.log for details"
+            exit 1
+        fi
+        print_success "Frontend dependencies installed"
+    fi
     
     # Check if .env exists
     if [ ! -f ".env" ]; then
-        print_warning ".env file not found. Creating basic configuration..."
-        cat > .env << EOF
+        print_warning ".env file not found. Creating from .env.example..."
+        if [ -f ".env.example" ]; then
+            cp .env.example .env
+        else
+            # Create a basic .env file
+            cat > .env << EOF
 # Frontend Configuration
 REACT_APP_API_URL=http://localhost:3001/api
 REACT_APP_WS_URL=ws://localhost:3001
+
+# Supabase Configuration (optional)
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Blockchain Configuration
 REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
 REACT_APP_CHAIN_ID=1337
 REACT_APP_CHAIN_NAME="Hardhat Local"
 
-# Contract Addresses
+# Contract Addresses (will be updated after deployment)
 REACT_APP_RECALL_CONTRACT_ADDRESS=${RECALL_CONTRACT:-}
 REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=${COUNTERFEIT_CONTRACT:-}
 
@@ -263,6 +445,16 @@ REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=${COUNTERFEIT_CONTRACT:-}
 REACT_APP_ENVIRONMENT=development
 REACT_APP_DEBUG=true
 EOF
+        fi
+        print_warning "Please update .env file with your actual configuration"
+    else
+        # Update existing .env with contract addresses if they exist
+        if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
+            print_status "Updating .env with deployed contract addresses..."
+            sed -i "s/REACT_APP_RECALL_CONTRACT_ADDRESS=.*/REACT_APP_RECALL_CONTRACT_ADDRESS=$RECALL_CONTRACT/" .env
+            sed -i "s/REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=.*/REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=$COUNTERFEIT_CONTRACT/" .env
+            print_success "Contract addresses updated in .env file"
+        fi
     fi
 
     # Start frontend
@@ -310,20 +502,30 @@ EOF
 
     # Display success message
     echo ""
-    echo -e "${GREEN}✨ PharbitChain Development Environment is now running!${NC}"
+    echo -e "${GREEN}✨ PharbitChain Complete Development Environment is now running!${NC}"
     echo ""
     print_service "🔗 Services:"
     print_service "  - Hardhat Node: http://localhost:8545"
     print_service "  - Backend API: http://localhost:3001"
     print_service "  - Frontend App: http://localhost:3000"
+    print_service "  - Contract Explorer: http://localhost:8545 (use MetaMask)"
     echo ""
     print_feature "🚨 Recall Management Features:"
-    print_feature "  - API: http://localhost:3001/api/recalls"
-    print_feature "  - Health Check: http://localhost:3001/api/health"
+    print_feature "  - Quick recall initiation: http://localhost:3000 (scroll down)"
+    print_feature "  - Affected batch identification"
+    print_feature "  - Distribution tracking for rapid response"
+    print_feature "  - Stakeholder notification system"
     echo ""
     print_feature "🛡️ Anti-Counterfeiting Features:"
-    print_feature "  - API: http://localhost:3001/api/counterfeit"
-    print_feature "  - Verification: http://localhost:3001/api/counterfeit/verify"
+    print_feature "  - Visual verification indicators (QR, hologram, serial)"
+    print_feature "  - Suspicious activity flagging"
+    print_feature "  - Reporting mechanism for suspected fakes"
+    print_feature "  - Security feature generation and validation"
+    echo ""
+    print_status "📊 API Endpoints:"
+    print_status "  - Recall Management: /api/recalls/*"
+    print_status "  - Anti-Counterfeiting: /api/counterfeit/*"
+    print_status "  - Health Check: /api/health"
     echo ""
     print_status "📝 Logs are available in the logs/ directory"
     print_status "🛑 To stop all services, run: ./stop-all.sh or press Ctrl+C"
