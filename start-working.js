@@ -94,6 +94,15 @@ async function installDependencies() {
         } else {
             console.log('✅ Hardhat dependencies already installed');
         }
+        
+        // Always verify Hardhat binary exists
+        const hardhatBinary = path.join('contracts', 'node_modules', '.bin', 'hardhat');
+        if (!fs.existsSync(hardhatBinary)) {
+            console.log('⚠️  Hardhat binary not found, reinstalling...');
+            installPromises.push(
+                runCommand('npm', ['install', '--force'], 'contracts', 'Reinstalling Hardhat dependencies')
+            );
+        }
 
         if (!deps.backend) {
             installPromises.push(
@@ -207,11 +216,26 @@ function startServices() {
 
     // Start Hardhat first
     console.log('🔗 Starting Hardhat blockchain node...');
-    const hardhatProcess = spawn('npx', ['hardhat', 'node'], {
-        cwd: 'contracts',
-        stdio: 'inherit',
-        shell: true
-    });
+    
+    // Try local Hardhat first, then fallback to npx
+    const hardhatBinary = path.join('contracts', 'node_modules', '.bin', 'hardhat');
+    let hardhatProcess;
+    
+    if (fs.existsSync(hardhatBinary)) {
+        console.log('Using local Hardhat installation...');
+        hardhatProcess = spawn(hardhatBinary, ['node'], {
+            cwd: 'contracts',
+            stdio: 'inherit',
+            shell: true
+        });
+    } else {
+        console.log('Using npx Hardhat...');
+        hardhatProcess = spawn('npx', ['hardhat', 'node'], {
+            cwd: 'contracts',
+            stdio: 'inherit',
+            shell: true
+        });
+    }
 
         // Start backend after delay
         setTimeout(() => {

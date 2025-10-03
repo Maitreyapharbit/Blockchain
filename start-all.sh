@@ -201,9 +201,15 @@ main() {
         cd contracts
         
         # Ensure dependencies are installed
-        if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/hardhat" ]; then
-            print_status "Installing Hardhat dependencies..."
-            npm install --force
+        print_status "Installing Hardhat dependencies..."
+        rm -rf node_modules package-lock.json
+        npm install --force
+        
+        # Verify Hardhat installation
+        if [ ! -f "node_modules/.bin/hardhat" ]; then
+            print_error "Hardhat installation failed - binary not found"
+            print_status "Trying alternative installation method..."
+            npm install hardhat --save-dev --force
         fi
         
         # Try different methods to start Hardhat
