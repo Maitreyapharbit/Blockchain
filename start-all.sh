@@ -49,7 +49,12 @@ port_in_use() {
     if command_exists lsof; then
         lsof -i :$1 >/dev/null 2>&1
     elif command_exists netstat; then
-        netstat -tuln | grep -q ":$1 "
+        # Windows netstat compatibility
+        if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+            netstat -an | findstr ":$1 " >/dev/null 2>&1
+        else
+            netstat -tuln | grep -q ":$1 "
+        fi
     elif command_exists ss; then
         ss -tuln | grep -q ":$1 "
     elif command_exists curl; then
@@ -135,6 +140,49 @@ main() {
     mkdir -p backend/logs
     mkdir -p frontend/logs
 
+    # Install all dependencies first
+    print_status "Installing all project dependencies..."
+    
+    # Install root dependencies
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing root dependencies..."
+        npm install --force
+    else
+        print_success "Root dependencies already installed"
+    fi
+    
+    # Install contracts dependencies
+    if [ ! -d "contracts/node_modules" ] || [ ! -f "contracts/node_modules/.bin/hardhat" ]; then
+        print_status "Installing Hardhat dependencies..."
+        cd contracts
+        npm install --force
+        cd ..
+    else
+        print_success "Hardhat dependencies already installed"
+    fi
+    
+    # Install backend dependencies
+    if [ ! -d "backend/node_modules" ]; then
+        print_status "Installing backend dependencies..."
+        cd backend
+        npm install --force
+        cd ..
+    else
+        print_success "Backend dependencies already installed"
+    fi
+    
+    # Install frontend dependencies
+    if [ ! -d "frontend/node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        cd frontend
+        npm install --force
+        cd ..
+    else
+        print_success "Frontend dependencies already installed"
+    fi
+    
+    print_success "All dependencies installed successfully!"
+
     # Free up commonly used ports
     print_status "Checking and freeing up ports..."
     check_and_free_port 3000
@@ -151,7 +199,21 @@ main() {
         fi
     else
         cd contracts
-        npx hardhat node > ../logs/hardhat-node.log 2>&1 &
+        
+        # Ensure dependencies are installed
+        if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/hardhat" ]; then
+            print_status "Installing Hardhat dependencies..."
+            npm install --force
+        fi
+        
+        # Try different methods to start Hardhat
+        if [ -f "node_modules/.bin/hardhat" ]; then
+            print_status "Using local Hardhat installation..."
+            ./node_modules/.bin/hardhat node > ../logs/hardhat-node.log 2>&1 &
+        else
+            print_status "Using npx Hardhat..."
+            npx hardhat node > ../logs/hardhat-node.log 2>&1 &
+        fi
         HARDHAT_PID=$!
         cd ..
         
@@ -171,34 +233,54 @@ main() {
     
     # Compile contracts
     print_status "Compiling contracts..."
-    if npx hardhat compile > ../logs/contract-compile.log 2>&1; then
-        print_success "Contracts compiled successfully"
+    if [ -f "node_modules/.bin/hardhat" ]; then
+        if ./node_modules/.bin/hardhat compile > ../logs/contract-compile.log 2>&1; then
+            print_success "Contracts compiled successfully"
+        else
+            print_error "Contract compilation failed"
+            print_status "Check logs/contract-compile.log for details"
+            exit 1
+        fi
     else
-        print_error "Contract compilation failed"
-        print_status "Check logs/contract-compile.log for details"
-        exit 1
+        if npx hardhat compile > ../logs/contract-compile.log 2>&1; then
+            print_success "Contracts compiled successfully"
+        else
+            print_error "Contract compilation failed"
+            print_status "Check logs/contract-compile.log for details"
+            exit 1
+        fi
     fi
 
     # Deploy to local network
     print_status "Deploying to local network..."
-    if npx hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
-        print_success "Smart contracts deployed successfully"
-        
-        # Extract contract addresses from deployment log
-        RECALL_CONTRACT=$(grep "RecallManagement deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
-        COUNTERFEIT_CONTRACT=$(grep "AntiCounterfeitVerification deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
-        
-        if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
-            print_success "Contract addresses extracted:"
-            print_success "  - Recall Management: $RECALL_CONTRACT"
-            print_success "  - Anti-Counterfeiting: $COUNTERFEIT_CONTRACT"
+    if [ -f "node_modules/.bin/hardhat" ]; then
+        if ./node_modules/.bin/hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
+            print_success "Smart contracts deployed successfully"
         else
-            print_warning "Could not extract contract addresses from deployment log"
+            print_error "Contract deployment failed"
+            print_status "Check logs/contract-deploy.log for details"
+            exit 1
         fi
     else
-        print_error "Contract deployment failed"
-        print_status "Check logs/contract-deploy.log for details"
-        exit 1
+        if npx hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
+            print_success "Smart contracts deployed successfully"
+        else
+            print_error "Contract deployment failed"
+            print_status "Check logs/contract-deploy.log for details"
+            exit 1
+        fi
+    fi
+    
+    # Extract contract addresses from deployment log
+    RECALL_CONTRACT=$(grep "RecallManagement deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
+    COUNTERFEIT_CONTRACT=$(grep "AntiCounterfeitVerification deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
+    
+    if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
+        print_success "Contract addresses extracted:"
+        print_success "  - Recall Management: $RECALL_CONTRACT"
+        print_success "  - Anti-Counterfeiting: $COUNTERFEIT_CONTRACT"
+    else
+        print_warning "Could not extract contract addresses from deployment log"
     fi
     
     cd ..
