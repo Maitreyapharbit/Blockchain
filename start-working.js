@@ -87,22 +87,17 @@ async function installDependencies() {
             console.log('✅ Root dependencies already installed');
         }
 
-        if (!deps.contracts) {
-            installPromises.push(
-                runCommand('npm', ['install', '--force'], 'contracts', 'Installing Hardhat dependencies')
-            );
-        } else {
-            console.log('✅ Hardhat dependencies already installed');
-        }
-        
-        // Always verify Hardhat binary exists
-        const hardhatBinary = path.join('contracts', 'node_modules', '.bin', 'hardhat');
-        if (!fs.existsSync(hardhatBinary)) {
-            console.log('⚠️  Hardhat binary not found, reinstalling...');
-            installPromises.push(
-                runCommand('npm', ['install', '--force'], 'contracts', 'Reinstalling Hardhat dependencies')
-            );
-        }
+        // Always reinstall Hardhat to ensure proper binary creation
+        console.log('📦 Installing Hardhat dependencies...');
+        installPromises.push(
+            runCommand('npm', ['install', 'hardhat@2.19.0', '--save-dev', '--force'], 'contracts', 'Installing Hardhat')
+        );
+        installPromises.push(
+            runCommand('npm', ['install', '@nomicfoundation/hardhat-toolbox@^4.0.0', '--save-dev', '--force'], 'contracts', 'Installing Hardhat Toolbox')
+        );
+        installPromises.push(
+            runCommand('npm', ['install', '@openzeppelin/contracts@^4.9.6', '--save', '--force'], 'contracts', 'Installing OpenZeppelin')
+        );
 
         if (!deps.backend) {
             installPromises.push(
@@ -229,12 +224,40 @@ function startServices() {
             shell: true
         });
     } else {
-        console.log('Using npx Hardhat...');
-        hardhatProcess = spawn('npx', ['hardhat', 'node'], {
-            cwd: 'contracts',
-            stdio: 'inherit',
-            shell: true
-        });
+        console.log('Hardhat binary not found, trying to create it...');
+        const hardhatDir = path.join('contracts', 'node_modules', 'hardhat');
+        if (fs.existsSync(hardhatDir)) {
+            console.log('Creating Hardhat binary symlink...');
+            const binDir = path.join('contracts', 'node_modules', '.bin');
+            if (!fs.existsSync(binDir)) {
+                fs.mkdirSync(binDir, { recursive: true });
+            }
+            const cliPath = path.join(hardhatDir, 'internal', 'cli', 'cli.js');
+            if (fs.existsSync(cliPath)) {
+                fs.writeFileSync(hardhatBinary, `#!/usr/bin/env node\nrequire('${cliPath}');`);
+                fs.chmodSync(hardhatBinary, '755');
+                console.log('Hardhat binary created, using local installation...');
+                hardhatProcess = spawn(hardhatBinary, ['node'], {
+                    cwd: 'contracts',
+                    stdio: 'inherit',
+                    shell: true
+                });
+            } else {
+                console.log('Using npx Hardhat...');
+                hardhatProcess = spawn('npx', ['hardhat', 'node'], {
+                    cwd: 'contracts',
+                    stdio: 'inherit',
+                    shell: true
+                });
+            }
+        } else {
+            console.log('Using npx Hardhat...');
+            hardhatProcess = spawn('npx', ['hardhat', 'node'], {
+                cwd: 'contracts',
+                stdio: 'inherit',
+                shell: true
+            });
+        }
     }
 
         // Start backend after delay

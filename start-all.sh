@@ -203,13 +203,23 @@ main() {
         # Ensure dependencies are installed
         print_status "Installing Hardhat dependencies..."
         rm -rf node_modules package-lock.json
-        npm install --force
+        
+        # Install with specific Hardhat version
+        print_status "Installing Hardhat and dependencies..."
+        npm install hardhat@2.19.0 --save-dev --force
+        npm install @nomicfoundation/hardhat-toolbox@^4.0.0 --save-dev --force
+        npm install @openzeppelin/contracts@^4.9.6 --save --force
         
         # Verify Hardhat installation
         if [ ! -f "node_modules/.bin/hardhat" ]; then
-            print_error "Hardhat installation failed - binary not found"
-            print_status "Trying alternative installation method..."
-            npm install hardhat --save-dev --force
+            print_error "Hardhat binary still not found, trying direct installation..."
+            npx hardhat --version
+            # Try to create the binary manually
+            if [ -d "node_modules/hardhat" ]; then
+                print_status "Hardhat package found, creating symlink..."
+                mkdir -p node_modules/.bin
+                ln -sf ../hardhat/internal/cli/cli.js node_modules/.bin/hardhat
+            fi
         fi
         
         # Try different methods to start Hardhat
