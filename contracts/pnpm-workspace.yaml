@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+  - classic-level
+  - keccak
+  - secp256k1

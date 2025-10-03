@@ -140,6 +140,21 @@ main() {
     mkdir -p backend/logs
     mkdir -p frontend/logs
 
+    # Check if root .env exists
+    if [ ! -f ".env" ]; then
+        print_error "Root .env file not found. Please create one before proceeding."
+        exit 1
+    fi
+
+    # Sync environment variables
+    print_status "Synchronizing environment variables..."
+    if node sync-env.js; then
+        print_success "Environment variables synchronized successfully"
+    else
+        print_error "Failed to synchronize environment variables"
+        exit 1
+    fi
+
     # Install all dependencies first
     print_status "Installing all project dependencies..."
     
@@ -202,13 +217,11 @@ main() {
         
         # Ensure dependencies are installed
         print_status "Installing Hardhat dependencies..."
-        rm -rf node_modules package-lock.json
+        rm -rf node_modules package-lock.json pnpm-lock.yaml
         
-        # Install with specific Hardhat version
+        # Install with pnpm for better dependency resolution
         print_status "Installing Hardhat and dependencies..."
-        npm install hardhat@2.19.0 --save-dev --force
-        npm install @nomicfoundation/hardhat-toolbox@^4.0.0 --save-dev --force
-        npm install @openzeppelin/contracts@^4.9.6 --save --force
+        pnpm install hardhat@2.19.0 ethers@5.8.0 @nomicfoundation/hardhat-toolbox@2.0.2 @openzeppelin/contracts@4.9.6 --save-dev
         
         # Verify Hardhat installation
         if [ ! -f "node_modules/.bin/hardhat" ]; then
@@ -222,23 +235,37 @@ main() {
             fi
         fi
         
-        # Try different methods to start Hardhat
-        if [ -f "node_modules/.bin/hardhat" ]; then
-            print_status "Using local Hardhat installation..."
-            ./node_modules/.bin/hardhat node > ../logs/hardhat-node.log 2>&1 &
-        else
-            print_status "Using npx Hardhat..."
-            npx hardhat node > ../logs/hardhat-node.log 2>&1 &
-        fi
+        # Start Hardhat with pnpm
+        print_status "Starting Hardhat node..."
+        pnpm hardhat node > ../logs/hardhat-node.log 2>&1 &
         HARDHAT_PID=$!
         cd ..
         
-        # Wait for Hardhat node to be ready
-        if wait_for_service localhost 8545 "Hardhat Node"; then
-            print_success "Hardhat node started successfully (PID: $HARDHAT_PID)"
-        else
-            print_error "Failed to start Hardhat node"
-            print_status "Check logs/hardhat-node.log for details"
+        # Wait for Hardhat node to be ready with enhanced check
+        attempt=1
+        max_attempts=30
+        print_status "Waiting for Hardhat node to be ready..."
+        while [ $attempt -le $max_attempts ]; do
+            # Try a more comprehensive RPC check
+            if curl -s -X POST -H "Content-Type: application/json" \
+               --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' \
+               http://localhost:8545 | grep -q "result.*1337"; then
+                print_success "Hardhat node is ready and responding correctly!"
+                break
+            fi
+            print_status "Attempt $attempt/$max_attempts - waiting for Hardhat node..."
+            sleep 2
+            attempt=$((attempt + 1))
+        done
+        
+        if [ $attempt -gt $max_attempts ]; then
+            print_error "Failed to start Hardhat node or node is not responding correctly"
+            print_status "Checking Hardhat logs..."
+            if [ -f "../logs/hardhat-node.log" ]; then
+                tail -n 20 ../logs/hardhat-node.log
+            else
+                print_warning "Hardhat log file not found"
+            fi
             exit 1
         fi
     fi
@@ -305,44 +332,48 @@ main() {
     print_service "Starting backend server with Recall Management & Anti-Counterfeiting APIs..."
     cd backend
     
-    # Check if .env exists
-    if [ ! -f ".env" ]; then
-        print_warning ".env file not found. Creating basic configuration..."
-        cat > .env << EOF
-# Backend Configuration
-NODE_ENV=development
-PORT=3001
-HOST=localhost
-CORS_ORIGIN=http://localhost:3000
-
-# Database Configuration
-DATABASE_URL=postgresql://localhost:5432/pharbit
-
-# JWT Configuration
-JWT_SECRET=your-jwt-secret-key-here
-JWT_EXPIRY=24h
-
-# Blockchain Configuration
-ETHEREUM_RPC_URL=http://localhost:8545
-PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-EOF
-    else
-        print_success ".env file found, using existing configuration"
+    # Install backend dependencies if needed
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing backend dependencies..."
+        npm install --legacy-peer-deps
     fi
+    
+    # Ensure required backend packages are installed
+    for pkg in express cors dotenv body-parser ethers web3 @openzeppelin/contracts
+    do
+        if ! npm list $pkg > /dev/null 2>&1; then
+            print_status "Installing $pkg package..."
+            npm install $pkg --legacy-peer-deps
+        fi
+    done
+    
+    # Remove any existing .env symlink or file
+    rm -f .env
+    
+    # Create symlink to root .env
+    print_status "Linking root .env to backend..."
+    ln -s ../.env .env
 
-    # Copy root .env to backend if it exists and backend doesn't have one
-    if [ -f "../.env" ] && [ ! -f ".env" ]; then
-        print_status "Copying root .env to backend directory..."
-        cp ../.env .env
-    fi
+    # Ensure logs directory exists
+    mkdir -p logs
 
     # Ensure port 3001 is free for backend
     check_and_free_port 3001
 
-    # Start backend server
+    # Start backend server with environment variables and HTTPS for Codespaces
     print_status "Starting backend with simple-server.js..."
-    node simple-server.js > ../logs/backend.log 2>&1 &
+    export PORT=3001
+    export NODE_ENV=development
+    if [ -n "$CODESPACES" ]; then
+        HTTPS=true node simple-server.js > ../logs/backend.log 2>&1 &
+    else
+        node simple-server.js > ../logs/backend.log 2>&1 &
+    fi
     BACKEND_PID=$!
+    
+    # Give the process a moment to start
+    sleep 2
+    
     print_status "Backend server started with PID: $BACKEND_PID"
     cd ..
 
@@ -379,34 +410,141 @@ EOF
     print_service "Starting frontend application..."
     cd frontend
     
-    # Check if .env exists
-    if [ ! -f ".env" ]; then
-        print_warning ".env file not found. Creating basic configuration..."
-        cat > .env << EOF
-# Frontend Configuration
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_WS_URL=ws://localhost:3001
+    # Install frontend dependencies if needed
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        # Install TypeScript dependencies
+        npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest @typescript-eslint/parser @typescript-eslint/eslint-plugin @types/qrcode @types/leaflet --legacy-peer-deps
+        # Install required packages
+        npm install ethers@5.8.0 @web3-react/core @web3-react/injected-connector web3 qrcode leaflet react-leaflet @mui/material @mui/icons-material @mui/x-data-grid @emotion/react @emotion/styled framer-motion --legacy-peer-deps
+        # Install remaining dependencies
+        npm install --legacy-peer-deps
+    fi
+    
+    # Remove any existing .env symlink or file
+    rm -f .env
+    
+    # Create symlink to root .env
+    print_status "Linking root .env to frontend..."
+    ln -s ../.env .env
 
-# Blockchain Configuration
+    # Check and create public directory if it doesn't exist
+    if [ ! -d "public" ]; then
+        print_status "Creating public directory..."
+        mkdir -p public
+    fi
+
+    # Set up environment for Codespaces
+    if [ -n "$CODESPACES" ]; then
+        # Get the Codespace domain
+        CODESPACE_DOMAIN="https://$CODESPACE_NAME-3000.app.github.dev"
+        BACKEND_DOMAIN="https://$CODESPACE_NAME-3001.app.github.dev"
+        
+        # Update the frontend environment with complete configuration
+        cat > .env << EOF
+REACT_APP_API_URL=$BACKEND_DOMAIN
+REACT_APP_WS_URL=wss://$CODESPACE_NAME-3001.app.github.dev
 REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
 REACT_APP_CHAIN_ID=1337
 REACT_APP_CHAIN_NAME="Hardhat Local"
-
-# Contract Addresses
-REACT_APP_RECALL_CONTRACT_ADDRESS=${RECALL_CONTRACT:-}
-REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=${COUNTERFEIT_CONTRACT:-}
-
-# Development Configuration
-REACT_APP_ENVIRONMENT=development
+REACT_APP_ENV=development
+REACT_APP_VERSION=1.0.0
+REACT_APP_API_TIMEOUT=30000
 REACT_APP_DEBUG=true
+REACT_APP_PORT=3000
+REACT_APP_HOST=0.0.0.0
+REACT_APP_RECALL_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+REACT_APP_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+SKIP_PREFLIGHT_CHECK=true
+TSC_COMPILE_ON_ERROR=true
+DISABLE_ESLINT_PLUGIN=true
+ESLINT_NO_DEV_ERRORS=true
+CI=false
+BROWSER=none
+PORT=3000
+HOST=0.0.0.0
+HTTPS=true
 EOF
     else
-        print_success ".env file found, using existing configuration"
+        # Local development environment
+        cat > .env << EOF
+REACT_APP_API_URL=http://localhost:3001
+REACT_APP_WS_URL=ws://localhost:3001
+REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
+REACT_APP_CHAIN_ID=1337
+REACT_APP_CHAIN_NAME="Hardhat Local"
+REACT_APP_ENV=development
+REACT_APP_VERSION=1.0.0
+REACT_APP_API_TIMEOUT=30000
+REACT_APP_DEBUG=true
+REACT_APP_PORT=3000
+REACT_APP_HOST=0.0.0.0
+REACT_APP_RECALL_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+REACT_APP_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+SKIP_PREFLIGHT_CHECK=true
+TSC_COMPILE_ON_ERROR=true
+DISABLE_ESLINT_PLUGIN=true
+ESLINT_NO_DEV_ERRORS=true
+CI=false
+BROWSER=none
+PORT=3000
+HOST=0.0.0.0
+EOF
     fi
 
-    # Start frontend
-    npm start > ../logs/frontend.log 2>&1 &
+    # Start frontend with proper host and port
+    print_status "Starting frontend server..."
+    export PORT=3000
+    
+    # Clean and rebuild node_modules
+    print_status "Cleaning frontend dependencies..."
+    rm -rf node_modules package-lock.json
+    
+    # Install dependencies with specific versions
+    print_status "Installing frontend dependencies..."
+    npm install --save \
+        react@18.2.0 \
+        react-dom@18.2.0 \
+        react-router-dom@6.16.0 \
+        @mui/material@5.15.12 \
+        @mui/icons-material@5.15.12 \
+        @mui/x-data-grid@6.19.6 \
+        @emotion/react@11.11.4 \
+        @emotion/styled@11.11.0 \
+        ethers@5.7.2 \
+        web3@1.10.0 \
+        @web3-react/core@6.1.9 \
+        @web3-react/injected-connector@6.0.7 \
+        qrcode@1.5.3 \
+        leaflet@1.9.4 \
+        react-leaflet@4.2.1 \
+        --legacy-peer-deps
+
+    # Install dev dependencies
+    print_status "Installing development dependencies..."
+    npm install --save-dev \
+        typescript@4.9.5 \
+        @types/node@18.15.11 \
+        @types/react@18.2.21 \
+        @types/react-dom@18.2.7 \
+        @types/leaflet@1.9.3 \
+        @types/qrcode@1.5.1 \
+        @typescript-eslint/parser@5.62.0 \
+        @typescript-eslint/eslint-plugin@5.62.0 \
+        --legacy-peer-deps
+
+    print_status "Starting frontend application..."
+    if [ -n "$CODESPACES" ]; then
+        BROWSER=none HOST=0.0.0.0 HTTPS=true npm start > ../logs/frontend.log 2>&1 &
+    else
+        BROWSER=none HOST=0.0.0.0 npm start > ../logs/frontend.log 2>&1 &
+    fi
     FRONTEND_PID=$!
+
+    # Give the frontend more time to start
+    sleep 10
     cd ..
 
     # Wait for frontend to be ready

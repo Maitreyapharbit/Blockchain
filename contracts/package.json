@@ -11,8 +11,9 @@
     "node": "hardhat node"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/contracts": "^4.9.6",
+    "ethers": "5.8.0",
     "hardhat": "^2.19.0"
   }
 }
