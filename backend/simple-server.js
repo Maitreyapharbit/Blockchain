@@ -48,17 +48,49 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // WebSocket connection handling
-wss.on('connection', (ws) => {
-  console.log('New WebSocket connection');
+wss.on('connection', (ws, req) => {
+  console.log('New WebSocket connection from:', req.socket.remoteAddress);
+  
+  // Send welcome message
+  ws.send(JSON.stringify({
+    type: 'connection',
+    message: 'Connected to PharbitChain WebSocket server',
+    timestamp: new Date().toISOString()
+  }));
   
   ws.on('message', (message) => {
-    console.log('Received:', message);
-    // Handle incoming messages
+    try {
+      const data = JSON.parse(message);
+      console.log('Received WebSocket message:', data);
+      
+      // Echo back the message for testing
+      ws.send(JSON.stringify({
+        type: 'echo',
+        originalMessage: data,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error parsing WebSocket message:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Invalid JSON message',
+        timestamp: new Date().toISOString()
+      }));
+    }
   });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+  ws.on('close', (code, reason) => {
+    console.log('Client disconnected:', code, reason.toString());
   });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+});
+
+// Handle WebSocket server errors
+wss.on('error', (error) => {
+  console.error('WebSocket server error:', error);
 });
 
 // Health check endpoint
@@ -72,8 +104,24 @@ app.get('/health', (req, res) => {
 });
 
 // Mount API routes
-app.use('/recalls', recallRoutes);
-app.use('/counterfeit', counterfeitRoutes);
+app.use('/api/recalls', recallRoutes);
+app.use('/api/counterfeit', counterfeitRoutes);
+
+// WebSocket endpoint info
+app.get('/api/websocket', (req, res) => {
+  const protocol = req.secure ? 'wss' : 'ws';
+  const host = req.get('host');
+  const wsUrl = `${protocol}://${host}`;
+  
+  res.json({
+    success: true,
+    websocket: {
+      url: wsUrl,
+      status: 'available',
+      connections: wss.clients.size
+    }
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -87,10 +135,14 @@ app.use((err, req, res, next) => {
 
 // Start the server
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log('Available endpoints:');
-  console.log('  - GET  /health          - Health check');
-  console.log('  - GET  /recalls         - Get all recalls');
-  console.log('  - POST /recalls/initiate - Initiate new recall');
-  console.log('  - GET  /counterfeit     - Get counterfeit reports');
+  console.log(`🚀 PharbitChain API Server running on port ${PORT}`);
+  console.log('📡 Available endpoints:');
+  console.log('  - GET  /health              - Health check');
+  console.log('  - GET  /api/websocket       - WebSocket info');
+  console.log('  - GET  /api/recalls         - Get all recalls');
+  console.log('  - POST /api/recalls/initiate - Initiate new recall');
+  console.log('  - GET  /api/counterfeit     - Get counterfeit reports');
+  console.log('🔌 WebSocket available at:');
+  console.log(`  - ws://localhost:${PORT} (local)`);
+  console.log(`  - wss://${process.env.CODESPACE_NAME || 'your-codespace'}-${PORT}.app.github.dev (GitHub Codespaces)`);
 });

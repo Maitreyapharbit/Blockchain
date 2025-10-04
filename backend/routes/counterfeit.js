@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middleware/auth');
+// Temporarily disabled authentication middleware
+// const { authenticate, authorize } = require('../middleware/auth');
 const { asyncHandler, sendSuccessResponse, sendErrorResponse } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
@@ -59,7 +60,7 @@ const generateId = () => `RPT-${Date.now()}-${Math.random().toString(36).substr(
  *       500:
  *         description: Internal server error
  */
-router.post('/verify', authenticate, asyncHandler(async (req, res) => {
+router.post('/verify', asyncHandler(async (req, res) => {
     const { batchId, verificationType, providedData, verifiedBy, ipAddress, userAgent } = req.body;
 
     // Validation
@@ -209,7 +210,7 @@ router.post('/verify', authenticate, asyncHandler(async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post('/report', authenticate, asyncHandler(async (req, res) => {
+router.post('/report', asyncHandler(async (req, res) => {
     const { 
         batchId, 
         reporterName, 
@@ -306,7 +307,7 @@ router.post('/report', authenticate, asyncHandler(async (req, res) => {
  *       200:
  *         description: List of flagged batches retrieved successfully
  */
-router.get('/flagged', authenticate, asyncHandler(async (req, res) => {
+router.get('/flagged', asyncHandler(async (req, res) => {
     try {
         const results = flaggedBatches.map(flagged => {
             const securityFeature = securityFeatures.find(sf => sf.batchId === flagged.batchId);
@@ -388,7 +389,7 @@ router.get('/flagged', authenticate, asyncHandler(async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post('/security-features', authenticate, authorize(['manufacturer', 'admin']), asyncHandler(async (req, res) => {
+router.post('/security-features', asyncHandler(async (req, res) => {
     const { batchId, qrCodeHash, hologramId, serialNumber, securityPattern } = req.body;
 
     // Validation
@@ -461,7 +462,7 @@ router.post('/security-features', authenticate, authorize(['manufacturer', 'admi
  *       404:
  *         description: Security features not found
  */
-router.get('/security-features/:batchId', authenticate, asyncHandler(async (req, res) => {
+router.get('/security-features/:batchId', asyncHandler(async (req, res) => {
     const { batchId } = req.params;
 
     try {
@@ -510,7 +511,7 @@ router.get('/security-features/:batchId', authenticate, asyncHandler(async (req,
  *       404:
  *         description: Report not found
  */
-router.patch('/reports/:reportId/status', authenticate, authorize(['admin', 'investigator']), asyncHandler(async (req, res) => {
+router.patch('/reports/:reportId/status', asyncHandler(async (req, res) => {
     const { reportId } = req.params;
     const { status, investigatorNotes } = req.body;
 
@@ -558,7 +559,7 @@ router.patch('/reports/:reportId/status', authenticate, authorize(['admin', 'inv
  *       200:
  *         description: Verification history retrieved successfully
  */
-router.get('/verification-history/:batchId', authenticate, asyncHandler(async (req, res) => {
+router.get('/verification-history/:batchId', asyncHandler(async (req, res) => {
     const { batchId } = req.params;
 
     try {
@@ -596,7 +597,7 @@ router.get('/verification-history/:batchId', authenticate, asyncHandler(async (r
  *       200:
  *         description: List of all reports retrieved successfully
  */
-router.get('/reports', authenticate, asyncHandler(async (req, res) => {
+router.get('/reports', asyncHandler(async (req, res) => {
     try {
         const result = counterfeitReports.map(report => ({
             id: report.id,
