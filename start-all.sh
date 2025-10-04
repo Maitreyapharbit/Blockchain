@@ -347,12 +347,9 @@ main() {
         fi
     done
     
-    # Remove any existing .env symlink or file
-    rm -f .env
-    
-    # Create symlink to root .env
-    print_status "Linking root .env to backend..."
-    ln -s ../.env .env
+    # The backend .env file is already synchronized by sync-env.js
+    # No need to create symlink or overwrite
+    print_status "Using synchronized backend .env file..."
 
     # Ensure logs directory exists
     mkdir -p logs
@@ -421,12 +418,9 @@ main() {
         npm install --legacy-peer-deps
     fi
     
-    # Remove any existing .env symlink or file
-    rm -f .env
-    
-    # Create symlink to root .env
-    print_status "Linking root .env to frontend..."
-    ln -s ../.env .env
+    # The frontend .env file is already synchronized by sync-env.js
+    # No need to create symlink or overwrite
+    print_status "Using synchronized frontend .env file..."
 
     # Check and create public directory if it doesn't exist
     if [ ! -d "public" ]; then
@@ -434,64 +428,31 @@ main() {
         mkdir -p public
     fi
 
-    # Set up environment for Codespaces
+    # The frontend .env file is already synchronized by sync-env.js
+    # We just need to add Codespaces-specific overrides if needed
     if [ -n "$CODESPACES" ]; then
         # Get the Codespace domain
         CODESPACE_DOMAIN="https://$CODESPACE_NAME-3000.app.github.dev"
         BACKEND_DOMAIN="https://$CODESPACE_NAME-3001.app.github.dev"
         
-        # Update the frontend environment with complete configuration
-        cat > .env << EOF
-REACT_APP_API_URL=$BACKEND_DOMAIN
-REACT_APP_WS_URL=wss://$CODESPACE_NAME-3001.app.github.dev
-REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
-REACT_APP_CHAIN_ID=1337
-REACT_APP_CHAIN_NAME="Hardhat Local"
-REACT_APP_ENV=development
-REACT_APP_VERSION=1.0.0
-REACT_APP_API_TIMEOUT=30000
-REACT_APP_DEBUG=true
-REACT_APP_PORT=3000
-REACT_APP_HOST=0.0.0.0
-REACT_APP_RECALL_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-REACT_APP_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-SKIP_PREFLIGHT_CHECK=true
-TSC_COMPILE_ON_ERROR=true
-DISABLE_ESLINT_PLUGIN=true
-ESLINT_NO_DEV_ERRORS=true
-CI=false
-BROWSER=none
-PORT=3000
-HOST=0.0.0.0
-HTTPS=true
-EOF
-    else
-        # Local development environment
-        cat > .env << EOF
-REACT_APP_API_URL=http://localhost:3001
-REACT_APP_WS_URL=ws://localhost:3001
-REACT_APP_ETHEREUM_RPC_URL=http://localhost:8545
-REACT_APP_CHAIN_ID=1337
-REACT_APP_CHAIN_NAME="Hardhat Local"
-REACT_APP_ENV=development
-REACT_APP_VERSION=1.0.0
-REACT_APP_API_TIMEOUT=30000
-REACT_APP_DEBUG=true
-REACT_APP_PORT=3000
-REACT_APP_HOST=0.0.0.0
-REACT_APP_RECALL_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-REACT_APP_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-SKIP_PREFLIGHT_CHECK=true
-TSC_COMPILE_ON_ERROR=true
-DISABLE_ESLINT_PLUGIN=true
-ESLINT_NO_DEV_ERRORS=true
-CI=false
-BROWSER=none
-PORT=3000
-HOST=0.0.0.0
-EOF
+        # Update specific variables for Codespaces without overwriting the entire file
+        print_status "Updating frontend environment for Codespaces..."
+        
+        # Read existing .env and update specific variables
+        if [ -f ".env" ]; then
+            # Create a backup
+            cp .env .env.backup
+            
+            # Update specific variables for Codespaces
+            sed -i "s|REACT_APP_API_URL=.*|REACT_APP_API_URL=$BACKEND_DOMAIN|" .env
+            sed -i "s|REACT_APP_WS_URL=.*|REACT_APP_WS_URL=wss://$CODESPACE_NAME-3001.app.github.dev|" .env
+            sed -i "s|HTTPS=.*|HTTPS=true|" .env
+            
+            # Add HTTPS=true if not present
+            if ! grep -q "HTTPS=" .env; then
+                echo "HTTPS=true" >> .env
+            fi
+        fi
     fi
 
     # Start frontend with proper host and port
