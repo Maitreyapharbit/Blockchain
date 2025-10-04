@@ -36,12 +36,18 @@ const FRONTEND_VARS = [
   'REACT_APP_WS_URL',
   'REACT_APP_CHAIN_NAME',
   'REACT_APP_RPC_URL',
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'SUPABASE_PROJECT_ID',
+  'REACT_APP_DEBUG',
   'REACT_APP_PORT',
+  'REACT_APP_HOST',
+  'SKIP_PREFLIGHT_CHECK',
+  'TSC_COMPILE_ON_ERROR',
+  'DISABLE_ESLINT_PLUGIN',
+  'ESLINT_NO_DEV_ERRORS',
+  'CI',
+  'BROWSER',
   'PORT',
-  'API_PORT'
+  'HOST',
+  'HTTPS'
 ];
 
 const CONTRACTS_VARS = [
@@ -59,6 +65,35 @@ const CONTRACTS_VARS = [
   'ALCHEMY_API_KEY',
   'ETHERSCAN_API_KEY',
   'HARDHAT_NETWORK'
+];
+
+// Backend variables (for backend .env)
+const BACKEND_VARS = [
+  'NODE_ENV',
+  'PORT',
+  'API_PORT',
+  'CORS_ORIGIN',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_JWT_SECRET',
+  'SUPABASE_PROJECT_ID',
+  'SUPABASE_DB_PASSWORD',
+  'DATABASE_URL',
+  'ETHEREUM_RPC_URL',
+  'PRIVATE_KEY',
+  'INFURA_PROJECT_ID',
+  'HARDHAT_NETWORK',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_REGION',
+  'AWS_S3_BUCKET',
+  'EC2_INSTANCE_ID',
+  'EC2_PUBLIC_DNS',
+  'EC2_PUBLIC_IP',
+  'JWT_SECRET',
+  'SESSION_SECRET',
+  'JWT_EXPIRY'
 ];
 
 // Additional environment variables that should be preserved
@@ -171,6 +206,25 @@ function syncContractsEnv() {
   console.log(`✅ Contracts .env updated: ${CONTRACTS_ENV_PATH}`);
 }
 
+function syncBackendEnv() {
+  console.log('🔄 Syncing backend environment variables...');
+  
+  const rootEnv = parseEnvFile(ROOT_ENV_PATH);
+  const backendEnv = {};
+  
+  BACKEND_VARS.forEach(varName => {
+    if (rootEnv[varName]) {
+      backendEnv[varName] = rootEnv[varName];
+    } else {
+      console.warn(`⚠️  Backend variable ${varName} not found in root .env`);
+    }
+  });
+  
+  const backendEnvPath = path.join(__dirname, 'backend', '.env');
+  writeEnvFile(backendEnvPath, backendEnv, '# Backend Environment Variables');
+  console.log(`✅ Backend .env updated: ${backendEnvPath}`);
+}
+
 // Main execution
 syncAllEnv(); // Always sync all variables first
 
@@ -178,9 +232,12 @@ if (process.argv.includes('--frontend-only')) {
   syncFrontendEnv();
 } else if (process.argv.includes('--contracts-only')) {
   syncContractsEnv();
+} else if (process.argv.includes('--backend-only')) {
+  syncBackendEnv();
 } else {
   syncFrontendEnv();
   syncContractsEnv();
+  syncBackendEnv();
 }
 
 function main() {
@@ -198,14 +255,16 @@ function main() {
     syncFrontendEnv();
   } else if (args.includes('--contracts-only')) {
     syncContractsEnv();
+  } else if (args.includes('--backend-only')) {
+    syncBackendEnv();
   } else {
     syncFrontendEnv();
     syncContractsEnv();
+    syncBackendEnv();
   }
   
   console.log('\n✨ Environment synchronization complete!');
-  console.log('\n📝 Note: Backend loads environment variables directly from root .env');
-  console.log('   No separate .env file needed for backend.');
+  console.log('\n📝 All environment variables have been synchronized to their respective directories.');
 }
 
 if (require.main === module) {
@@ -215,6 +274,7 @@ if (require.main === module) {
 module.exports = {
   syncFrontendEnv,
   syncContractsEnv,
+  syncBackendEnv,
   parseEnvFile,
   writeEnvFile
 };
