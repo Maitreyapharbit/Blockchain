@@ -11,14 +11,20 @@ class WebSocketService {
 
   // Generate WebSocket URL based on environment
   getWebSocketUrl() {
-    // Check if we're in GitHub Codespaces
-    if (window.location.hostname.includes('app.github.dev')) {
-      const codespaceName = process.env.REACT_APP_CODESPACE_NAME || 'verbose-tribble-7vxrwqqxr4g5fr9j5';
-      return `wss://${codespaceName}-3001.app.github.dev/ws`;
+    // Allow explicit override from environment (.env)
+    if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
+      return process.env.REACT_APP_WS_URL;
     }
-    
-    // Default to local development
-    return process.env.REACT_APP_WS_URL || 'ws://localhost:3001/ws';
+
+    // Build from current location — use wss when on https, ws when on http
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const host = window.location.host; // includes hostname:port
+      return `${protocol}://${host.replace(/:3000$/, ':3001')}/ws`;
+    } catch (err) {
+      // Fallback to localhost
+      return 'ws://localhost:3001/ws';
+    }
   }
 
   connect() {

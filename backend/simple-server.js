@@ -19,20 +19,24 @@ const PORT = process.env.API_PORT || process.env.PORT || 3001;
 // CORS configuration for local and GitHub Codespaces
 const corsOptions = {
   origin: function(origin, callback) {
-    const allowedOrigins = [
-      'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000'
-    ];
-    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.app.github.dev')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+
+    // Allow explicit origin from environment
+    const envOrigin = process.env.CORS_ORIGIN;
+
+    // Allow localhost and 127.0.0.1
+    const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+    // Allow any subdomain of app.github.dev (GitHub Codespaces / github.dev previews)
+    const isGitHubDev = origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev');
+
+    if (isGitHubDev || localOrigins.indexOf(origin) !== -1 || (envOrigin && origin === envOrigin)) {
+      // Reflect the request origin (safer than wildcard when credentials are used)
+      return callback(null, true);
     }
+
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -42,10 +46,34 @@ const corsOptions = {
 };
 
 // Enable CORS pre-flight requests
-app.options('*', cors(corsOptions));
+app.options('*', (req, res) => {
+  // Use cors middleware for preflight but reflect allowed origin header
+  const origin = req.get('Origin');
+  try {
+    cors(corsOptions)(req, res, () => {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
+      res.sendStatus(200);
+    });
+  } catch (err) {
+    res.status(403).json({ success: false, error: 'CORS preflight failed' });
+  }
+});
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
+// Apply CORS middleware (reflect origin on allowed requests)
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+  cors(corsOptions)(req, res, (err) => {
+    if (err) return next(err);
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    next();
+  });
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

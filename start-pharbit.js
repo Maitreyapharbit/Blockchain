@@ -51,22 +51,22 @@ function startSimpleMode() {
             console.log('⛓️ Blockchain: http://localhost:8545');
             console.log('\nPress Ctrl+C to stop all services...');
 
-            // Handle process termination
-            process.on('SIGINT', () => {
+            // Handle process termination (cross-platform)
+            const terminateChildren = () => {
                 console.log('\n🛑 Stopping all services...');
-                hardhatProcess.kill('SIGINT');
-                backendProcess.kill('SIGINT');
-                frontendProcess.kill('SIGINT');
+                try { hardhatProcess.kill(); } catch (e) {}
+                try { backendProcess.kill(); } catch (e) {}
+                try { frontendProcess.kill(); } catch (e) {}
                 process.exit(0);
-            });
+            };
 
-            process.on('SIGTERM', () => {
-                console.log('\n🛑 Stopping all services...');
-                hardhatProcess.kill('SIGTERM');
-                backendProcess.kill('SIGTERM');
-                frontendProcess.kill('SIGTERM');
-                process.exit(0);
-            });
+            process.on('SIGINT', terminateChildren);
+            process.on('SIGTERM', terminateChildren);
+            if (process.platform === 'win32') {
+                // Ctrl+C handling for Windows
+                const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
+                rl.on('SIGINT', () => process.emit('SIGINT'));
+            }
 
         }, 3000); // Wait 3 seconds for backend
 
@@ -127,17 +127,18 @@ const child = spawn('npm', ['run', 'dev'], {
 });
 
 // Handle process termination
-process.on('SIGINT', () => {
+const terminateMainChild = () => {
     console.log('\n🛑 Stopping all services...');
-    child.kill('SIGINT');
+    try { child.kill(); } catch (e) {}
     process.exit(0);
-});
+};
 
-process.on('SIGTERM', () => {
-    console.log('\n🛑 Stopping all services...');
-    child.kill('SIGTERM');
-    process.exit(0);
-});
+process.on('SIGINT', terminateMainChild);
+process.on('SIGTERM', terminateMainChild);
+if (process.platform === 'win32') {
+    const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
+    rl.on('SIGINT', () => process.emit('SIGINT'));
+}
 
 child.on('close', (code) => {
     console.log(`\n✅ All services stopped with code ${code}`);

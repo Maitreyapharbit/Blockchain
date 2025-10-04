@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "start:all": "node start-pharbit.js",
     "dev:frontend": "cd frontend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "build": "cd frontend && npm run build",

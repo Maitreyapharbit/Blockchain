@@ -1,4 +1,24 @@
-# Simple Pharbit Blockchain Startup Script
+<#
+Start all services on Windows PowerShell
+Usage: .\start-all.ps1
+#>
+if (-not (Test-Path -Path "package.json")) {
+    Write-Error "Please run this script from the project root that contains package.json"
+    exit 1
+}
+
+Write-Host "Starting Pharbit Blockchain application..."
+
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Error "Node.js not found. Please install Node.js from https://nodejs.org/"
+    exit 1
+}
+
+Write-Host "Installing dependencies (if needed)..."
+npm install --no-audit --no-fund
+
+Write-Host "Running start-pharbit.js"
+node start-pharbit.js# Simple Pharbit Blockchain Startup Script
 Write-Host "🚀 Starting Pharbit Blockchain Application..." -ForegroundColor Green
 Write-Host "===============================================" -ForegroundColor Green
 

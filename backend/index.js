@@ -38,28 +38,32 @@ app.use(helmet({
 }));
 
 // CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
-      config.cors.origin
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+// Use dynamic CORS handling to support github.dev preview URLs and configured origin
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+
+  const envOrigin = config.cors.origin;
+  const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  const isGitHubDev = origin && (origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev'));
+
+  if (!origin || isGitHubDev || localOrigins.indexOf(origin) !== -1 || (envOrigin && origin === envOrigin)) {
+    // Reflect the origin to allow credentials
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', String(config.cors.credentials));
+      res.setHeader('Vary', 'Origin');
     }
-  },
-  credentials: config.cors.credentials,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-}));
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Range,X-Content-Range');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
+    // Handle preflight
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    return next();
+  }
+
+  // Not allowed
+  res.status(403).json({ success: false, error: 'Not allowed by CORS' });
+});
 
 // Rate limiting
 const limiter = rateLimit({

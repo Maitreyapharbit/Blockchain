@@ -1,4 +1,24 @@
 @echo off
+REM Start all services on Windows (cmd)
+SETLOCAL
+if not exist package.json (
+  echo Error: Please run this script from the project root containing package.json
+  exit /b 1
+)
+
+echo Starting Pharbit Blockchain application...
+node --version >nul 2>&1 || (
+  echo Node.js is required but not found in PATH. Please install Node.js from https://nodejs.org/
+  exit /b 1
+)
+
+echo Ensuring dependencies are installed...
+npm install --no-audit --no-fund
+
+echo Running start-pharbit.js
+node start-pharbit.js
+
+ENDLOCAL@echo off
 echo.
 echo ===============================================
 echo   Pharbit Blockchain - Simple Startup
