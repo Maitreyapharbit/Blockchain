@@ -25,7 +25,8 @@ export const MetaMaskProvider = ({ children }) => {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.ethereum) {
       setIsInstalled(true);
-      setProvider(new ethers.BrowserProvider(window.ethereum));
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(provider);
     }
   }, []);
 
@@ -62,8 +63,8 @@ export const MetaMaskProvider = ({ children }) => {
         return { success: false, error: 'No accounts found' };
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
       const address = await signer.getAddress();
       const network = await provider.getNetwork();
       const balance = await provider.getBalance(address);
@@ -72,7 +73,7 @@ export const MetaMaskProvider = ({ children }) => {
       setChainId(Number(network.chainId));
       setProvider(provider);
       setSigner(signer);
-      setBalance(ethers.formatEther(balance));
+      setBalance(ethers.utils.formatEther(balance));
       setIsConnected(true);
 
       toast.success(`Connected to ${address.slice(0, 6)}...${address.slice(-4)}`);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import {
   ThemeProvider,
   createTheme,
@@ -11,6 +11,7 @@ import {
   Tabs,
   Tab,
   Paper,
+  type Theme,
 } from '@mui/material';
 import {
   Warning as WarningIcon,
@@ -63,22 +64,26 @@ const theme = createTheme({
 });
 
 interface TabPanelProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   index: number;
   value: number;
 }
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
+
+  if (value !== index) {
+    return null;
+  }
+
   return (
     <div
       role="tabpanel"
-      hidden={value !== index}
       id={`main-tabpanel-${index}`}
       aria-labelledby={`main-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      <Box sx={{ p: 3 }}>{children}</Box>
     </div>
   );
 }
@@ -86,7 +91,7 @@ function TabPanel(props: TabPanelProps) {
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -96,7 +101,7 @@ const App: React.FC = () => {
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static" elevation={0}>
           <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
               Pharmaceutical Blockchain System
             </Typography>
             <Typography variant="body2" sx={{ mr: 2 }}>

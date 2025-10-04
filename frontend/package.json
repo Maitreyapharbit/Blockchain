@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prestart": "node ../sync-env.js --frontend-only",
-    "start": "react-scripts start",
+    "start": "HTTPS=false react-scripts start",
     "prebuild": "node ../sync-env.js --frontend-only",
     "build": "react-scripts build",
     "test": "react-scripts test",

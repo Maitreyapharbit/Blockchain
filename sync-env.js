@@ -32,7 +32,10 @@ const FRONTEND_VARS = [
   'REACT_APP_CONTRACT_ADDRESS',
   'REACT_APP_CHAIN_ID',
   'REACT_APP_RECALL_CONTRACT_ADDRESS',
-  'REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS'
+  'REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS',
+  'REACT_APP_WS_URL',
+  'REACT_APP_CHAIN_NAME',
+  'REACT_APP_RPC_URL'
 ];
 
 const CONTRACTS_VARS = [
@@ -48,7 +51,34 @@ const CONTRACTS_VARS = [
   'INVESTIGATOR_ADDRESS',
   'INFURA_PROJECT_ID',
   'ALCHEMY_API_KEY',
-  'ETHERSCAN_API_KEY'
+  'ETHERSCAN_API_KEY',
+  'HARDHAT_NETWORK'
+];
+
+// Additional environment variables that should be preserved
+const ADDITIONAL_VARS = [
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_REGION',
+  'AWS_S3_BUCKET',
+  'EC2_INSTANCE_ID',
+  'EC2_PUBLIC_DNS',
+  'EC2_PUBLIC_IP',
+  'NODE_ENV',
+  'PORT',
+  'API_PORT',
+  'CORS_ORIGIN',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'DATABASE_URL',
+  'SUPABASE_JWT_SECRET',
+  'SUPABASE_PROJECT_ID',
+  'SUPABASE_DB_PASSWORD',
+  'JWT_SECRET',
+  'SESSION_SECRET',
+  'JWT_EXPIRY',
+  'PHARBIT_PEM_KEY'
 ];
 
 function parseEnvFile(filePath) {
@@ -90,6 +120,26 @@ function writeEnvFile(filePath, envVars, comment = '') {
   fs.writeFileSync(filePath, lines.join('\n') + '\n');
 }
 
+function syncAllEnv() {
+  console.log('🔄 Syncing all environment variables...');
+  
+  const rootEnv = parseEnvFile(ROOT_ENV_PATH);
+  const allVars = new Set([...FRONTEND_VARS, ...CONTRACTS_VARS, ...ADDITIONAL_VARS]);
+  
+  // Create new env object with all variables
+  const newEnv = {};
+  allVars.forEach(varName => {
+    if (rootEnv[varName]) {
+      newEnv[varName] = rootEnv[varName];
+    }
+  });
+  
+  // Write back to root .env to preserve all variables
+  writeEnvFile(ROOT_ENV_PATH, newEnv, '# Environment Variables - Managed by sync-env.js');
+  
+  // Continue with frontend/contracts specific syncs
+}
+
 function syncFrontendEnv() {
   console.log('🔄 Syncing frontend environment variables...');
   
@@ -124,6 +174,18 @@ function syncContractsEnv() {
   
   writeEnvFile(CONTRACTS_ENV_PATH, contractsEnv, '# Contracts Environment Variables');
   console.log(`✅ Contracts .env updated: ${CONTRACTS_ENV_PATH}`);
+}
+
+// Main execution
+syncAllEnv(); // Always sync all variables first
+
+if (process.argv.includes('--frontend-only')) {
+  syncFrontendEnv();
+} else if (process.argv.includes('--contracts-only')) {
+  syncContractsEnv();
+} else {
+  syncFrontendEnv();
+  syncContractsEnv();
 }
 
 function main() {
