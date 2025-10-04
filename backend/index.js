@@ -20,6 +20,8 @@ const complianceRoutes = require('./routes/compliance');
 const fileRoutes = require('./routes/files');
 const walletRoutes = require('./routes/wallets');
 const healthRoutes = require('./routes/health');
+const recallRoutes = require('./routes/recalls');
+const counterfeitRoutes = require('./routes/counterfeit');
 
 const app = express();
 
@@ -37,10 +39,26 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: config.cors.origin,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
+      config.cors.origin
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: config.cors.credentials,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
 }));
 
 // Rate limiting
@@ -81,6 +99,8 @@ app.use('/api/batches', batchRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/wallets', walletRoutes);
+app.use('/api/recalls', recallRoutes);
+app.use('/api/counterfeit', counterfeitRoutes);
 
 // API documentation
 if (config.env === 'development') {

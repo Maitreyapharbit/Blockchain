@@ -372,7 +372,7 @@ const BatchVerifier = () => {
         <BatchCard>
           <BatchHeader>
             <BatchId>Batch #{batch.batchId || searchId}</BatchId>
-            <Status verified={verificationResult?.verified}>
+            <Status $verified={verificationResult?.verified}>
               {verificationResult?.verified ? 'VERIFIED' : 'UNVERIFIED'}
             </Status>
           </BatchHeader>
