@@ -6,7 +6,7 @@ const authenticate = (req, res, next) => {
   // In production, this would validate JWT tokens
   req.user = {
     id: 'demo-user',
-    role: 'manufacturer',
+    role: 'admin',
     address: '0x1234567890123456789012345678901234567890'
   };
   next();
@@ -14,20 +14,16 @@ const authenticate = (req, res, next) => {
 
 const authorize = (roles) => {
   return (req, res, next) => {
-    // For demonstration purposes, we'll allow all roles
+    // For demonstration purposes, we'll allow all access
     // In production, this would check user roles
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      });
-    }
-    
-    if (roles && !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Insufficient permissions'
-      });
+    next();
+  };
+};
+
+module.exports = {
+  authenticate,
+  authorize
+};
     }
     
     next();

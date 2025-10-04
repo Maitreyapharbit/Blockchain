@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const WebSocket = require('ws');
+const http = require('http');
 
 // Import route modules
 const recallRoutes = require('./routes/recalls');
@@ -18,21 +20,40 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+// Get port from environment variable or use default
+const PORT = process.env.API_PORT || process.env.PORT || 3001;
+
+// CORS configuration
+const corsOptions = {
+  origin: ['https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+};
 
 // Basic middleware
-app.use(cors({
-  origin: function(origin, callback) {
-    // Allow any origin in development
-    callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-}));
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// WebSocket connection handling
+wss.on('connection', (ws) => {
+  console.log('New WebSocket connection');
+  
+  ws.on('message', (message) => {
+    console.log('Received:', message);
+    // Handle incoming messages
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -44,146 +65,26 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'PharbitChain API Server is running',
-    timestamp: new Date().toISOString(),
-    status: 'healthy'
-  });
-});
+// Mount API routes
+app.use('/recalls', recallRoutes);
+app.use('/counterfeit', counterfeitRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'PharbitChain API Server',
-    version: '1.0.0',
-    environment: 'development',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      health: '/health',
-      api: '/api',
-    },
-  });
-});
-
-// API Routes
-app.use('/api/recalls', recallRoutes);
-app.use('/api/counterfeit', counterfeitRoutes);
-
-// Basic API routes
-app.get('/api', (req, res) => {
-  res.json({
-    success: true,
-    message: 'PharbitChain API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/api/health',
-      batches: '/api/batches',
-      compliance: '/api/compliance',
-      files: '/api/files',
-      wallets: '/api/wallets',
-      recalls: '/api/recalls',
-      counterfeit: '/api/counterfeit',
-    },
-  });
-});
-
-// Mock API routes for testing
-app.get('/api/batches', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: 'Batches endpoint - not implemented yet'
-  });
-});
-
-app.get('/api/compliance', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: 'Compliance endpoint - not implemented yet'
-  });
-});
-
-app.get('/api/files', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: 'Files endpoint - not implemented yet'
-  });
-});
-
-app.get('/api/wallets', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: 'Wallets endpoint - not implemented yet'
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      code: 'NOT_FOUND',
-      message: 'Endpoint not found',
-      path: req.originalUrl,
-    },
-  });
-});
-
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
   res.status(500).json({
     success: false,
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    }
+    message: 'Internal Server Error',
+    error: err.message
   });
 });
 
-// Start server
-const PORT = process.env.API_PORT || process.env.PORT || 3001;
-const HOST = process.env.HOST || 'localhost';
-
-const server = app.listen(PORT, HOST, () => {
-  console.log(`PharbitChain API Server running on http://${HOST}:${PORT}`);
-  console.log(`Health check: http://${HOST}:${PORT}/health`);
-  console.log(`API Documentation: http://${HOST}:${PORT}/api`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+// Start the server
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log('Available endpoints:');
+  console.log('  - GET  /health          - Health check');
+  console.log('  - GET  /recalls         - Get all recalls');
+  console.log('  - POST /recalls/initiate - Initiate new recall');
+  console.log('  - GET  /counterfeit     - Get counterfeit reports');
 });
-
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Please free the port or use a different port.`);
-  } else {
-    console.error('Server error:', error);
-  }
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
-
-module.exports = app;
