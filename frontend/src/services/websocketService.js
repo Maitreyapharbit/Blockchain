@@ -11,20 +11,18 @@ class WebSocketService {
 
   // Generate WebSocket URL based on environment
   getWebSocketUrl() {
-    // Allow explicit override from environment (.env)
+    // Always build from window.location for Codespaces/browser preview
+    if (typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('.app.github.dev')) {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      let host = window.location.host.replace(/-(3000)(\.|$)/, '-3001');
+      host = host.replace(/:3000$/, ':3001');
+      return `${protocol}://${host}/ws`;
+    }
+    // Fallback to env or localhost
     if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
       return process.env.REACT_APP_WS_URL;
     }
-
-    // Build from current location — use wss when on https, ws when on http
-    try {
-      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-      const host = window.location.host; // includes hostname:port
-      return `${protocol}://${host.replace(/:3000$/, ':3001')}/ws`;
-    } catch (err) {
-      // Fallback to localhost
-      return 'ws://localhost:3001/ws';
-    }
+    return 'ws://localhost:3001/ws';
   }
 
   connect() {

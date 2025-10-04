@@ -106,6 +106,19 @@ app.use('/api/wallets', walletRoutes);
 app.use('/api/recalls', recallRoutes);
 app.use('/api/counterfeit', counterfeitRoutes);
 
+// CORS diagnostic endpoint
+app.get('/api/cors-debug', (req, res) => {
+  res.json({
+    success: true,
+    origin: req.get('Origin') || null,
+    headers: {
+      'Access-Control-Request-Method': req.get('Access-Control-Request-Method') || null,
+      'Access-Control-Request-Headers': req.get('Access-Control-Request-Headers') || null,
+    },
+    message: 'CORS debug - server received your request'
+  });
+});
+
 // API documentation
 if (config.env === 'development') {
   const swaggerUi = require('swagger-ui-express');

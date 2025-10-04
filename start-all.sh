@@ -129,10 +129,17 @@ main() {
     echo -e "${PURPLE}📋 Including Recall Management & Anti-Counterfeiting Features${NC}"
     echo ""
 
+
     # Check if we're in the right directory
     if [ ! -f "package.json" ]; then
         print_error "Please run this script from the project root directory"
         exit 1
+    fi
+
+    # Auto-update .env for Codespaces (if possible)
+    if [ -f "scripts/update-env-codespace.js" ]; then
+        print_status "Updating .env for Codespaces (if detected)..."
+        node scripts/update-env-codespace.js
     fi
 
     # Create necessary directories

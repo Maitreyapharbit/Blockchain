@@ -20,22 +20,21 @@ const PORT = process.env.API_PORT || process.env.PORT || 3001;
 const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    // Allow explicit origin from environment
-    const envOrigin = process.env.CORS_ORIGIN;
-
-    // Allow localhost and 127.0.0.1
-    const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
-    // Allow any subdomain of app.github.dev (GitHub Codespaces / github.dev previews)
-    const isGitHubDev = origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev');
-
-    if (isGitHubDev || localOrigins.indexOf(origin) !== -1 || (envOrigin && origin === envOrigin)) {
-      // Reflect the request origin (safer than wildcard when credentials are used)
+    if (!origin) {
+      console.log(`[CORS] Allowing request with no origin`);
       return callback(null, true);
     }
 
+    const envOrigin = process.env.CORS_ORIGIN;
+    const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+    const isGitHubDev = origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev');
+
+    if (isGitHubDev || localOrigins.indexOf(origin) !== -1 || (envOrigin && origin === envOrigin)) {
+      console.log(`[CORS] Allowing origin: ${origin}`);
+      return callback(null, true);
+    }
+
+    console.log(`[CORS] Blocked origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -78,9 +77,25 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Mount API routes
+// Mount API routes (both root and /api prefix to support different dev servers / proxies)
 app.use('/recalls', recallRoutes);
 app.use('/counterfeit', counterfeitRoutes);
+// Also mount under /api for clients expecting /api/ prefixed endpoints
+app.use('/api/recalls', recallRoutes);
+app.use('/api/counterfeit', counterfeitRoutes);
+
+// CORS debug endpoint
+app.get('/api/cors-debug', (req, res) => {
+  const origin = req.get('Origin');
+  res.set('Access-Control-Allow-Origin', origin || '*');
+  res.set('Access-Control-Allow-Credentials', 'true');
+  res.json({
+    origin,
+    allowed: !!origin && (origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev')),
+    envOrigin: process.env.CORS_ORIGIN,
+    message: 'CORS debug info',
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -161,6 +176,19 @@ app.get('/api/websocket', (req, res) => {
       status: 'available',
       connections: wss.clients.size
     }
+  });
+});
+
+// CORS diagnostic endpoint (mirror for /api paths)
+app.get('/api/cors-debug', (req, res) => {
+  res.json({
+    success: true,
+    origin: req.get('Origin') || null,
+    headers: {
+      'Access-Control-Request-Method': req.get('Access-Control-Request-Method') || null,
+      'Access-Control-Request-Headers': req.get('Access-Control-Request-Headers') || null,
+    },
+    message: 'CORS debug - server received your request'
   });
 });
 

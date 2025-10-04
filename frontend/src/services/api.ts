@@ -10,6 +10,14 @@ const getApiBaseUrl = () => {
   }
   
   // Default to local development
+  // Prefer dynamic host for Codespaces/browser preview
+  if (typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('.app.github.dev')) {
+    // If running in Codespaces preview, build API URL from window.location
+    let host = window.location.host.replace(/-(3000)(\.|$)/, '-3001');
+    host = host.replace(/:3000$/, ':3001');
+    return `${window.location.protocol}//${host}/api`;
+  }
+  // Fallback to env or localhost
   return process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 };
 
