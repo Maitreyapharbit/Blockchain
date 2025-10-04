@@ -147,7 +147,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 PharbitChain API Server running on port ${PORT}`);
   console.log('📡 Available endpoints:');
   console.log('  - GET  /health              - Health check');
@@ -157,5 +157,5 @@ server.listen(PORT, () => {
   console.log('  - GET  /api/counterfeit     - Get counterfeit reports');
   console.log('🔌 WebSocket available at:');
   console.log(`  - ws://localhost:${PORT} (local)`);
-  console.log(`  - wss://${process.env.CODESPACE_NAME || 'your-codespace'}-${PORT}.app.github.dev (GitHub Codespaces)`);
+  console.log(`  - wss://verbose-tribble-7vxrwqqxr4g5fr9j5-${PORT}.app.github.dev (GitHub Codespaces)`);
 });
