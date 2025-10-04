@@ -14,7 +14,7 @@ class WebSocketClient {
     }
 
     this.isConnecting = true;
-    console.log('WebSocket connection to', url, 'failed:');
+    console.log('Attempting WebSocket connection to:', url);
     
     try {
       this.ws = new WebSocket(url);

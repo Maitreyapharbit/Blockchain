@@ -1,10 +1,8 @@
-import WebSocketClient from './WebSocketClient';
+import websocketService from './websocketService';
 
 class SocketService {
   constructor() {
-    this.client = new WebSocketClient();
     this.isInitialized = false;
-    this.wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
   }
 
   initSocket() {
@@ -15,25 +13,25 @@ class SocketService {
     console.log('Initializing WebSocket connection...');
     
     // Set up event listeners
-    this.client.on('connected', () => {
+    websocketService.on('connected', () => {
       console.log('WebSocket connected successfully');
     });
 
-    this.client.on('disconnected', (event) => {
+    websocketService.on('disconnected', (event) => {
       console.log('WebSocket disconnected:', event);
     });
 
-    this.client.on('error', (error) => {
+    websocketService.on('error', (error) => {
       console.error('WebSocket error:', error);
     });
 
-    this.client.on('message', (data) => {
+    websocketService.on('message', (data) => {
       console.log('Received WebSocket message:', data);
       this.handleMessage(data);
     });
 
     // Connect to WebSocket
-    this.client.connect(this.wsUrl);
+    websocketService.connect();
     this.isInitialized = true;
   }
 
@@ -55,20 +53,20 @@ class SocketService {
   }
 
   sendMessage(message) {
-    if (this.client.isConnected()) {
-      this.client.send(message);
+    if (websocketService.isConnected) {
+      websocketService.send(message);
     } else {
       console.warn('WebSocket not connected. Cannot send message.');
     }
   }
 
   disconnect() {
-    this.client.disconnect();
+    websocketService.disconnect();
     this.isInitialized = false;
   }
 
   isConnected() {
-    return this.client.isConnected();
+    return websocketService.isConnected;
   }
 }
 

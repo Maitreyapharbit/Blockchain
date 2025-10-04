@@ -1,7 +1,19 @@
 import axios from 'axios';
 import { Recall, RecallBatch, DistributionRecord, SecurityFeature, VerificationRecord, CounterfeitReport, FlaggedBatch, ApiResponse } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+// Determine API base URL based on environment
+const getApiBaseUrl = () => {
+  // Check if we're in GitHub Codespaces
+  if (window.location.hostname.includes('app.github.dev')) {
+    const codespaceName = process.env.REACT_APP_CODESPACE_NAME || 'verbose-tribble-7vxrwqqxr4g5fr9j5';
+    return `https://${codespaceName}-3001.app.github.dev/api`;
+  }
+  
+  // Default to local development
+  return process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

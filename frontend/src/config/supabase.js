@@ -8,6 +8,7 @@ const isPlaceholder = supabaseUrl === 'https://placeholder.supabase.co' || supab
 
 if (isPlaceholder) {
   console.warn('⚠️ Using placeholder Supabase configuration. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file')
+  console.info('ℹ️ Supabase features will be disabled until proper configuration is provided')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
