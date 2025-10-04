@@ -8,17 +8,7 @@ const http = require('http');
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
 
-// Add error handling for missing dependencies
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
+// Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -28,23 +18,50 @@ const PORT = process.env.API_PORT || process.env.PORT || 3001;
 
 // CORS configuration for local and GitHub Codespaces
 const corsOptions = {
-  origin: [
-    'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://*.app.github.dev',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001'
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.app.github.dev')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 200
 };
+
+// Enable CORS pre-flight requests
+app.options('*', cors(corsOptions));
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Mount API routes
+app.use('/recalls', recallRoutes);
+app.use('/counterfeit', counterfeitRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // WebSocket connection handling
@@ -102,10 +119,6 @@ app.get('/health', (req, res) => {
     status: 'healthy'
   });
 });
-
-// Mount API routes
-app.use('/api/recalls', recallRoutes);
-app.use('/api/counterfeit', counterfeitRoutes);
 
 // WebSocket endpoint info
 app.get('/api/websocket', (req, res) => {

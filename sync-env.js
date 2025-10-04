@@ -35,7 +35,13 @@ const FRONTEND_VARS = [
   'REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS',
   'REACT_APP_WS_URL',
   'REACT_APP_CHAIN_NAME',
-  'REACT_APP_RPC_URL'
+  'REACT_APP_RPC_URL',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'SUPABASE_PROJECT_ID',
+  'REACT_APP_PORT',
+  'PORT',
+  'API_PORT'
 ];
 
 const CONTRACTS_VARS = [
@@ -123,19 +129,8 @@ function writeEnvFile(filePath, envVars, comment = '') {
 function syncAllEnv() {
   console.log('🔄 Syncing all environment variables...');
   
+  // Read the root .env file but don't modify it
   const rootEnv = parseEnvFile(ROOT_ENV_PATH);
-  const allVars = new Set([...FRONTEND_VARS, ...CONTRACTS_VARS, ...ADDITIONAL_VARS]);
-  
-  // Create new env object with all variables
-  const newEnv = {};
-  allVars.forEach(varName => {
-    if (rootEnv[varName]) {
-      newEnv[varName] = rootEnv[varName];
-    }
-  });
-  
-  // Write back to root .env to preserve all variables
-  writeEnvFile(ROOT_ENV_PATH, newEnv, '# Environment Variables - Managed by sync-env.js');
   
   // Continue with frontend/contracts specific syncs
 }
