@@ -26,16 +26,22 @@ const wss = new WebSocket.Server({ server });
 // Get port from environment variable or use default
 const PORT = process.env.API_PORT || process.env.PORT || 3001;
 
-// CORS configuration
+// CORS configuration for local and GitHub Codespaces
 const corsOptions = {
-  origin: ['https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev', 'http://localhost:3000'],
+  origin: [
+    'https://verbose-tribble-7vxrwqqxr4g5fr9j5-3000.app.github.dev',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://*.app.github.dev',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  optionsSuccessStatus: 200
 };
-
-// Basic middleware
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
