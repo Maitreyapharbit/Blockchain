@@ -187,13 +187,41 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
     const fetchBatches = async () => {
       try {
         setFetchingBatches(true);
+        // Try to fetch from Supabase first
         const { data, error } = await supabase
           .from('batches')
-          .select('id, batch_number, product_name')
+          .select('id, batch_number, drug_name')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setBatches(data || []);
+        if (error) {
+          console.warn('Error fetching batches from Supabase:', error);
+        }
+
+        let fetchedBatches = data || [];
+
+        // Also fetch from localStorage (batches created in the frontend)
+        try {
+          const localBatches = JSON.parse(localStorage.getItem('pharbitBatches') || '[]');
+          // Convert local batches to match Supabase format
+          const convertedLocalBatches = localBatches.map(batch => ({
+            id: batch.batchId?.toString() || batch.id,
+            batch_number: batch.batchNumber || `BATCH-${batch.batchId}`,
+            drug_name: batch.drugName || 'Unknown Drug'
+          }));
+
+          // Merge and deduplicate (prefer Supabase batches)
+          const allBatches = [...fetchedBatches];
+          for (const localBatch of convertedLocalBatches) {
+            if (!allBatches.find(b => b.id === localBatch.id)) {
+              allBatches.push(localBatch);
+            }
+          }
+
+          setBatches(allBatches);
+        } catch (localError) {
+          console.warn('Error fetching local batches:', localError);
+          setBatches(fetchedBatches);
+        }
       } catch (error) {
         console.error('Error fetching batches:', error);
         toast.error('Failed to load batches');
@@ -296,7 +324,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
               </option>
               {batches.map(batch => (
                 <option key={batch.id} value={batch.id}>
-                  {batch.batch_number} - {batch.product_name}
+                  {batch.batch_number} - {batch.drug_name}
                 </option>
               ))}
             </Select>

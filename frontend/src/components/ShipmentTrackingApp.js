@@ -393,13 +393,15 @@ const ShipmentTrackingApp = () => {
     getUnresolvedAlerts,
     getShipmentById,
     resolveAlert,
-    signOut
+    signOut,
+    createShipment
   } = useSupabase();
 
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAlerts, setShowAlerts] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const unresolvedAlerts = getUnresolvedAlerts();
 
@@ -462,6 +464,20 @@ const ShipmentTrackingApp = () => {
     }
   };
 
+  const handleCreateShipment = async (shipmentData) => {
+    try {
+      const { data, error } = await createShipment(shipmentData);
+      if (error) {
+        throw error;
+      }
+      setShowCreateModal(false);
+      toast.success('Shipment created successfully');
+    } catch (error) {
+      console.error('Error creating shipment:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <AppContainer>
@@ -515,7 +531,7 @@ const ShipmentTrackingApp = () => {
             )}
           </AlertButton>
           
-          <CreateButton>
+          <CreateButton onClick={() => setShowCreateModal(true)}>
             <FaPlus />
             New Shipment
           </CreateButton>
@@ -647,6 +663,12 @@ const ShipmentTrackingApp = () => {
           )}
         </Sidebar>
       </MainContent>
+
+      <CreateShipmentModal 
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateShipment}
+      />
     </AppContainer>
   );
 };

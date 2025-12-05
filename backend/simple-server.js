@@ -7,6 +7,7 @@ const http = require('http');
 // Import route modules
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
+const shipmentsRoutes = require('./routes/shipments');
 
 // Create Express app and HTTP server
 const app = express();
@@ -27,14 +28,22 @@ const corsOptions = {
 
     const envOrigin = process.env.CORS_ORIGIN;
     const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-    const isGitHubDev = origin.endsWith('.app.github.dev') || origin.endsWith('.github.dev');
+    
+    // Check if it's a GitHub Codespaces preview URL
+    const isGitHubDev = origin && (origin.includes('.app.github.dev') || origin.includes('.github.dev'));
+    
+    // Check if it's a local origin
+    const isLocalOrigin = localOrigins.includes(origin);
+    
+    // Check if it matches environment variable
+    const isEnvOrigin = envOrigin && origin === envOrigin;
 
-    if (isGitHubDev || localOrigins.indexOf(origin) !== -1 || (envOrigin && origin === envOrigin)) {
-      console.log(`[CORS] Allowing origin: ${origin}`);
+    if (isGitHubDev || isLocalOrigin || isEnvOrigin) {
+      console.log(`[CORS] ✓ Allowing origin: ${origin}`);
       return callback(null, true);
     }
 
-    console.log(`[CORS] Blocked origin: ${origin}`);
+    console.log(`[CORS] ✗ Blocked origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -80,9 +89,11 @@ app.use(express.urlencoded({ extended: true }));
 // Mount API routes (both root and /api prefix to support different dev servers / proxies)
 app.use('/recalls', recallRoutes);
 app.use('/counterfeit', counterfeitRoutes);
+app.use('/shipments', shipmentsRoutes);
 // Also mount under /api for clients expecting /api/ prefixed endpoints
 app.use('/api/recalls', recallRoutes);
 app.use('/api/counterfeit', counterfeitRoutes);
+app.use('/api/shipments', shipmentsRoutes);
 
 // CORS debug endpoint
 app.get('/api/cors-debug', (req, res) => {

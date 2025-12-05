@@ -5,6 +5,35 @@ import { alertService } from '../services/alertService';
 
 const SupabaseContext = createContext();
 
+// API Base URL - use environment variable or construct from current location
+const getAPIBaseURL = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // In Codespaces or similar preview environments, construct the API URL
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    
+    // For Codespaces preview URLs: replace -3000 with -3001 in the domain
+    // e.g., cuddly-disco-wrj7prq54q5pfgxxq-3000.app.github.dev → cuddly-disco-wrj7prq54q5pfgxxq-3001.app.github.dev
+    if (hostname.includes('app.github.dev')) {
+      const apiHost = hostname.replace('-3000.app.github.dev', '-3001.app.github.dev');
+      return `${protocol}//${apiHost}/api`;
+    }
+    
+    // For localhost: replace port 3000 with 3001
+    const apiHost = hostname.replace(':3000', ':3001');
+    return `${protocol}//${apiHost}/api`;
+  }
+  
+  // Default fallback
+  return '/api';
+};
+
+const API_BASE_URL = getAPIBaseURL();
+
 export const useSupabase = () => {
   const context = useContext(SupabaseContext);
   if (!context) {
@@ -193,7 +222,7 @@ export const SupabaseProvider = ({ children }) => {
 
   const createShipment = async (shipmentData) => {
     try {
-      const response = await fetch('/api/shipments', {
+      const response = await fetch(`${API_BASE_URL}/shipments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -220,7 +249,7 @@ export const SupabaseProvider = ({ children }) => {
 
   const updateShipmentStatus = async (shipmentId, status, additionalData = {}) => {
     try {
-      const response = await fetch(`/api/shipments/${shipmentId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/shipments/${shipmentId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
