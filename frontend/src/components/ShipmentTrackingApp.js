@@ -15,6 +15,7 @@ import { useSupabase } from '../contexts/SupabaseContext';
 import ShipmentDashboard from './ShipmentDashboard';
 import ShipmentTimeline from './ShipmentTimeline';
 import AuthComponent from './AuthComponent';
+import CreateShipmentModal from './CreateShipmentModal';
 import toast from 'react-hot-toast';
 
 const AppContainer = styled.div`
