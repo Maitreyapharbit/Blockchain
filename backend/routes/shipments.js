@@ -104,11 +104,20 @@ router.post('/',
       console.error('Error creating shipment:', error);
 
       const message = (error && error.message) ? error.message.toString() : '';
-      // Fall back to local storage if Supabase has issues (invalid API key, foreign key constraint, etc.)
-      if (message.toLowerCase().includes('invalid api key') || 
-          message.toLowerCase().includes('missing supabase') ||
-          message.toLowerCase().includes('violates foreign key') ||
-          message.toLowerCase().includes('invalid input syntax')) {
+      // Fall back to local storage if Supabase is unreachable or returns known errors
+      const shouldFallback = (
+        message.toLowerCase().includes('invalid api key') ||
+        message.toLowerCase().includes('missing supabase') ||
+        message.toLowerCase().includes('violates foreign key') ||
+        message.toLowerCase().includes('invalid input syntax') ||
+        // network/DNS errors surfaced by fetch/undici
+        message.toLowerCase().includes('fetch failed') ||
+        message.toLowerCase().includes('getaddrinfo') ||
+        // some libraries wrap the original error in `cause`
+        (error && error.cause && typeof error.cause.code === 'string' && (error.cause.code === 'ENOTFOUND' || error.cause.code === 'EAI_AGAIN'))
+      );
+
+      if (shouldFallback) {
         try {
           const storageDir = path.join(process.cwd(), 'data');
           if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
@@ -155,7 +164,7 @@ router.get('/',
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    query('status').optional().isIn(['pending', 'in_transit', 'delivered', 'delayed', 'damaged', 'lost']).withMessage('Invalid status'),
+    query('status').optional().isIn(['pending', 'in_transit', 'in_factory', 'delivered', 'delayed', 'damaged', 'lost']).withMessage('Invalid status'),
     query('search').optional().isLength({ max: 100 }).withMessage('Search term too long')
   ],
   handleValidationErrors,
@@ -285,7 +294,7 @@ router.patch('/:id/status',
   authenticateUser,
   [
     param('id').isUUID().withMessage('Valid shipment ID is required'),
-    body('status').isIn(['pending', 'in_transit', 'delivered', 'delayed', 'damaged', 'lost']).withMessage('Invalid status'),
+    body('status').isIn(['pending', 'in_transit', 'in_factory', 'delivered', 'delayed', 'damaged', 'lost']).withMessage('Invalid status'),
     body('location').optional().isLength({ max: 255 }).withMessage('Location too long'),
     body('notes').optional().isLength({ max: 1000 }).withMessage('Notes too long')
   ],
@@ -348,6 +357,61 @@ router.patch('/:id/status',
       });
     } catch (error) {
       console.error('Error updating shipment status:', error);
+
+      const message = (error && error.message) ? error.message.toString() : '';
+      const shouldFallback = (
+        message.toLowerCase().includes('fetch failed') ||
+        message.toLowerCase().includes('getaddrinfo') ||
+        (error && error.cause && typeof error.cause.code === 'string' && (error.cause.code === 'ENOTFOUND' || error.cause.code === 'EAI_AGAIN'))
+      );
+
+      if (shouldFallback) {
+        try {
+          const storageDir = path.join(process.cwd(), 'data');
+          if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
+          const filePath = path.join(storageDir, 'local_shipment_updates.json');
+          let local = [];
+          if (fs.existsSync(filePath)) {
+            try { local = JSON.parse(fs.readFileSync(filePath, 'utf8') || '[]'); } catch (e) { local = []; }
+          }
+
+          // Build a fallback update record
+          const updateRecord = {
+            id: req.params.id,
+            status: req.body.status,
+            location: req.body.location || null,
+            notes: req.body.notes || null,
+            actual_delivery_date: req.body.actual_delivery_date || null,
+            previous_status: null,
+            created_by: req.user?.id || 'anonymous',
+            requested_at: new Date().toISOString(),
+            retry_count: 0,
+            _fallback: true
+          };
+
+          // Attempt to capture previous_status from current shipment if available
+          try {
+            if (!updateRecord.previous_status) {
+              const existing = local.find(u => u.shipment_id === req.params.id && u.previous_status);
+              if (existing) updateRecord.previous_status = existing.previous_status;
+            }
+          } catch (e) { /* ignore */ }
+
+          // Prepend to queue
+          local.unshift(updateRecord);
+          fs.writeFileSync(filePath, JSON.stringify(local, null, 2));
+
+          return res.status(201).json({
+            success: true,
+            data: updateRecord,
+            message: 'Status update saved locally (Supabase unavailable)'
+          });
+        } catch (fsErr) {
+          console.error('Failed to persist local status update fallback:', fsErr);
+          return res.status(500).json({ error: 'Failed to update shipment status', details: fsErr.message });
+        }
+      }
+
       res.status(500).json({
         error: 'Failed to update shipment status',
         details: error.message
@@ -355,6 +419,88 @@ router.patch('/:id/status',
     }
   }
 );
+
+  // Retry pending local status updates (admin/dev endpoint)
+  router.post('/local-updates/retry',
+    authenticateUser,
+    async (req, res) => {
+      try {
+        const storageDir = path.join(process.cwd(), 'data');
+        const filePath = path.join(storageDir, 'local_shipment_updates.json');
+        if (!fs.existsSync(filePath)) {
+          return res.json({ success: true, message: 'No local updates to retry', processed: 0 });
+        }
+
+        let updates = [];
+        try { updates = JSON.parse(fs.readFileSync(filePath, 'utf8') || '[]'); } catch (e) { updates = []; }
+
+        if (!updates.length) {
+          return res.json({ success: true, message: 'No local updates to retry', processed: 0 });
+        }
+
+        const results = [];
+        const remaining = [];
+
+        for (const upd of updates) {
+          const sid = upd.shipment_id || upd.id || upd.shipmentId;
+          try {
+            // attempt to apply the status update to Supabase
+            const updateData = { status: upd.status };
+            if (upd.actual_delivery_date) updateData.actual_delivery_date = upd.actual_delivery_date;
+
+            const { data, error } = await supabase
+              .from('shipments')
+              .update(updateData)
+              .eq('id', sid)
+              .select()
+              .single();
+
+            if (error) {
+              // cannot apply now; increment retry_count and keep it
+              upd.retry_count = (upd.retry_count || 0) + 1;
+              remaining.push(upd);
+              results.push({ shipment_id: upd.shipment_id, ok: false, error: error.message });
+              continue;
+            }
+
+            // create shipment_event to record status change
+            await supabase.from('shipment_events').insert([{
+              shipment_id: sid,
+              event_type: upd.status,
+              event_data: {
+                previous_status: upd.previous_status || null,
+                new_status: upd.status,
+                location: upd.location || null,
+                notes: upd.notes || null
+              },
+              location: upd.location || null,
+              created_by: upd.created_by || 'system'
+            }]);
+
+            results.push({ id: sid, ok: true, data });
+          } catch (err) {
+            // treat as transient and keep for retry
+            upd.retry_count = (upd.retry_count || 0) + 1;
+            remaining.push(upd);
+            results.push({ id: sid, ok: false, error: err.message });
+          }
+        }
+
+        // write remaining back to file
+        try {
+          if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
+          fs.writeFileSync(filePath, JSON.stringify(remaining, null, 2));
+        } catch (werr) {
+          console.error('Failed to write remaining local updates:', werr);
+        }
+
+        res.json({ success: true, processed: results.length, results });
+      } catch (error) {
+        console.error('Error retrying local updates:', error);
+        res.status(500).json({ error: 'Failed to retry local updates', details: error.message });
+      }
+    }
+  );
 
 // Add temperature reading
 router.post('/:id/temperature',
@@ -682,4 +828,74 @@ router.get('/stats/overview',
   }
 );
 
+// Helper: retry pending local updates (used by admin endpoint and background worker)
+async function retryPendingLocalUpdates() {
+  const storageDir = path.join(process.cwd(), 'data');
+  const filePath = path.join(storageDir, 'local_shipment_updates.json');
+  if (!fs.existsSync(filePath)) {
+    return { success: true, message: 'No local updates to retry', processed: 0, results: [] };
+  }
+
+  let updates = [];
+  try { updates = JSON.parse(fs.readFileSync(filePath, 'utf8') || '[]'); } catch (e) { updates = []; }
+
+  if (!updates.length) {
+    return { success: true, message: 'No local updates to retry', processed: 0, results: [] };
+  }
+
+  const results = [];
+  const remaining = [];
+
+  for (const upd of updates) {
+    const sid = upd.shipment_id || upd.id || upd.shipmentId;
+    try {
+      const updateData = { status: upd.status };
+      if (upd.actual_delivery_date) updateData.actual_delivery_date = upd.actual_delivery_date;
+
+      const { data, error } = await supabase
+        .from('shipments')
+        .update(updateData)
+        .eq('id', sid)
+        .select()
+        .single();
+
+      if (error) {
+        upd.retry_count = (upd.retry_count || 0) + 1;
+        remaining.push(upd);
+        results.push({ id: sid, ok: false, error: error.message });
+        continue;
+      }
+
+      await supabase.from('shipment_events').insert([{
+        shipment_id: sid,
+        event_type: upd.status,
+        event_data: {
+          previous_status: upd.previous_status || null,
+          new_status: upd.status,
+          location: upd.location || null,
+          notes: upd.notes || null
+        },
+        location: upd.location || null,
+        created_by: upd.created_by || 'system'
+      }]);
+
+      results.push({ id: sid, ok: true, data });
+    } catch (err) {
+      upd.retry_count = (upd.retry_count || 0) + 1;
+      remaining.push(upd);
+      results.push({ id: sid, ok: false, error: err.message });
+    }
+  }
+
+  try {
+    if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(remaining, null, 2));
+  } catch (werr) {
+    console.error('Failed to write remaining local updates:', werr);
+  }
+
+  return { success: true, processed: results.length, results };
+}
+
 module.exports = router;
+module.exports.retryPendingLocalUpdates = retryPendingLocalUpdates;

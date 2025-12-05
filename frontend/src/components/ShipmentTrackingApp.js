@@ -409,6 +409,7 @@ const ShipmentTrackingApp = () => {
     const colors = {
       pending: { bg: '#fef3c7', color: '#92400e' },
       in_transit: { bg: '#dbeafe', color: '#1e40af' },
+      in_factory: { bg: '#eef2ff', color: '#3730a3' },
       delivered: { bg: '#d1fae5', color: '#065f46' },
       delayed: { bg: '#fed7d7', color: '#c53030' },
       damaged: { bg: '#fed7d7', color: '#c53030' },
@@ -469,6 +470,10 @@ const ShipmentTrackingApp = () => {
       const { data, error } = await createShipment(shipmentData);
       if (error) {
         throw error;
+      }
+      // Auto-select the newly created shipment so user can update status immediately
+      if (data && data.id) {
+        setSelectedShipmentId(data.id);
       }
       setShowCreateModal(false);
       toast.success('Shipment created successfully');

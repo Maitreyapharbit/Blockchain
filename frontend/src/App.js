@@ -89,6 +89,7 @@ function App() {
               <Routes>
                 <Route path="/shipments" element={<ShipmentTrackingApp />} />
                 <Route path="/alerts" element={<AlertDashboard />} />
+                {/* events-demo route removed (feature rollback) */}
                 <Route path="/" element={
                   <AppContainer>
                     <Header>

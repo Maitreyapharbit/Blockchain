@@ -171,6 +171,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
   const [fetchingBatches, setFetchingBatches] = useState(true);
   const [formData, setFormData] = useState({
     batch_id: '',
+    status: 'pending',
     tracking_number: '',
     origin_location: '',
     destination_location: '',
@@ -260,6 +261,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
         tracking_number: formData.tracking_number,
         origin_location: formData.origin_location,
         destination_location: formData.destination_location,
+        status: formData.status || 'pending',
         expected_delivery_date: formData.expected_delivery_date || null,
         temperature_min: formData.temperature_min ? parseFloat(formData.temperature_min) : null,
         temperature_max: formData.temperature_max ? parseFloat(formData.temperature_max) : null,
@@ -344,6 +346,26 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
               disabled={loading}
               required
             />
+          </FormGroup>
+
+          {/* Initial Status */}
+          <FormGroup>
+            <Label>Initial Status</Label>
+            <Select
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+              disabled={loading}
+            >
+              <option value="pending">Pending</option>
+              <option value="in_transit">In Transit</option>
+              <option value="in_factory">In Factory</option>
+              <option value="delivered">Delivered</option>
+              <option value="delayed">Delayed</option>
+              <option value="damaged">Damaged</option>
+              <option value="lost">Lost</option>
+            </Select>
+            <HelperText>If you know the initial status, set it here.</HelperText>
           </FormGroup>
 
           {/* Origin Location */}

@@ -15,6 +15,9 @@ import { format, parseISO } from 'date-fns';
 import { supabase } from '../config/supabase';
 import { realtimeService } from '../services/realtimeService';
 import { alertService } from '../services/alertService';
+import { useSupabase } from '../contexts/SupabaseContext';
+import toast from 'react-hot-toast';
+import ConfirmModal from './ConfirmModal';
 import ShipmentTimeline from './ShipmentTimeline';
 import EnhancedAlerts from './EnhancedAlerts';
 import ProductJourneyTimeline from './ProductJourneyTimeline';
@@ -301,6 +304,13 @@ const ShipmentDashboard = ({ shipmentId }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('timeline');
+  const { updateShipmentStatus } = useSupabase();
+
+  const [selectedStatus, setSelectedStatus] = useState('pending');
+  const [statusNotes, setStatusNotes] = useState('');
+  const [statusLocation, setStatusLocation] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (shipmentId) {
@@ -312,6 +322,12 @@ const ShipmentDashboard = ({ shipmentId }) => {
       realtimeService.unsubscribeAll();
     };
   }, [shipmentId]);
+
+  useEffect(() => {
+    if (shipment) {
+      setSelectedStatus(shipment.status || 'pending');
+    }
+  }, [shipment]);
 
   const fetchShipmentData = async () => {
     try {
@@ -383,6 +399,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
     const colors = {
       pending: { bg: '#fef3c7', color: '#92400e' },
       in_transit: { bg: '#dbeafe', color: '#1e40af' },
+      in_factory: { bg: '#eef2ff', color: '#3730a3' },
       delivered: { bg: '#d1fae5', color: '#065f46' },
       delayed: { bg: '#fed7d7', color: '#c53030' },
       damaged: { bg: '#fed7d7', color: '#c53030' },
@@ -440,10 +457,49 @@ const ShipmentDashboard = ({ shipmentId }) => {
     <DashboardContainer>
       <Header>
         <Title>Shipment Tracking - {shipment.tracking_number}</Title>
-        <RefreshButton onClick={handleRefresh} disabled={refreshing}>
-          <FaSync className={refreshing ? 'animate-spin' : ''} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </RefreshButton>
+
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+            >
+              <option value="pending">Pending</option>
+              <option value="in_transit">In Transit</option>
+              <option value="in_factory">In Factory</option>
+              <option value="delivered">Delivered</option>
+              <option value="delayed">Delayed</option>
+              <option value="damaged">Damaged</option>
+              <option value="lost">Lost</option>
+            </select>
+            <button
+              onClick={async () => {
+                try {
+                  setUpdatingStatus(true);
+                  const { data, error } = await updateShipmentStatus(shipmentId, selectedStatus, { location: statusLocation, notes: statusNotes });
+                  if (error) throw error;
+                  setShipment(data);
+                  toast.success('Shipment status updated');
+                } catch (err) {
+                  console.error('Quick status update failed', err);
+                  toast.error('Failed to update status');
+                } finally {
+                  setUpdatingStatus(false);
+                }
+              }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}
+              disabled={updatingStatus}
+            >
+              {updatingStatus ? 'Updating...' : 'Set'}
+            </button>
+          </div>
+
+          <RefreshButton onClick={handleRefresh} disabled={refreshing}>
+            <FaSync className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </RefreshButton>
+        </div>
       </Header>
 
       <StatsGrid>
@@ -569,6 +625,96 @@ const ShipmentDashboard = ({ shipmentId }) => {
                 {format(parseISO(shipment.created_at), 'MMM dd, yyyy HH:mm')}
               </InfoValue>
             </InfoRow>
+            <InfoRow style={{ alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Update Status</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', flex: 1 }}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_transit">In Transit</option>
+                    <option value="in_factory">In Factory</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="delayed">Delayed</option>
+                    <option value="damaged">Damaged</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
+                <input
+                  placeholder="Location (optional)"
+                  value={statusLocation}
+                  onChange={(e) => setStatusLocation(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                />
+                <input
+                  placeholder="Notes (optional)"
+                  value={statusNotes}
+                  onChange={(e) => setStatusNotes(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button
+                  onClick={async () => {
+                    // If marking as delivered, show confirmation modal first
+                    if (selectedStatus === 'delivered') {
+                      setShowConfirmModal(true);
+                      return;
+                    }
+
+                    try {
+                      setUpdatingStatus(true);
+                      const { data, error } = await updateShipmentStatus(shipmentId, selectedStatus, { location: statusLocation, notes: statusNotes });
+                      if (error) throw error;
+                      setShipment(data);
+                      toast.success('Shipment status updated');
+                    } catch (err) {
+                      console.error('Status update failed', err);
+                      toast.error('Failed to update status');
+                    } finally {
+                      setUpdatingStatus(false);
+                    }
+                  }}
+                  style={{ padding: '10px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+                  disabled={updatingStatus}
+                >
+                  {updatingStatus ? 'Updating...' : 'Update'}
+                </button>
+              </div>
+            </InfoRow>
+
+            <ConfirmModal
+              open={showConfirmModal}
+              title="Confirm Delivery"
+              message={
+                <p>
+                  Marking shipment <strong>{shipment?.tracking_number}</strong> as <strong>Delivered</strong> will set the actual delivery date to now. Continue?
+                </p>
+              }
+              onCancel={() => setShowConfirmModal(false)}
+              onConfirm={async () => {
+                try {
+                  setUpdatingStatus(true);
+                  const actual_delivery_date = new Date().toISOString();
+                  const { data, error } = await updateShipmentStatus(shipmentId, 'delivered', { location: statusLocation, notes: statusNotes, actual_delivery_date });
+                  if (error) throw error;
+                  setShipment(data);
+                  setShowConfirmModal(false);
+                  toast.success('Shipment marked as delivered');
+                } catch (err) {
+                  console.error('Delivery confirmation failed', err);
+                  toast.error('Failed to mark as delivered');
+                } finally {
+                  setUpdatingStatus(false);
+                }
+              }}
+              cancelLabel="Cancel"
+              confirmLabel="Confirm Delivery"
+              loading={updatingStatus}
+            />
           </ShipmentInfo>
 
           <AlertsPanel>

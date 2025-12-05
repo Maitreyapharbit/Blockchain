@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend for pharmaceutical blockchain recall management and anti-counterfeiting system",
   "main": "index.js",
+  "proxy": "http://localhost:3001",
   "scripts": {
     "prestart": "node ../sync-env.js --frontend-only",
     "start": "HTTPS=false react-scripts start",

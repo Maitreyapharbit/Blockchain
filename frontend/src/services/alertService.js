@@ -18,7 +18,7 @@ class AlertService {
   // Play alert sound
   playAlertSound(severity) {
     if (!this.alertSound) {
-      this.alertSound = new Audio('/sounds/alert.mp3'); // You'll need to add this sound file
+      // this.alertSound = new Audio('/sounds/alert.mp3'); // Removed to fix 404 error
     }
     
     try {

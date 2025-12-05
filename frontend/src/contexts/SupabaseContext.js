@@ -8,6 +8,17 @@ const SupabaseContext = createContext();
 // API Base URL - use environment variable or construct from current location
 const getAPIBaseURL = () => {
   if (process.env.REACT_APP_API_URL) {
+    // If running inside a GitHub Codespaces/browser preview, prefer relative
+    // API paths to allow the dev-server proxy to handle requests and avoid
+    // preview auth redirects or CORS issues.
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.hostname &&
+          window.location.hostname.includes('.app.github.dev') && process.env.REACT_APP_API_URL.includes('.app.github.dev')) {
+        return '/api';
+      }
+    } catch (e) {
+      // ignore and fall back to env value
+    }
     return process.env.REACT_APP_API_URL;
   }
   

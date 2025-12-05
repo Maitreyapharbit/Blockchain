@@ -10,7 +10,8 @@ const envSchema = Joi.object({
     .valid('development', 'production', 'test')
     .default('development'),
   PORT: Joi.number().default(3000),
-  HOST: Joi.string().default('localhost'),
+  // Bind to all interfaces in development so Codespaces / preview URLs can reach the server
+  HOST: Joi.string().default('0.0.0.0'),
 
   // Database
   SUPABASE_URL: Joi.string().required(),

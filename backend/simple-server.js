@@ -8,6 +8,7 @@ const http = require('http');
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
 const shipmentsRoutes = require('./routes/shipments');
+// eventsRoutes removed (feature rollback)
 
 // Create Express app and HTTP server
 const app = express();
@@ -27,7 +28,15 @@ const corsOptions = {
     }
 
     const envOrigin = process.env.CORS_ORIGIN;
-    const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+    const localOrigins = [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      // Allow backend local host origins which can appear when CRA proxy forwards requests
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+      // Codespaces frontend origin
+      'https://crispy-umbrella-g4wqjxg7rr772xxw-3000.app.github.dev'
+    ];
     
     // Check if it's a GitHub Codespaces preview URL
     const isGitHubDev = origin && (origin.includes('.app.github.dev') || origin.includes('.github.dev'));
@@ -226,3 +235,35 @@ server.listen(PORT, () => {
   console.log(`  - ws://localhost:${PORT} (local)`);
   console.log(`  - wss://${process.env.CODESPACE_NAME || 'your-codespace'}-${PORT}.app.github.dev (GitHub Codespaces)`);
 });
+
+// Background worker: periodic retry of local shipment status updates
+try {
+  const retryInterval = parseInt(process.env.LOCAL_UPDATES_RETRY_INTERVAL_MS || '300000', 10); // default 5 minutes
+  if (typeof shipmentsRoutes.retryPendingLocalUpdates === 'function') {
+    // Run once at startup
+    (async () => {
+      try {
+        console.log(`[local-updates] Running initial retry of pending local shipment updates`);
+        const result = await shipmentsRoutes.retryPendingLocalUpdates();
+        console.log('[local-updates] initial retry result:', result && result.processed ? `${result.processed} processed` : result.message);
+      } catch (err) {
+        console.error('[local-updates] initial retry failed:', err);
+      }
+    })();
+
+    // Schedule periodic retries
+    setInterval(async () => {
+      try {
+        console.log('[local-updates] periodic retry triggered');
+        const result = await shipmentsRoutes.retryPendingLocalUpdates();
+        console.log('[local-updates] periodic retry result:', result && result.processed ? `${result.processed} processed` : result.message);
+      } catch (err) {
+        console.error('[local-updates] periodic retry failed:', err);
+      }
+    }, retryInterval);
+
+    console.log(`[local-updates] Scheduled periodic retry every ${retryInterval} ms`);
+  }
+} catch (err) {
+  console.error('[local-updates] Failed to schedule periodic retry:', err);
+}
