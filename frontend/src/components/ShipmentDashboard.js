@@ -303,7 +303,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('timeline');
+  const [activeTab, setActiveTab] = useState('details');
   const { updateShipmentStatus } = useSupabase();
 
   const [selectedStatus, setSelectedStatus] = useState('pending');
@@ -345,16 +345,30 @@ const ShipmentDashboard = ({ shipmentId }) => {
 
   const fetchShipment = async () => {
     try {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('id', shipmentId)
-        .single();
+      // Fetch shipment from API instead of Supabase directly
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/shipments/${shipmentId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch shipment');
+      }
 
-      if (error) throw error;
-      setShipment(data);
+      const result = await response.json();
+      setShipment(result.data || result);
     } catch (error) {
       console.error('Error fetching shipment:', error);
+      // Fallback: try Supabase
+      try {
+        const { data, error: sbError } = await supabase
+          .from('shipments')
+          .select('*')
+          .eq('id', shipmentId)
+          .single();
+
+        if (sbError) throw sbError;
+        setShipment(data);
+      } catch (sbErr) {
+        console.error('Fallback Supabase fetch also failed:', sbErr);
+      }
     }
   };
 
@@ -564,6 +578,12 @@ const ShipmentDashboard = ({ shipmentId }) => {
         <MainContent>
           <TabContainer>
             <TabButton 
+              active={activeTab === 'details'} 
+              onClick={() => setActiveTab('details')}
+            >
+              Detailed Information
+            </TabButton>
+            <TabButton 
               active={activeTab === 'timeline'} 
               onClick={() => setActiveTab('timeline')}
             >
@@ -576,6 +596,186 @@ const ShipmentDashboard = ({ shipmentId }) => {
               Enhanced Alerts
             </TabButton>
           </TabContainer>
+          
+          {activeTab === 'details' && (
+            <div>
+              <h3 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '18px', fontWeight: 600 }}>
+                Complete Shipment Information
+              </h3>
+              
+              {/* Basic Information */}
+              <div style={{ marginBottom: '30px' }}>
+                <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  📋 Basic Information
+                </h4>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <InfoRow>
+                    <InfoLabel>Tracking Number:</InfoLabel>
+                    <InfoValue>{shipment.tracking_number}</InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Shipment ID:</InfoLabel>
+                    <InfoValue style={{ fontSize: '12px', fontFamily: 'monospace' }}>{shipment.id}</InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Status:</InfoLabel>
+                    <InfoValue>
+                      <StatusBadge bgColor={statusColors.bg} color={statusColors.color}>
+                        {shipment.status.replace('_', ' ').toUpperCase()}
+                      </StatusBadge>
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Created:</InfoLabel>
+                    <InfoValue>{format(parseISO(shipment.created_at), 'MMM dd, yyyy HH:mm')}</InfoValue>
+                  </InfoRow>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div style={{ marginBottom: '30px' }}>
+                <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  📍 Location Information
+                </h4>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <InfoRow>
+                    <InfoLabel>Origin Location:</InfoLabel>
+                    <InfoValue>{shipment.origin_location}</InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Destination Location:</InfoLabel>
+                    <InfoValue>{shipment.destination_location}</InfoValue>
+                  </InfoRow>
+                  {shipment.current_location && (
+                    <InfoRow>
+                      <InfoLabel>Current Location:</InfoLabel>
+                      <InfoValue>{shipment.current_location}</InfoValue>
+                    </InfoRow>
+                  )}
+                </div>
+              </div>
+
+              {/* Delivery Schedule */}
+              <div style={{ marginBottom: '30px' }}>
+                <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  📅 Delivery Schedule
+                </h4>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <InfoRow>
+                    <InfoLabel>Expected Delivery:</InfoLabel>
+                    <InfoValue>
+                      {shipment.expected_delivery_date 
+                        ? format(parseISO(shipment.expected_delivery_date), 'MMM dd, yyyy')
+                        : 'Not set'
+                      }
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Actual Delivery:</InfoLabel>
+                    <InfoValue>
+                      {shipment.actual_delivery_date 
+                        ? format(parseISO(shipment.actual_delivery_date), 'MMM dd, yyyy')
+                        : 'Not delivered'
+                      }
+                    </InfoValue>
+                  </InfoRow>
+                </div>
+              </div>
+
+              {/* Environmental Conditions */}
+              <div style={{ marginBottom: '30px' }}>
+                <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  🌡️ Environmental Conditions
+                </h4>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <InfoRow>
+                    <InfoLabel>Current Temperature:</InfoLabel>
+                    <InfoValue>
+                      {shipment.current_temperature ? `${shipment.current_temperature}°C` : 'N/A'}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Temperature Range:</InfoLabel>
+                    <InfoValue>
+                      {shipment.temperature_min && shipment.temperature_max 
+                        ? `${shipment.temperature_min}°C - ${shipment.temperature_max}°C`
+                        : 'Not specified'
+                      }
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Current Humidity:</InfoLabel>
+                    <InfoValue>
+                      {shipment.current_humidity ? `${shipment.current_humidity}%` : 'N/A'}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Humidity Range:</InfoLabel>
+                    <InfoValue>
+                      {shipment.humidity_min && shipment.humidity_max 
+                        ? `${shipment.humidity_min}% - ${shipment.humidity_max}%`
+                        : 'Not specified'
+                      }
+                    </InfoValue>
+                  </InfoRow>
+                </div>
+              </div>
+
+              {/* Batch Information */}
+              {shipment.batch_id && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    📦 Associated Batch
+                  </h4>
+                  <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    <InfoRow>
+                      <InfoLabel>Batch ID:</InfoLabel>
+                      <InfoValue style={{ fontSize: '12px', fontFamily: 'monospace' }}>{shipment.batch_id}</InfoValue>
+                    </InfoRow>
+                    {shipment.batches && (
+                      <>
+                        <InfoRow>
+                          <InfoLabel>Batch Number:</InfoLabel>
+                          <InfoValue>{shipment.batches.batch_number || 'N/A'}</InfoValue>
+                        </InfoRow>
+                        <InfoRow>
+                          <InfoLabel>Product Name:</InfoLabel>
+                          <InfoValue>{shipment.batches.drug_name || 'N/A'}</InfoValue>
+                        </InfoRow>
+                        <InfoRow>
+                          <InfoLabel>Batch Status:</InfoLabel>
+                          <InfoValue>
+                            <StatusBadge bgColor="#dbeafe" color="#1e40af">
+                              {shipment.batches.status || 'N/A'}
+                            </StatusBadge>
+                          </InfoValue>
+                        </InfoRow>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Details */}
+              {shipment.metadata && Object.keys(shipment.metadata).length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    ⚙️ Additional Metadata
+                  </h4>
+                  <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    {Object.entries(shipment.metadata).map(([key, value]) => (
+                      <InfoRow key={key}>
+                        <InfoLabel>{key}:</InfoLabel>
+                        <InfoValue>
+                          {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                        </InfoValue>
+                      </InfoRow>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           {activeTab === 'timeline' && (
             <ShipmentTimeline shipmentId={shipmentId} showFilters={true} />

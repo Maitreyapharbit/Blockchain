@@ -119,30 +119,20 @@ export const SupabaseProvider = ({ children }) => {
   const fetchUserData = async () => {
     if (!user) return;
 
-    // Check if Supabase is properly configured
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey || 
-        supabaseUrl === 'https://placeholder.supabase.co' || 
-        supabaseAnonKey === 'placeholder-key') {
-      console.warn('Supabase not configured, skipping user data fetch');
-      return;
-    }
-
     try {
-      // Fetch user's shipments
-      const { data: shipmentsData, error: shipmentsError } = await supabase
-        .from('shipments')
-        .select(`
-          *,
-          batches!inner(id, batch_number, product_name)
-        `)
-        .eq('created_by', user.id)
-        .order('created_at', { ascending: false });
+      // Fetch shipments from the backend API instead of Supabase directly
+      const response = await fetch(`${API_BASE_URL}/shipments`, {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      });
 
-      if (shipmentsError) throw shipmentsError;
-      setShipments(shipmentsData || []);
+      if (!response.ok) {
+        throw new Error('Failed to fetch shipments');
+      }
+
+      const result = await response.json();
+      setShipments(result.data || []);
 
       // Fetch user's alerts
       const alertsData = await alertService.getUnresolvedAlerts();

@@ -342,7 +342,8 @@ router.get('/:id',
   handleValidationErrors,
   async (req, res) => {
     try {
-      const { data, error } = await supabase
+      // Build query for fetching shipment
+      let query = supabase
         .from('shipments')
         .select(`
           *,
@@ -350,9 +351,14 @@ router.get('/:id',
           shipment_events(id, event_type, event_data, location, temperature, humidity, timestamp, created_by),
           shipment_alerts(id, alert_type, severity, title, description, is_resolved, created_at)
         `)
-        .eq('id', req.params.id)
-        .eq('created_by', req.user.id)
-        .single();
+        .eq('id', req.params.id);
+
+      // Only filter by created_by for authenticated users (not anonymous)
+      if (req.user && req.user.id && req.user.id !== 'anonymous') {
+        query = query.eq('created_by', req.user.id);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -390,13 +396,18 @@ router.patch('/:id/status',
       const { id } = req.params;
       const { status, location, notes } = req.body;
 
-      // Get current shipment
-      const { data: currentShipment, error: fetchError } = await supabase
+      // Get current shipment (allow anonymous users to update any shipment in dev mode)
+      let query = supabase
         .from('shipments')
         .select('*')
-        .eq('id', id)
-        .eq('created_by', req.user.id)
-        .single();
+        .eq('id', id);
+
+      // Only filter by created_by for authenticated users (not anonymous)
+      if (req.user && req.user.id && req.user.id !== 'anonymous') {
+        query = query.eq('created_by', req.user.id);
+      }
+
+      const { data: currentShipment, error: fetchError } = await query.single();
 
       if (fetchError) {
         if (fetchError.code === 'PGRST116') {

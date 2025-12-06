@@ -23,6 +23,8 @@ const healthRoutes = require('./routes/health');
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
 const shipmentsRoutes = require('./routes/shipments');
+const pricingRoutes = require('./routes/pricing');
+const calibrationRoutes = require('./routes/calibration');
 
 const app = express();
 
@@ -107,6 +109,8 @@ app.use('/api/wallets', walletRoutes);
 app.use('/api/recalls', recallRoutes);
 app.use('/api/counterfeit', counterfeitRoutes);
 app.use('/api/shipments', shipmentsRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/calibration', calibrationRoutes);
 
 // CORS diagnostic endpoint
 app.get('/api/cors-debug', (req, res) => {
