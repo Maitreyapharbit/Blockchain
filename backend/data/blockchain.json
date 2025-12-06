@@ -105,5 +105,16 @@
     "timestamp": "2025-12-06T17:15:15.341Z",
     "hash": "eafe64695d574578a597222b6477ed2504c713ddc56639cdbcce9e0cf344d92c",
     "index": 8
+  },
+  {
+    "type": "PRICE_RECORD",
+    "productId": "933469",
+    "sellerId": "123",
+    "price": 123,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T18:52:33.152Z",
+    "timestamp": "2025-12-06T18:52:33.154Z",
+    "hash": "4fd218071737bcfd135aa513fcdae4266478fc20b733b260cc8c25a109e87bdc",
+    "index": 9
   }
 ]
