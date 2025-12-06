@@ -17,9 +17,13 @@ import {
   Warning as WarningIcon,
   Security as SecurityIcon,
   Dashboard as DashboardIcon,
+  MonetizationOn as PricingIcon,
+  BuildCircle as CalibrationIcon,
 } from '@mui/icons-material';
 import RecallManagement from './components/RecallManagement/RecallManagement';
 import AntiCounterfeit from './components/AntiCounterfeit/AntiCounterfeit';
+import PricingComparisonDashboard from './components/PricingComparisonDashboard';
+import EquipmentCalibrationTracker from './components/EquipmentCalibrationTracker';
 
 const theme = createTheme({
   palette: {
@@ -64,9 +68,10 @@ const theme = createTheme({
 });
 
 interface TabPanelProps {
-  children?: ReactNode;
+  children?: React.ReactNode;
   index: number;
   value: number;
+  [key: string]: any;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -82,8 +87,9 @@ function TabPanel(props: TabPanelProps) {
       id={`main-tabpanel-${index}`}
       aria-labelledby={`main-tab-${index}`}
       {...other}
+      style={{ padding: '24px', display: value === index ? 'block' : 'none' }}
     >
-      <Box sx={{ p: 3 }}>{children}</Box>
+      {children}
     </div>
   );
 }
@@ -98,7 +104,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ flexGrow: 1 }}>
+      <div style={{ flexGrow: 1 }}>
         <AppBar position="static" elevation={0}>
           <Toolbar>
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -136,6 +142,18 @@ const App: React.FC = () => {
                 label="Anti-Counterfeiting"
                 id="main-tab-2"
                 aria-controls="main-tabpanel-2"
+              />
+              <Tab
+                icon={<PricingIcon />}
+                label="Price Transparency"
+                id="main-tab-3"
+                aria-controls="main-tabpanel-3"
+              />
+              <Tab
+                icon={<CalibrationIcon />}
+                label="Calibrations"
+                id="main-tab-4"
+                aria-controls="main-tabpanel-4"
               />
             </Tabs>
           </Paper>
@@ -222,13 +240,24 @@ const App: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography variant="subtitle1" gutterBottom>
-                      🔗 Blockchain Integration
+                      💰 Price Transparency
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • Immutable recall records<br/>
-                      • Tamper-proof verification logs<br/>
-                      • Smart contract automation<br/>
-                      • Transparent audit trail
+                      • Complete pricing ledger tracking<br/>
+                      • Supply chain checkpoints<br/>
+                      • Pharmacy price comparisons<br/>
+                      • Transparent pricing reports
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" gutterBottom>
+                      🔧 Equipment Calibration
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      • Equipment registration & QR codes<br/>
+                      • Calibration scheduling<br/>
+                      • Compliance tracking<br/>
+                      • Service provider assignment
                     </Typography>
                   </Box>
                 </Box>
@@ -243,8 +272,16 @@ const App: React.FC = () => {
           <TabPanel value={activeTab} index={2}>
             <AntiCounterfeit />
           </TabPanel>
+
+          <TabPanel value={activeTab} index={3}>
+            <PricingComparisonDashboard />
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={4}>
+            <EquipmentCalibrationTracker />
+          </TabPanel>
         </Container>
-      </Box>
+      </div>
     </ThemeProvider>
   );
 };
