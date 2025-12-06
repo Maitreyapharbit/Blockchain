@@ -11,27 +11,28 @@ class WebSocketService {
 
   // Generate WebSocket URL based on environment
   getWebSocketUrl() {
-    // Direct connection override: if `REACT_APP_WS_DIRECT=true` is set
-    // and running in Codespaces/browser preview, attempt to connect directly
-    // to the backend on localhost:3001. This is useful when the preview proxy
-    // interferes with websocket upgrades and you have access to the backend
-    // via the container's localhost.
+    // Prefer explicit environment override when present. This ensures
+    // previews and other environments can set the exact WebSocket URL
+    // (including wss:// and the correct host/port) without relying on
+    // `window.location` heuristics which vary between devices and tunnels.
+    if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
+      return process.env.REACT_APP_WS_URL;
+    }
+
+    // Direct connection override for Codespaces preview: if the app is
+    // running inside a preview and `REACT_APP_WS_DIRECT=true` is set,
+    // attempt to connect to localhost:3001 where the backend may be
+    // reachable from the preview container.
     if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname.includes('.app.github.dev')) {
       const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
       if (process.env.REACT_APP_WS_DIRECT === 'true') {
-        // Try direct backend host on localhost:3001
         return `${protocol}://localhost:3001/ws`;
       }
       // Default: try same-origin preview host so the proxy handles WS upgrade
       return `${protocol}://${window.location.host}/ws`;
     }
 
-    // Prefer explicit environment override when present (local development)
-    if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
-      return process.env.REACT_APP_WS_URL;
-    }
-
-    // Fallback to localhost websocket
+    // Fallback to localhost websocket for local development
     return 'ws://localhost:3001/ws';
   }
 

@@ -14,7 +14,31 @@ const pricesRoutes = require('./routes/prices');
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
+// WebSocket server (created without immediately attaching upgrade handling)
+const wss = new WebSocket.Server({ noServer: true });
+
+// Allowed origins for WebSocket upgrades
+const allowedWsOriginRegex = /\.app\.github\.dev$|\.github\.dev$|^https?:\/\/localhost(:\d+)?$/;
+
+// Handle HTTP -> WebSocket upgrade requests and enforce origin checks
+server.on('upgrade', (req, socket, head) => {
+  const origin = req.headers.origin;
+  const reqUrl = req.url || '';
+  console.log(`[WS upgrade] incoming upgrade request - origin: ${origin || 'none'}, url: ${reqUrl}, remote: ${req.socket.remoteAddress}`);
+
+  // Allow requests with no origin (curl, some native clients) or matching allowed patterns
+  if (!origin || allowedWsOriginRegex.test(origin) || (process.env.CORS_ORIGIN && origin === process.env.CORS_ORIGIN)) {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+    return;
+  }
+
+  console.log(`[WS upgrade] Rejected origin: ${origin}`);
+  socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+  socket.destroy();
+});
 
 // Get port from environment variable or use default
 const PORT = process.env.API_PORT || process.env.PORT || 3001;

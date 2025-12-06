@@ -20,7 +20,24 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+// Dynamic CORS: allow localhost, configured origin, and GitHub Codespaces / app.github.dev previews
+app.use(cors({
+  origin: (incomingOrigin, callback) => {
+    const envOrigin = process.env.CORS_ORIGIN || process.env.API_BASE_URL || null;
+    const localOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001'];
+    const isGithubDev = typeof incomingOrigin === 'string' && (/\.app\.github\.dev$/.test(incomingOrigin) || /\.github\.dev$/.test(incomingOrigin));
+
+    // Allow requests with no origin (server-to-server, curl), or allowed local / env / github.dev origins
+    if (!incomingOrigin || isGithubDev || localOrigins.includes(incomingOrigin) || (envOrigin && incomingOrigin === envOrigin)) {
+      return callback(null, true);
+    }
+
+    // Deny otherwise
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
