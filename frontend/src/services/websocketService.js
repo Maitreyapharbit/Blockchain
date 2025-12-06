@@ -16,8 +16,11 @@ class WebSocketService {
     // (including wss:// and the correct host/port) without relying on
     // `window.location` heuristics which vary between devices and tunnels.
     if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
+      console.log('[WebSocketService] Using REACT_APP_WS_URL:', process.env.REACT_APP_WS_URL);
       return process.env.REACT_APP_WS_URL;
     }
+
+    console.warn('[WebSocketService] REACT_APP_WS_URL not set, falling back to heuristic logic');
 
     // Direct connection override for Codespaces preview: if the app is
     // running inside a preview and `REACT_APP_WS_DIRECT=true` is set,
@@ -26,13 +29,20 @@ class WebSocketService {
     if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname.includes('.app.github.dev')) {
       const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
       if (process.env.REACT_APP_WS_DIRECT === 'true') {
-        return `${protocol}://localhost:3001/ws`;
+        const url = `${protocol}://localhost:3001/ws`;
+        console.log('[WebSocketService] Codespaces direct mode (REACT_APP_WS_DIRECT=true):', url);
+        return url;
       }
       // Default: try same-origin preview host so the proxy handles WS upgrade
-      return `${protocol}://${window.location.host}/ws`;
+      // BUT if on .app.github.dev, construct the correct backend host from frontend host
+      const backendHost = window.location.host.replace('-3000.', '-3001.'); // map frontend to backend port
+      const url = `${protocol}://${backendHost}/ws`;
+      console.log('[WebSocketService] Codespaces fallback (derived backend host):', url);
+      return url;
     }
 
     // Fallback to localhost websocket for local development
+    console.log('[WebSocketService] Using localhost fallback');
     return 'ws://localhost:3001/ws';
   }
 
