@@ -175,12 +175,76 @@ function syncFrontendEnv() {
   
   const rootEnv = parseEnvFile(ROOT_ENV_PATH);
   const frontendEnv = {};
-  
+  // helper defaults
+  const apiPort = rootEnv.API_PORT || rootEnv.PORT || '3001';
+  const frontendPort = rootEnv.REACT_APP_PORT || rootEnv.PORT || '3000';
+  const isCodespaces = process.env.CODESPACE_NAME || process.env.GITHUB_CODESPACE_NAME || process.env.CODESPACES;
+  // attempt to derive a Codespaces preview host if running in Codespaces
+  let codespaceHost = null;
+  if (process.env.CODESPACE_NAME) codespaceHost = process.env.CODESPACE_NAME;
+  if (!codespaceHost && process.env.GITHUB_CODESPACE_NAME) codespaceHost = process.env.GITHUB_CODESPACE_NAME;
+
   FRONTEND_VARS.forEach(varName => {
     if (rootEnv[varName]) {
       frontendEnv[varName] = rootEnv[varName];
-    } else {
-      console.warn(`⚠️  Frontend variable ${varName} not found in root .env`);
+      return;
+    }
+
+    // Auto-fill sensible defaults for commonly missing frontend vars
+    switch (varName) {
+      case 'REACT_APP_API_URL':
+        if (codespaceHost) {
+          frontendEnv[varName] = `https://${codespaceHost}-${apiPort}.app.github.dev/api`;
+        } else {
+          frontendEnv[varName] = `http://localhost:${apiPort}/api`;
+        }
+        break;
+      case 'REACT_APP_WS_URL':
+        if (codespaceHost) {
+          frontendEnv[varName] = `wss://${codespaceHost}-${apiPort}.app.github.dev/ws`;
+        } else {
+          frontendEnv[varName] = `ws://localhost:${apiPort}/ws`;
+        }
+        break;
+      case 'REACT_APP_ETHEREUM_RPC_URL':
+      case 'REACT_APP_RPC_URL':
+        frontendEnv[varName] = rootEnv.ETHEREUM_RPC_URL || 'http://localhost:8545';
+        break;
+      case 'REACT_APP_CHAIN_ID':
+        frontendEnv[varName] = rootEnv.CHAIN_ID || '1337';
+        break;
+      case 'REACT_APP_CHAIN_NAME':
+        frontendEnv[varName] = rootEnv.CHAIN_NAME || 'Localhost';
+        break;
+      case 'REACT_APP_CONTRACT_ADDRESS':
+      case 'REACT_APP_RECALL_CONTRACT_ADDRESS':
+      case 'REACT_APP_COUNTERFEIT_CONTRACT_ADDRESS':
+        frontendEnv[varName] = rootEnv.CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
+        break;
+      case 'REACT_APP_API_TIMEOUT':
+        frontendEnv[varName] = rootEnv.REACT_APP_API_TIMEOUT || '10000';
+        break;
+      case 'REACT_APP_ENV':
+        frontendEnv[varName] = rootEnv.NODE_ENV || 'development';
+        break;
+      case 'REACT_APP_VERSION':
+        frontendEnv[varName] = rootEnv.REACT_APP_VERSION || '0.0.0';
+        break;
+      case 'REACT_APP_PORT':
+      case 'PORT':
+        frontendEnv[varName] = frontendPort;
+        break;
+      case 'HOST':
+      case 'REACT_APP_HOST':
+        frontendEnv[varName] = rootEnv.HOST || 'localhost';
+        break;
+      case 'HTTPS':
+        frontendEnv[varName] = rootEnv.HTTPS || 'false';
+        break;
+      default:
+        // For other vars, supply empty string so the frontend can still start
+        frontendEnv[varName] = '';
+        console.warn(`⚠️  Frontend variable ${varName} not found in root .env — defaulting to empty string`);
     }
   });
   
