@@ -1,5 +1,63 @@
 [
   {
+    "id": "6438e779-15eb-49fc-a483-695c45512343",
+    "batch_id": "x",
+    "tracking_number": "x",
+    "origin_location": "a",
+    "destination_location": "b",
+    "created_by": "anonymous",
+    "status": "pending",
+    "created_at": "2025-12-06T14:22:05.762Z",
+    "_fallback": true
+  },
+  {
+    "id": "8f5fcc35-4dcf-4a6a-9018-72b3f0bd6ab8",
+    "batch_id": "x",
+    "tracking_number": "x",
+    "origin_location": "a",
+    "destination_location": "b",
+    "created_by": "anonymous",
+    "status": "pending",
+    "created_at": "2025-12-06T14:21:56.378Z",
+    "_fallback": true
+  },
+  {
+    "id": "7d769f18-2ca5-452a-8200-cd698bf2234e",
+    "batch_id": "x",
+    "tracking_number": "x",
+    "origin_location": "a",
+    "destination_location": "b",
+    "created_by": "anonymous",
+    "status": "pending",
+    "created_at": "2025-12-06T14:21:31.171Z",
+    "_fallback": true
+  },
+  {
+    "id": "96e9c004-e043-4f1a-9b0b-aaa479f74d00",
+    "batch_id": "x",
+    "tracking_number": "x",
+    "origin_location": "a",
+    "destination_location": "b",
+    "created_by": "anonymous",
+    "status": "pending",
+    "created_at": "2025-12-06T14:20:52.486Z",
+    "_fallback": true
+  },
+  {
+    "id": "ec43a780-3c3d-486e-add4-1ee31e3c8214",
+    "batch_id": "local-batch-444",
+    "tracking_number": "TEST-444",
+    "origin_location": "Factory",
+    "destination_location": "Clinic",
+    "seller_id": "seller-444",
+    "price": 44.44,
+    "currency": "USD",
+    "created_by": "anonymous",
+    "status": "pending",
+    "created_at": "2025-12-06T14:19:52.005Z",
+    "_fallback": true
+  },
+  {
     "id": "ce4d3ce2-3b7e-4b07-982a-092e58193dfb",
     "batch_id": "550e8400-e29b-41d4-a716-446655440001",
     "tracking_number": "PHARBIT-1764951874904",

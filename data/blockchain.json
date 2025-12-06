@@ -1,0 +1,13 @@
+[
+  {
+    "type": "PRICE_RECORD",
+    "productId": "local-batch-444",
+    "sellerId": "seller-444",
+    "price": 44.44,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T14:19:52.009Z",
+    "timestamp": "2025-12-06T14:19:52.009Z",
+    "hash": "190e7c5595b7c2704d1115d9ab41d4804f79135c101613e550d7f9a9d2d560a4",
+    "index": 0
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "type": "PRICE_RECORD",
+    "productId": "123",
+    "sellerId": "134",
+    "price": 132,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T14:04:30.144Z",
+    "actor": null,
+    "notes": null,
+    "fileHash": null,
+    "fileUrl": null,
+    "timestamp": "2025-12-06T14:04:30.329Z",
+    "hash": "cfc299edbeb8525a9a3f785a22325767681883dd23f72ddafdbf4e6aa29d5cf2",
+    "index": 0
+  },
+  {
+    "type": "PRICE_RECORD",
+    "productId": "p-test",
+    "sellerId": "s-test",
+    "price": 12.5,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T14:14:50.797Z",
+    "actor": null,
+    "notes": null,
+    "fileHash": null,
+    "fileUrl": null,
+    "timestamp": "2025-12-06T14:14:50.847Z",
+    "hash": "afefb3f39862787b04da68a57517bc72470142f29ca347a330146c8355ae8dc6",
+    "index": 1
+  },
+  {
+    "type": "PRICE_RECORD",
+    "productId": "233280",
+    "sellerId": "233",
+    "price": 123,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T14:51:53.841Z",
+    "timestamp": "2025-12-06T14:51:53.841Z",
+    "hash": "fc1d9954c775370f76a7d5ea181f65672fd3865067ae3f95bf73a159ee1a8b5b",
+    "index": 2
+  },
+  {
+    "type": "PRICE_RECORD",
+    "productId": "233280",
+    "sellerId": "233",
+    "price": 213,
+    "currency": "USD",
+    "effectiveAt": "2025-12-06T14:57:36.825Z",
+    "timestamp": "2025-12-06T14:57:36.828Z",
+    "hash": "1a78d169cf42284d7fe12317b43d962c1d764185feb3dd85c8971cd283b11a36",
+    "index": 3
+  }
+]

@@ -180,7 +180,11 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
     temperature_max: '',
     humidity_min: '',
     humidity_max: '',
-    metadata: {}
+    metadata: {},
+    // Price transparency fields
+    seller_id: '',
+    price: '',
+    currency: 'USD'
   });
 
   // Fetch available batches
@@ -249,7 +253,8 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
     
     // Validate required fields
     if (!formData.batch_id || !formData.tracking_number || 
-        !formData.origin_location || !formData.destination_location) {
+        !formData.origin_location || !formData.destination_location ||
+        !formData.seller_id || !formData.price) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -267,7 +272,11 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
         temperature_max: formData.temperature_max ? parseFloat(formData.temperature_max) : null,
         humidity_min: formData.humidity_min ? parseFloat(formData.humidity_min) : null,
         humidity_max: formData.humidity_max ? parseFloat(formData.humidity_max) : null,
-        metadata: formData.metadata
+        metadata: formData.metadata,
+        // Include optional price transparency fields if provided
+        seller_id: formData.seller_id || undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        currency: formData.currency || undefined
       };
 
       await onSubmit(shipmentData);
@@ -283,7 +292,10 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
         temperature_max: '',
         humidity_min: '',
         humidity_max: '',
-        metadata: {}
+        metadata: {},
+        seller_id: '',
+        price: '',
+        currency: 'USD'
       });
       
       toast.success('Shipment created successfully');
@@ -467,6 +479,46 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
                 step="0.1"
                 disabled={loading}
               />
+            </FormGroup>
+          </FormRow>
+
+          {/* Price fields for transparency */}
+          <FormGroup>
+            <Label>Seller ID <RequiredLabel>*</RequiredLabel></Label>
+            <Input
+              type="text"
+              name="seller_id"
+              value={formData.seller_id}
+              onChange={handleInputChange}
+              placeholder="e.g., seller-123"
+              disabled={loading}
+              required
+            />
+            <HelperText>Record the seller who provided the cash price.</HelperText>
+          </FormGroup>
+
+          <FormRow>
+            <FormGroup>
+              <Label>Price <RequiredLabel>*</RequiredLabel></Label>
+              <Input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+                placeholder="e.g., 9.99"
+                step="0.01"
+                disabled={loading}
+                required
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Currency</Label>
+              <Select name="currency" value={formData.currency} onChange={handleInputChange} disabled={loading}>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="INR">INR</option>
+                <option value="GBP">GBP</option>
+              </Select>
             </FormGroup>
           </FormRow>
 

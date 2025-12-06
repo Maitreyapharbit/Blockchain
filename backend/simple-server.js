@@ -8,6 +8,7 @@ const http = require('http');
 const recallRoutes = require('./routes/recalls');
 const counterfeitRoutes = require('./routes/counterfeit');
 const shipmentsRoutes = require('./routes/shipments');
+const pricesRoutes = require('./routes/prices');
 // eventsRoutes removed (feature rollback)
 
 // Create Express app and HTTP server
@@ -99,10 +100,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/recalls', recallRoutes);
 app.use('/counterfeit', counterfeitRoutes);
 app.use('/shipments', shipmentsRoutes);
+app.use('/prices', pricesRoutes);
 // Also mount under /api for clients expecting /api/ prefixed endpoints
 app.use('/api/recalls', recallRoutes);
 app.use('/api/counterfeit', counterfeitRoutes);
 app.use('/api/shipments', shipmentsRoutes);
+app.use('/api/prices', pricesRoutes);
 
 // CORS debug endpoint
 app.get('/api/cors-debug', (req, res) => {

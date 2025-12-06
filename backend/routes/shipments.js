@@ -5,6 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 const router = express.Router();
+const crypto = require('crypto');
+const { createAndBroadcastTx } = require('../lib/blockchain');
 
 // Middleware to check authentication (optional)
 const authenticateUser = async (req, res, next) => {
@@ -59,11 +61,20 @@ router.post('/',
     body('humidity_min').optional().isDecimal().withMessage('Humidity must be a decimal'),
     body('humidity_max').optional().isDecimal().withMessage('Humidity must be a decimal'),
     body('metadata').optional().isObject().withMessage('Metadata must be an object')
+    ,
+    // Price transparency fields (required)
+    body('seller_id').exists().notEmpty().withMessage('seller_id is required'),
+    body('price').exists().notEmpty().isDecimal().withMessage('price must be a decimal'),
+    body('currency').optional().isLength({ min: 3, max: 3 }).withMessage('currency must be a 3-letter code')
   ],
   handleValidationErrors,
   async (req, res) => {
     let shipmentData = null;
     try {
+      // Enforce presence of price transparency fields (server-side fail-safe)
+      if (!req.body.seller_id || typeof req.body.price === 'undefined' || req.body.price === null) {
+        return res.status(400).json({ error: 'seller_id and price are required when creating a shipment' });
+      }
       shipmentData = {
         ...req.body,
         created_by: req.user.id,
@@ -94,6 +105,54 @@ router.post('/',
           },
           created_by: req.user.id
         }]);
+
+      // If price transparency fields were provided, create a price record and anchor it on-chain
+      try {
+        const { seller_id, price, currency } = req.body;
+        if (seller_id && price) {
+          const productId = data.batch_id || data.batchId || null;
+          const priceRecord = {
+            product_id: productId,
+            seller_id: seller_id,
+            price: price,
+            currency: currency || 'USD',
+            effective_at: new Date().toISOString()
+          };
+
+          // Insert into price_records table for indexing (best-effort)
+          let prData = null;
+          try {
+            const insertRes = await supabase.from('price_records').insert([priceRecord]).select().single();
+            if (insertRes.error) {
+              console.warn('Failed to insert price_records during shipment creation:', insertRes.error.message || insertRes.error);
+            } else {
+              prData = insertRes.data;
+            }
+          } catch (err) {
+            console.warn('Error inserting price_record during shipment creation:', err.message || err);
+          }
+
+          // Always create an on-chain anchor for the price record (best-effort)
+          try {
+            const tx = {
+              type: 'PRICE_RECORD',
+              productId: productId,
+              sellerId: seller_id,
+              price: price,
+              currency: currency || 'USD',
+              effectiveAt: priceRecord.effective_at
+            };
+            const txResult = createAndBroadcastTx(tx);
+            if (txResult && txResult.hash && prData && prData.id) {
+              try { await supabase.from('price_records').update({ tx_hash: txResult.hash }).eq('id', prData.id); } catch (e) { console.warn('Failed to update tx_hash after insert', e.message || e); }
+            }
+          } catch (err) {
+            console.warn('Failed to create on-chain price anchor during shipment creation:', err.message || err);
+          }
+        }
+      } catch (err) {
+        console.warn('Price transparency post-processing error:', err.message || err);
+      }
 
       res.status(201).json({
         success: true,
@@ -138,6 +197,33 @@ router.post('/',
 
           local.unshift(localShipment);
           fs.writeFileSync(filePath, JSON.stringify(local, null, 2));
+
+          // If price transparency fields were provided, create on-chain PRICE_RECORD anchor (best-effort)
+          try {
+            const { seller_id, price, currency } = req.body || {};
+            if (seller_id && price) {
+              const productId = localShipment.batch_id || localShipment.batchId || null;
+              const tx = {
+                type: 'PRICE_RECORD',
+                productId,
+                sellerId: seller_id,
+                price: price,
+                currency: currency || 'USD',
+                effectiveAt: new Date().toISOString()
+              };
+              const txResult = createAndBroadcastTx(tx);
+              if (txResult && txResult.hash) {
+                // attach tx hash to the local shipment and update persisted file
+                localShipment.price_tx_hash = txResult.hash;
+                if (local && local.length && local[0] && local[0].id === localShipment.id) {
+                  local[0].price_tx_hash = txResult.hash;
+                  try { fs.writeFileSync(filePath, JSON.stringify(local, null, 2)); } catch (e) { console.warn('Failed to update local shipment with tx hash', e); }
+                }
+              }
+            }
+          } catch (txErr) {
+            console.warn('Failed to create on-chain price anchor for local fallback shipment:', txErr.message || txErr);
+          }
 
           return res.status(201).json({
             success: true,

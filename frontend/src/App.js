@@ -12,6 +12,7 @@ import BlockMiner from './components/BlockMiner';
 import ShipmentTrackingApp from './components/ShipmentTrackingApp';
 import AlertDashboard from './components/AlertDashboard';
 import RecallAndAntiCounterfeitDemo from './components/RecallAndAntiCounterfeitDemo';
+import PriceSubmit from './components/PriceSubmit';
 import styled from 'styled-components';
 
 const AppContainer = styled.div`
@@ -89,6 +90,7 @@ function App() {
               <Routes>
                 <Route path="/shipments" element={<ShipmentTrackingApp />} />
                 <Route path="/alerts" element={<AlertDashboard />} />
+                <Route path="/prices" element={<PriceSubmit />} />
                 {/* events-demo route removed (feature rollback) */}
                 <Route path="/" element={
                   <AppContainer>
@@ -139,6 +141,12 @@ function App() {
                         <ServiceTitle>🚨 Recall Management & Anti-Counterfeiting</ServiceTitle>
                         <p>Comprehensive recall management system with anti-counterfeiting tools for pharmaceutical supply chain security.</p>
                         <RecallAndAntiCounterfeitDemo />
+                      </ServiceCard>
+                      
+                      <ServiceCard>
+                        <ServiceTitle>💲 Cash Price Comparison</ServiceTitle>
+                        <p>Submit and compare cash prices for products. Records are anchored on-chain.</p>
+                        <ServiceLink href="/prices">Submit Price</ServiceLink>
                       </ServiceCard>
                       
                       <ServiceCard>

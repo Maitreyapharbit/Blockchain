@@ -17,6 +17,7 @@ import ShipmentTimeline from './ShipmentTimeline';
 import AuthComponent from './AuthComponent';
 import CreateShipmentModal from './CreateShipmentModal';
 import toast from 'react-hot-toast';
+import PriceSubmit from './PriceSubmit';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -449,6 +450,8 @@ const ShipmentTrackingApp = () => {
     setSelectedShipmentId(shipmentId);
   };
 
+  const selectedShipment = shipments.find(s => s.id === selectedShipmentId) || null;
+
   const handleAlertClick = async (alert) => {
     // Navigate to shipment details
     setSelectedShipmentId(alert.shipment_id);
@@ -629,6 +632,17 @@ const ShipmentTrackingApp = () => {
               <p>Select a shipment to view details</p>
             </EmptyState>
           )}
+
+          {/* Price transparency inline when viewing shipments */}
+          <div>
+            <PanelHeader style={{ marginTop: 12 }}>
+              <FaPlus color="#10b981" />
+              <PanelTitle>Price Transparency</PanelTitle>
+            </PanelHeader>
+            <div style={{ marginTop: 12 }}>
+              <PriceSubmit defaultProductId={selectedShipment ? (selectedShipment.batch_id || selectedShipment.batchId || '') : ''} />
+            </div>
+          </div>
 
           {showAlerts && (
             <AlertsPanel>
