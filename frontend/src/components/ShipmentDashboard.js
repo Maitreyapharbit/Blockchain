@@ -21,6 +21,8 @@ import ConfirmModal from './ConfirmModal';
 import ShipmentTimeline from './ShipmentTimeline';
 import EnhancedAlerts from './EnhancedAlerts';
 import ProductJourneyTimeline from './ProductJourneyTimeline';
+import PricingComparisonDashboard from './PricingComparisonDashboard';
+import EquipmentCalibrationTracker from './EquipmentCalibrationTracker';
 
 const DashboardContainer = styled.div`
   max-width: 1200px;
@@ -594,6 +596,18 @@ const ShipmentDashboard = ({ shipmentId }) => {
               onClick={() => setActiveTab('alerts')}
             >
               Enhanced Alerts
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'pricing'} 
+              onClick={() => setActiveTab('pricing')}
+            >
+              💰 Pricing Transparency
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'calibration'} 
+              onClick={() => setActiveTab('calibration')}
+            >
+              🔧 Equipment Calibration
             </TabButton>
           </TabContainer>
           
