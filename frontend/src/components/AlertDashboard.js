@@ -110,7 +110,7 @@ const StatIcon = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: ${props => props.bgColor || '#3b82f6'};
+  background: ${props => props.$bgColor || '#3b82f6'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -136,7 +136,7 @@ const StatValue = styled.div`
 
 const StatChange = styled.div`
   font-size: 14px;
-  color: ${props => props.positive ? '#10b981' : '#ef4444'};
+  color: ${props => props.$positive ? '#10b981' : '#ef4444'};
   font-weight: 500;
 `;
 
@@ -382,8 +382,8 @@ const SeverityBadge = styled.span`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: ${props => props.bgColor};
-  color: ${props => props.color};
+  background: ${props => props.$bgColor};
+  color: ${props => props.$color};
 `;
 
 const AlertDashboard = () => {
@@ -565,52 +565,52 @@ const AlertDashboard = () => {
       <StatsGrid>
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#ef4444">
+            <StatIcon $bgColor="#ef4444">
               <FaBell />
             </StatIcon>
             <StatTitle>Total Alerts</StatTitle>
           </StatHeader>
           <StatValue>{stats.total}</StatValue>
-          <StatChange positive={stats.total === 0}>
+          <StatChange $positive={stats.total === 0}>
             {stats.total === 0 ? 'All Clear' : 'Active Alerts'}
           </StatChange>
         </StatCard>
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#f59e0b">
+            <StatIcon $bgColor="#f59e0b">
               <FaExclamationTriangle />
             </StatIcon>
             <StatTitle>Unresolved</StatTitle>
           </StatHeader>
           <StatValue>{stats.unresolved}</StatValue>
-          <StatChange positive={stats.unresolved === 0}>
+          <StatChange $positive={stats.unresolved === 0}>
             {stats.unresolved === 0 ? 'All Resolved' : 'Needs Attention'}
           </StatChange>
         </StatCard>
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#dc2626">
+            <StatIcon $bgColor="#dc2626">
               <FaExclamationTriangle />
             </StatIcon>
             <StatTitle>Critical</StatTitle>
           </StatHeader>
           <StatValue>{stats.critical}</StatValue>
-          <StatChange positive={stats.critical === 0}>
+          <StatChange $positive={stats.critical === 0}>
             {stats.critical === 0 ? 'No Critical' : 'Critical Alerts'}
           </StatChange>
         </StatCard>
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#3b82f6">
+            <StatIcon $bgColor="#3b82f6">
               <FaThermometerHalf />
             </StatIcon>
             <StatTitle>Temperature</StatTitle>
           </StatHeader>
           <StatValue>{stats.temperature}</StatValue>
-          <StatChange positive={stats.temperature === 0}>
+          <StatChange $positive={stats.temperature === 0}>
             {stats.temperature === 0 ? 'No Temp Issues' : 'Temp Alerts'}
           </StatChange>
         </StatCard>
@@ -647,16 +647,16 @@ const AlertDashboard = () => {
               return (
                 <AlertItem
                   key={alert.id}
-                  severityColor={severityConfig.border}
-                  severityBg={severityConfig.bg}
+                  $severityColor={severityConfig.border}
+                  $severityBg={severityConfig.bg}
                 >
                   <AlertHeader>
                     <AlertTitle>
                       <IconComponent />
                       {alert.title}
                       <SeverityBadge 
-                        bgColor={severityConfig.badge.bg} 
-                        color={severityConfig.badge.color}
+                        $bgColor={severityConfig.badge.bg} 
+                        $color={severityConfig.badge.color}
                       >
                         {alert.severity}
                       </SeverityBadge>

@@ -239,8 +239,8 @@ const SeverityBadge = styled.span`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: ${props => props.bgColor};
-  color: ${props => props.color};
+  background: ${props => props.$bgColor};
+  color: ${props => props.$color};
 `;
 
 const EnhancedAlerts = ({ shipmentId, showControls = true }) => {
@@ -484,16 +484,16 @@ const EnhancedAlerts = ({ shipmentId, showControls = true }) => {
             return (
               <AlertItem
                 key={alert.id}
-                severityColor={severityConfig.border}
-                severityBg={severityConfig.bg}
+                $severityColor={severityConfig.border}
+                $severityBg={severityConfig.bg}
               >
                 <AlertHeader>
                   <AlertTitle>
                     <IconComponent />
                     {getAlertTitle(alert.alert_type, alert.alert_data)}
                     <SeverityBadge 
-                      bgColor={severityConfig.badge.bg} 
-                      color={severityConfig.badge.color}
+                      $bgColor={severityConfig.badge.bg} 
+                      $color={severityConfig.badge.color}
                     >
                       {alert.severity}
                     </SeverityBadge>

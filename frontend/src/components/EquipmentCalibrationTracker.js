@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Wrench, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'react-feather';
+import { Tool, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'react-feather';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import toast from 'react-hot-toast';
 
@@ -403,7 +403,7 @@ const EquipmentCalibrationTracker = () => {
     <Container>
       <Header>
         <h2>
-          <Wrench size={32} />
+          <Tool size={32} />
           Equipment Calibration Management
         </h2>
         <p>Track calibration status, predictive maintenance, and FDA compliance</p>
@@ -566,7 +566,7 @@ const EquipmentCalibrationTracker = () => {
           padding: '40px',
           opacity: 0.7
         }}>
-          <Wrench size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
+          <Tool size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
           <p>No equipment registered yet. Register equipment to begin tracking calibrations.</p>
         </div>
       )}

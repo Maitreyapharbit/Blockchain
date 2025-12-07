@@ -103,7 +103,7 @@ const StatIcon = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: ${props => props.bgColor || '#3b82f6'};
+  background: ${props => props.$bgColor || '#3b82f6'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,8 +212,8 @@ const PanelTitle = styled.h3`
 const AlertItem = styled.div`
   padding: 16px;
   border-radius: 8px;
-  border-left: 4px solid ${props => props.severityColor};
-  background: ${props => props.severityBg};
+  border-left: 4px solid ${props => props.$severityColor};
+  background: ${props => props.$severityBg};
   margin-bottom: 12px;
   
   &:last-child {
@@ -284,8 +284,8 @@ const StatusBadge = styled.span`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: ${props => props.bgColor};
-  color: ${props => props.color};
+  background: ${props => props.$bgColor};
+  color: ${props => props.$color};
 `;
 
 const EmptyState = styled.div`
@@ -521,32 +521,32 @@ const ShipmentDashboard = ({ shipmentId }) => {
       <StatsGrid>
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#3b82f6">
+            <StatIcon $bgColor="#3b82f6">
               <FaTruck />
             </StatIcon>
             <StatTitle>Status</StatTitle>
           </StatHeader>
-          <StatusBadge bgColor={statusColors.bg} color={statusColors.color}>
+          <StatusBadge $bgColor={statusColors.bg} $color={statusColors.color}>
             {shipment.status.replace('_', ' ').toUpperCase()}
           </StatusBadge>
         </StatCard>
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#10b981">
+            <StatIcon $bgColor="#10b981">
               <FaCheckCircle />
             </StatIcon>
             <StatTitle>Alerts</StatTitle>
           </StatHeader>
           <StatValue>{unresolvedAlerts.length}</StatValue>
-          <StatChange positive={unresolvedAlerts.length === 0}>
+          <StatChange $positive={unresolvedAlerts.length === 0}>
             {unresolvedAlerts.length === 0 ? 'All Clear' : 'Active Alerts'}
           </StatChange>
         </StatCard>
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#f59e0b">
+            <StatIcon $bgColor="#f59e0b">
               <FaThermometerHalf />
             </StatIcon>
             <StatTitle>Temperature</StatTitle>
@@ -564,7 +564,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
 
         <StatCard>
           <StatHeader>
-            <StatIcon bgColor="#8b5cf6">
+            <StatIcon $bgColor="#8b5cf6">
               <FaMapMarkerAlt />
             </StatIcon>
             <StatTitle>Location</StatTitle>
@@ -634,7 +634,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
                   <InfoRow>
                     <InfoLabel>Status:</InfoLabel>
                     <InfoValue>
-                      <StatusBadge bgColor={statusColors.bg} color={statusColors.color}>
+                      <StatusBadge $bgColor={statusColors.bg} $color={statusColors.color}>
                         {shipment.status.replace('_', ' ').toUpperCase()}
                       </StatusBadge>
                     </InfoValue>
@@ -759,7 +759,7 @@ const ShipmentDashboard = ({ shipmentId }) => {
                         <InfoRow>
                           <InfoLabel>Batch Status:</InfoLabel>
                           <InfoValue>
-                            <StatusBadge bgColor="#dbeafe" color="#1e40af">
+                            <StatusBadge $bgColor="#dbeafe" $color="#1e40af">
                               {shipment.batches.status || 'N/A'}
                             </StatusBadge>
                           </InfoValue>
@@ -950,8 +950,8 @@ const ShipmentDashboard = ({ shipmentId }) => {
                 return (
                   <AlertItem
                     key={alert.id}
-                    severityColor={severityColors.border}
-                    severityBg={severityColors.bg}
+                    $severityColor={severityColors.border}
+                    $severityBg={severityColors.bg}
                   >
                     <AlertHeader>
                       <AlertTitle>

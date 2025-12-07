@@ -47,7 +47,7 @@ const EventIcon = styled.div`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: ${props => props.bgColor || '#3b82f6'};
+  background: ${props => props.$bgColor || '#3b82f6'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -63,7 +63,7 @@ const EventContent = styled.div`
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border-left: 4px solid ${props => props.borderColor || '#3b82f6'};
+  border-left: 4px solid ${props => props.$borderColor || '#3b82f6'};
   position: relative;
   
   &::before {
@@ -75,7 +75,7 @@ const EventContent = styled.div`
     height: 0;
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
-    border-right: 6px solid ${props => props.borderColor || '#3b82f6'};
+    border-right: 6px solid ${props => props.$borderColor || '#3b82f6'};
   }
 `;
 
@@ -325,7 +325,6 @@ const ShipmentTimeline = ({ shipmentId, showFilters = true }) => {
   const filteredEvents = events.filter(event => {
     if (filter === 'all') return true;
     if (filter === 'temperature') return event.event_type === 'temperature_check';
-    if (filter === 'location') return event.event_type === 'location_update';
     if (filter === 'alerts') return event.event_data?.is_anomaly || event.event_type === 'delay' || event.event_type === 'damaged';
     return true;
   });
@@ -390,11 +389,11 @@ const ShipmentTimeline = ({ shipmentId, showFilters = true }) => {
         
         return (
           <EventItem key={event.id} isCollapsed={isCollapsed}>
-            <EventIcon bgColor={eventColor}>
+            <EventIcon $bgColor={eventColor}>
               <IconComponent size={10} />
             </EventIcon>
             
-            <EventContent borderColor={eventColor}>
+            <EventContent $borderColor={eventColor}>
               <CollapseButton
                 onClick={() => toggleEventCollapse(event.id)}
                 title={isCollapsed ? 'Expand' : 'Collapse'}

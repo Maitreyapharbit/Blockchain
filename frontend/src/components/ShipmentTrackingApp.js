@@ -203,13 +203,13 @@ const ShipmentsList = styled.div`
 `;
 
 const ShipmentCard = styled.div`
-  border: 2px solid ${props => props.borderColor || '#e5e7eb'};
+  border: 2px solid ${props => props.$borderColor || '#e5e7eb'};
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: ${props => props.isSelected ? '#f0f9ff' : 'white'};
+  background: ${props => props.$isSelected ? '#f0f9ff' : 'white'};
   
   &:hover {
     transform: translateY(-2px);
@@ -243,8 +243,8 @@ const StatusBadge = styled.span`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: ${props => props.bgColor};
-  color: ${props => props.color};
+  background: ${props => props.$bgColor};
+  color: ${props => props.$color};
 `;
 
 const ShipmentDetails = styled.div`
@@ -285,7 +285,7 @@ const ProgressBar = styled.div`
 const ProgressFill = styled.div`
   height: 100%;
   background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  width: ${props => props.percentage}%;
+  width: ${props => props.$percentage}%;
   transition: width 0.3s ease;
 `;
 
@@ -331,8 +331,8 @@ const PanelTitle = styled.h3`
 const AlertItem = styled.div`
   padding: 16px;
   border-radius: 12px;
-  border-left: 4px solid ${props => props.severityColor};
-  background: ${props => props.severityBg};
+  border-left: 4px solid ${props => props.$severityColor};
+  background: ${props => props.$severityBg};
   margin-bottom: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -577,12 +577,12 @@ const ShipmentTrackingApp = () => {
                 <ShipmentCard
                   key={shipment.id}
                   onClick={() => handleShipmentSelect(shipment.id)}
-                  isSelected={isSelected}
-                  borderColor={isSelected ? '#3b82f6' : statusColors.bg}
+                  $isSelected={isSelected}
+                  $borderColor={isSelected ? '#3b82f6' : statusColors.bg}
                 >
                   <ShipmentHeader>
                     <ShipmentTitle>{shipment.tracking_number}</ShipmentTitle>
-                    <StatusBadge bgColor={statusColors.bg} color={statusColors.color}>
+                    <StatusBadge $bgColor={statusColors.bg} $color={statusColors.color}>
                       {shipment.status.replace('_', ' ')}
                     </StatusBadge>
                   </ShipmentHeader>
@@ -613,7 +613,7 @@ const ShipmentTrackingApp = () => {
                   
                   <ShipmentProgress>
                     <ProgressBar>
-                      <ProgressFill percentage={progress} />
+                      <ProgressFill $percentage={progress} />
                     </ProgressBar>
                     <ProgressText>{Math.round(progress)}%</ProgressText>
                   </ShipmentProgress>
@@ -664,8 +664,8 @@ const ShipmentTrackingApp = () => {
                     <AlertItem
                       key={alert.id}
                       onClick={() => handleAlertClick(alert)}
-                      severityColor={severityColors.border}
-                      severityBg={severityColors.bg}
+                      $severityColor={severityColors.border}
+                      $severityBg={severityColors.bg}
                     >
                       <AlertHeader>
                         <AlertTitle>{alert.title}</AlertTitle>

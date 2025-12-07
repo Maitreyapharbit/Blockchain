@@ -11,6 +11,14 @@ class WebSocketService {
 
   // Generate WebSocket URL based on environment
   getWebSocketUrl() {
+    // If an explicit environment override is provided, prefer it first.
+    // This makes it easy to force connections to a specific host/port
+    // (for example codespace backend on port 3001) without relying on
+    // the browser host detection logic.
+    if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
+      return process.env.REACT_APP_WS_URL;
+    }
+
     // Direct connection override: if `REACT_APP_WS_DIRECT=true` is set
     // and running in Codespaces/browser preview, attempt to connect directly
     // to the backend on localhost:3001. This is useful when the preview proxy
@@ -24,11 +32,6 @@ class WebSocketService {
       }
       // Default: try same-origin preview host so the proxy handles WS upgrade
       return `${protocol}://${window.location.host}/ws`;
-    }
-
-    // Prefer explicit environment override when present (local development)
-    if (process.env.REACT_APP_WS_URL && process.env.REACT_APP_WS_URL.length > 0) {
-      return process.env.REACT_APP_WS_URL;
     }
 
     // Fallback to localhost websocket

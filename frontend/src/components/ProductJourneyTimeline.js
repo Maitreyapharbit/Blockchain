@@ -142,7 +142,7 @@ const PhaseIcon = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: ${props => props.bgColor || '#3b82f6'};
+  background: ${props => props.$bgColor || '#3b82f6'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,7 +187,7 @@ const EventItem = styled.div`
   background: ${props => props.isAnomaly ? '#fef2f2' : 'white'};
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border-left: 4px solid ${props => props.borderColor || '#3b82f6'};
+  border-left: 4px solid ${props => props.$borderColor || '#3b82f6'};
   transition: all 0.2s ease;
   opacity: ${props => props.isCollapsed ? 0.6 : 1};
   
@@ -320,7 +320,7 @@ const LoadingState = styled.div`
 const ProductJourneyTimeline = ({ shipmentId, showControls = true }) => {
   const [shipment, setShipment] = useState(null);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+      const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [collapsedEvents, setCollapsedEvents] = useState(new Set());
@@ -619,7 +619,7 @@ const ProductJourneyTimeline = ({ shipmentId, showControls = true }) => {
         return (
           <JourneyPhase key={phaseKey}>
             <PhaseHeader>
-              <PhaseIcon bgColor={phaseInfo.color}>
+              <PhaseIcon $bgColor={phaseInfo.color}>
                 <IconComponent />
               </PhaseIcon>
               <PhaseInfo>
@@ -641,11 +641,11 @@ const ProductJourneyTimeline = ({ shipmentId, showControls = true }) => {
                 return (
                   <EventItem
                     key={event.id}
-                    borderColor={eventColor}
+                    $borderColor={eventColor}
                     isAnomaly={event.event_data?.is_anomaly}
                     isCollapsed={isCollapsed}
                   >
-                    <EventIcon bgColor={eventColor}>
+                    <EventIcon $bgColor={eventColor}>
                       <EventIconComponent size={12} />
                     </EventIcon>
                     

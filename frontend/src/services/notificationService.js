@@ -24,8 +24,20 @@ class NotificationService {
   // Load alert sound
   loadAlertSound() {
     try {
-      // this.alertSound = new Audio('/sounds/alert.mp3'); // Removed to fix 404 error
-      this.alertSound.preload = 'auto';
+      // Attempt to create audio element if the file exists; guard against null
+      if (!this.alertSound) {
+        try {
+          this.alertSound = new Audio('/sounds/alert.mp3');
+        } catch (err) {
+          // ignore creation errors (browser may block or file may not exist)
+          this.alertSound = null;
+        }
+      }
+
+      if (this.alertSound) {
+        this.alertSound.preload = 'auto';
+        this.alertSound.volume = 0.6;
+      }
     } catch (error) {
       console.warn('Could not load alert sound:', error);
     }
