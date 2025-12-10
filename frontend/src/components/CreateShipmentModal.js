@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { supabase } from '../config/supabase';
+import AuthModal from './AuthModal';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -256,6 +257,24 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit }) => {
         !formData.origin_location || !formData.destination_location ||
         !formData.seller_id || !formData.price) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Ensure user intent for server persistence when not authenticated
+    // Check session and optionally show auth modal
+    let showAuth = false;
+    try {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) showAuth = true;
+    } catch (sesErr) {
+      console.warn('Failed to check session before shipment create:', sesErr);
+      showAuth = true;
+    }
+
+    if (showAuth) {
+      // Open modal in parent by dispatching a custom event — parent pages/providers may listen
+      const ev = new CustomEvent('pharbit:show-auth-modal', { detail: { reason: 'create-shipment' } });
+      window.dispatchEvent(ev);
       return;
     }
 

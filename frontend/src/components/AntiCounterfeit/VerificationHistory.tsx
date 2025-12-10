@@ -91,7 +91,7 @@ const VerificationHistory: React.FC<VerificationHistoryProps> = ({
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    dispatch(fetchVerificationResults());
+    dispatch(fetchVerificationResults({}));
   }, [dispatch]);
 
   const filteredVerifications = verifications.filter(verification => {
@@ -461,7 +461,7 @@ const VerificationHistory: React.FC<VerificationHistoryProps> = ({
                 setResultFilter('');
                 setTypeFilter('');
                 dispatch(setFilters({ search: '', result: '', verificationType: '' }));
-                dispatch(fetchVerificationResults());
+                dispatch(fetchVerificationResults({}));
               }}
               fullWidth
             >

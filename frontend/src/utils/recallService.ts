@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../config/supabase';
 import { Recall, Batch, DistributionNode, RecallAction, ApiResponse, PaginatedResponse } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
@@ -11,10 +12,16 @@ const api = axios.create({
 });
 
 // Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(async (config) => {
+  try {
+    const { data: { session } = {} } = await supabase.auth.getSession();
+    if (session && session.access_token) {
+      if (config.headers) {
+        config.headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch (e) {
+    // ignore and continue without auth
   }
   return config;
 });

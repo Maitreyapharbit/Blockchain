@@ -71,7 +71,7 @@ const RecallDashboard: React.FC<RecallDashboardProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
-    dispatch(fetchRecalls());
+    dispatch(fetchRecalls({}));
     dispatch(fetchRecallStats());
   }, [dispatch]);
 
@@ -376,7 +376,7 @@ const RecallDashboard: React.FC<RecallDashboardProps> = ({
                 setStatusFilter('');
                 setSeverityFilter('');
                 dispatch(setFilters({ search: '', status: '', severity: '' }));
-                dispatch(fetchRecalls());
+                dispatch(fetchRecalls({}));
               }}
               fullWidth
             >

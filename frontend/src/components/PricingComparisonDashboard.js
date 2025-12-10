@@ -214,11 +214,7 @@ const PricingComparisonDashboard = ({ batchId, drugName }) => {
   const fetchPriceData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/pricing/cash-prices/${batchId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await (await import('../utils/api')).default.authFetch(`/pricing/cash-prices/${batchId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -235,11 +231,7 @@ const PricingComparisonDashboard = ({ batchId, drugName }) => {
 
   const fetchPricingChain = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/pricing/pricing-ledger/${batchId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await (await import('../utils/api')).default.authFetch(`/pricing/pricing-ledger/${batchId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -252,12 +244,9 @@ const PricingComparisonDashboard = ({ batchId, drugName }) => {
 
   const handlePublishTransparency = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/pricing/pricing-reports/transparency`, {
+      const response = await (await import('../utils/api')).default.authFetch('/pricing/pricing-reports/transparency', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ batch_id: batchId })
       });
       

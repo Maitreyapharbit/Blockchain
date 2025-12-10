@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Notification, PaginatedResponse } from '../types';
+import type { Notification, PaginatedResponse } from '../types';
 import { 
   getNotificationsFromStorage, 
   saveNotificationToStorage, 

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Tool, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'react-feather';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import toast from 'react-hot-toast';
+import { supabase } from '../config/supabase';
 
 const Container = styled.div`
   padding: 24px;
@@ -290,11 +291,7 @@ const EquipmentCalibrationTracker = () => {
   const fetchEquipment = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/calibration/equipment`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await (await import('../utils/api')).default.authFetch('/calibration/equipment');
       
       if (response.ok) {
         const data = await response.json();
@@ -311,14 +308,7 @@ const EquipmentCalibrationTracker = () => {
 
   const fetchCalibrationAnalytics = async (equipmentId) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/calibration/calibration-analytics/${equipmentId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      const response = await (await import('../utils/api')).default.authFetch(`/calibration/calibration-analytics/${equipmentId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -331,14 +321,7 @@ const EquipmentCalibrationTracker = () => {
 
   const fetchCalibrationHistory = async (equipmentId) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/calibration/calibration-history/${equipmentId}?limit=10`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      const response = await (await import('../utils/api')).default.authFetch(`/calibration/calibration-history/${equipmentId}?limit=10`);
       
       if (response.ok) {
         const data = await response.json();
@@ -390,6 +373,22 @@ const EquipmentCalibrationTracker = () => {
     const now = new Date();
     const dueDate = new Date(eq.next_calibration_date);
     return Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+  };
+
+  const handleRecordCalibration = async (eq) => {
+    try {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        window.dispatchEvent(new CustomEvent('pharbit:show-auth-modal', { detail: { reason: 'record-calibration', equipment: eq } }));
+        return;
+      }
+
+      // TODO: open calibration recording modal or call API to persist calibration
+      toast('Open calibration modal (server-persisted flow) — not yet implemented');
+    } catch (err) {
+      console.error('Error checking session for calibration:', err);
+      toast.error('Unable to start calibration recording');
+    }
   };
 
   const overdueCount = equipment.filter(eq => getDaysUntilCalibration(eq) < 0).length;
@@ -552,7 +551,7 @@ const EquipmentCalibrationTracker = () => {
                 Frequency: Every {eq.calibration_frequency_days} days
               </div>
               
-              <CalibrationButton>
+              <CalibrationButton onClick={() => handleRecordCalibration(eq)}>
                 Record Calibration
               </CalibrationButton>
             </EquipmentCard>

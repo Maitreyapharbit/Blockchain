@@ -9,7 +9,7 @@ import {
   markNotificationAsRead,
   clearAllNotifications,
 } from '../../utils/notificationService';
-import { Notification } from '../../types';
+import type { Notification } from '../../types';
 
 // Mock localStorage
 const localStorageMock = {

@@ -97,7 +97,7 @@ const SuspiciousActivityList: React.FC<SuspiciousActivityListProps> = ({
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchSuspiciousActivities());
+    dispatch(fetchSuspiciousActivities({}));
   }, [dispatch]);
 
   const filteredActivities = activities.filter(activity => {

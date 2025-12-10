@@ -66,7 +66,7 @@ import {
   setFilters,
   setRealTimeEnabled,
 } from '../../store/notificationSlice';
-import { NotificationCenterProps, Notification } from '../../types';
+import type { NotificationCenterProps, Notification } from '../../types';
 import { formatNotificationTime, getSeverityColor, getSeverityIcon } from '../../utils/notificationService';
 import { format } from 'date-fns';
 
@@ -94,7 +94,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchNotifications());
+    dispatch(fetchNotifications({}));
   }, [dispatch]);
 
   const filteredNotifications = notifications.filter(notification => {
@@ -118,7 +118,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       severity: severityFilter,
       read: readFilter,
     }));
-    dispatch(fetchNotifications());
+    dispatch(fetchNotifications({}));
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
@@ -354,7 +354,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   setSeverityFilter('');
                   setReadFilter(null);
                   dispatch(setFilters({ search: '', type: '', severity: '', read: null }));
-                  dispatch(fetchNotifications());
+                  dispatch(fetchNotifications({}));
                 }}
               >
                 Clear

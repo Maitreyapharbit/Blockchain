@@ -83,7 +83,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`main-tab-${index}`}
       {...other}
     >
-      <Box sx={{ p: 3 }}>{children}</Box>
+      <Box sx={{ p: 3 }}>{children as any}</Box>
     </div>
   );
 }
@@ -98,7 +98,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ flexGrow: 1 }}>
+      <Box style={{ flexGrow: 1 }}>
         <AppBar position="static" elevation={0}>
           <Toolbar>
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -120,18 +120,21 @@ const App: React.FC = () => {
               textColor="primary"
             >
               <Tab
+                iconPosition="start"
                 icon={<DashboardIcon />}
                 label="Dashboard"
                 id="main-tab-0"
                 aria-controls="main-tabpanel-0"
               />
               <Tab
+                iconPosition="start"
                 icon={<WarningIcon />}
                 label="Recall Management"
                 id="main-tab-1"
                 aria-controls="main-tabpanel-1"
               />
               <Tab
+                iconPosition="start"
                 icon={<SecurityIcon />}
                 label="Anti-Counterfeiting"
                 id="main-tab-2"

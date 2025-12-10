@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useMetaMask } from './MetaMaskContext';
+import { supabase } from '../config/supabase';
+import AuthModal from '../components/AuthModal';
 
 const BlockchainContext = createContext();
 
@@ -20,6 +22,16 @@ export const BlockchainProvider = ({ children }) => {
   const [deploymentStatus, setDeploymentStatus] = useState({});
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Listen for global requests to open the auth modal (components dispatch this event)
+  useEffect(() => {
+    const handler = (ev) => {
+      setShowAuthModal(true);
+    };
+    window.addEventListener('pharbit:show-auth-modal', handler);
+    return () => window.removeEventListener('pharbit:show-auth-modal', handler);
+  }, []);
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -297,7 +309,64 @@ export const BlockchainProvider = ({ children }) => {
         }
       };
 
-      // Store the batch in localStorage for persistence
+      // Try to persist batch to backend API first (if server & auth available)
+      try {
+        const { data: { session } = {} } = await supabase.auth.getSession();
+          if (!session) {
+            // Show the sign-in modal and return early — user can retry after signing in
+            setShowAuthModal(true);
+            return { success: false, error: 'prompted-signin' };
+          }
+
+        const payload = {
+          drugName: newBatch.drugName,
+          quantity: newBatch.quantity,
+          manufacturer: newBatch.manufacturer,
+          lotNumber: newBatch.lotNumber,
+          dosageForm: newBatch.dosageForm,
+          strength: newBatch.strength,
+          packaging: newBatch.packaging,
+          description: newBatch.description,
+          // extra metadata that server may expect
+          metadata: {
+            qr_hash: newBatch.qrCode.hash,
+            generated_at: newBatch.qrCode.generatedAt
+          }
+        };
+        const resp = await axios.post(`${API_BASE_URL}/batches`, payload, {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`
+          }
+        });
+        if (resp && resp.data && resp.data.success) {
+          const serverBatch = resp.data.data || {};
+          // Merge server response with the locally generated QR and tx details
+          const merged = {
+            ...newBatch,
+            batchId: serverBatch.batch_id || newBatch.batchId,
+            txHash: serverBatch.transaction?.txHash || newBatch.txHash,
+            blockNumber: serverBatch.transaction?.blockNumber || newBatch.blockNumber,
+            // if server provides a QR or DB stored data, prefer it
+            qrCode: serverBatch.qrCode || newBatch.qrCode
+          };
+
+          // Update state and local cache
+          setBatches(prev => [...prev, merged]);
+          try {
+            const existingBatches = JSON.parse(localStorage.getItem('pharbitBatches') || '[]');
+            existingBatches.push(merged);
+            localStorage.setItem('pharbitBatches', JSON.stringify(existingBatches));
+          } catch (e) { /* ignore localStorage write errors */ }
+
+          toast.success('Batch created and persisted to server');
+          return { success: true, batch: merged };
+        }
+      } catch (apiErr) {
+        // Backend not available or not authorized; fall back to localStorage below
+        console.warn('Backend batch create failed or unauthorized, falling back to localStorage:', apiErr?.message || apiErr);
+      }
+
+      // Store the batch in localStorage for persistence (fallback)
       const existingBatches = JSON.parse(localStorage.getItem('pharbitBatches') || '[]');
       existingBatches.push(newBatch);
       localStorage.setItem('pharbitBatches', JSON.stringify(existingBatches));
@@ -308,7 +377,7 @@ export const BlockchainProvider = ({ children }) => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success('Batch created successfully');
+      toast.success('Batch created locally (offline fallback)');
       return { success: true, batch: newBatch };
     } catch (error) {
       console.error('Batch creation error:', error);
@@ -536,6 +605,7 @@ export const BlockchainProvider = ({ children }) => {
   return (
     <BlockchainContext.Provider value={value}>
       {children}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </BlockchainContext.Provider>
   );
 };

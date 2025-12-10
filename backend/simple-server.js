@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const WebSocket = require('ws');
 const http = require('http');
 
 // Import route modules
@@ -14,7 +13,9 @@ const pricesRoutes = require('./routes/prices');
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
+// Simple SSE (EventSource) clients set
+const sseClients = new Set();
 
 // Get port from environment variable or use default
 const PORT = process.env.API_PORT || process.env.PORT || 3001;
@@ -130,50 +131,42 @@ app.get('/health', (req, res) => {
 });
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// WebSocket connection handling
-wss.on('connection', (ws, req) => {
-  console.log('New WebSocket connection from:', req.socket.remoteAddress);
-  
-  // Send welcome message
-  ws.send(JSON.stringify({
-    type: 'connection',
-    message: 'Connected to PharbitChain WebSocket server',
-    timestamp: new Date().toISOString()
-  }));
-  
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      console.log('Received WebSocket message:', data);
-      
-      // Echo back the message for testing
-      ws.send(JSON.stringify({
-        type: 'echo',
-        originalMessage: data,
-        timestamp: new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error('Error parsing WebSocket message:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: 'Invalid JSON message',
-        timestamp: new Date().toISOString()
-      }));
-    }
-  });
+// SSE endpoint for notifications (EventSource clients connect here)
+app.get('/notifications/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
 
-  ws.on('close', (code, reason) => {
-    console.log('Client disconnected:', code, reason.toString());
-  });
+  // send a comment to establish the stream
+  res.write(': connected\n\n');
 
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
+  // Keep connection alive with periodic comments
+  const keepalive = setInterval(() => {
+    try { res.write(': keepalive\n\n'); } catch (e) { /* ignore */ }
+  }, 20000);
+
+  sseClients.add(res);
+
+  req.on('close', () => {
+    clearInterval(keepalive);
+    sseClients.delete(res);
   });
 });
 
-// Handle WebSocket server errors
-wss.on('error', (error) => {
-  console.error('WebSocket server error:', error);
+// Helper to broadcast SSE to all connected clients
+function broadcastNotification(event, data) {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients) {
+    try { client.write(payload); } catch (e) { /* ignore broken clients */ }
+  }
+}
+
+// Test endpoint to push notifications (useful for local testing)
+app.post('/notifications/push', (req, res) => {
+  const { event = 'message', data = {} } = req.body || {};
+  broadcastNotification(event, data);
+  res.json({ ok: true });
 });
 
 // Health check endpoint
@@ -186,19 +179,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// WebSocket endpoint info
+// WebSocket removed: inform clients SSE is available instead
 app.get('/api/websocket', (req, res) => {
-  const protocol = req.secure ? 'wss' : 'ws';
   const host = req.get('host');
-  const wsUrl = `${protocol}://${host}`;
-  
+  const notificationUrl = `${req.protocol}://${host}/notifications/stream`;
   res.json({
     success: true,
-    websocket: {
-      url: wsUrl,
-      status: 'available',
-      connections: wss.clients.size
-    }
+    websocket: null,
+    message: 'WebSockets removed; use Server-Sent Events at /notifications/stream',
+    notifications: { url: notificationUrl }
   });
 });
 
@@ -234,9 +223,9 @@ server.listen(PORT, () => {
   console.log('  - GET  /api/recalls         - Get all recalls');
   console.log('  - POST /api/recalls/initiate - Initiate new recall');
   console.log('  - GET  /api/counterfeit     - Get counterfeit reports');
-  console.log('🔌 WebSocket available at:');
-  console.log(`  - ws://localhost:${PORT} (local)`);
-  console.log(`  - wss://${process.env.CODESPACE_NAME || 'your-codespace'}-${PORT}.app.github.dev (GitHub Codespaces)`);
+  console.log('🔌 Server-Sent Events available at:');
+  console.log(`  - http://localhost:${PORT}/notifications/stream (local)`);
+  console.log(`  - https://${process.env.CODESPACE_NAME || 'your-codespace'}-${PORT}.app.github.dev/notifications/stream (Codespaces)`);
 });
 
 // Background worker: periodic retry of local shipment status updates

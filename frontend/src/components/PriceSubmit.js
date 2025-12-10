@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import api from '../utils/api';
+import { supabase } from '../config/supabase';
+import AuthModal from './AuthModal';
 
 function PriceSubmit({ defaultProductId = '' }) {
   const [productId, setProductId] = useState(defaultProductId || '');
@@ -11,6 +14,19 @@ function PriceSubmit({ defaultProductId = '' }) {
   const submit = async (e) => {
     e.preventDefault();
     setStatus('Submitting...');
+
+    try {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        // request the global auth modal to open
+        window.dispatchEvent(new CustomEvent('pharbit:show-auth-modal', { detail: { reason: 'submit-price' } }));
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not verify session before price submit:', err);
+      window.dispatchEvent(new CustomEvent('pharbit:show-auth-modal', { detail: { reason: 'submit-price' } }));
+      return;
+    }
 
     let fileBuffer = null;
     let fileName = null;
@@ -31,11 +47,12 @@ function PriceSubmit({ defaultProductId = '' }) {
     }
 
     try {
-      const res = await fetch('/api/prices/cash', {
+      const res = await api.authFetch('/prices/cash', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, sellerId, price: parseFloat(price), currency, fileBuffer, fileName })
       });
+
       const json = await res.json();
       if (res.ok) {
         setStatus('Submitted — tx: ' + (json.tx && json.tx.hash ? json.tx.hash : 'pending'));

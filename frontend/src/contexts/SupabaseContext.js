@@ -97,6 +97,12 @@ export const SupabaseProvider = ({ children }) => {
           // User signed in, fetch their data
           await fetchUserData();
           setupRealtimeSubscriptions();
+            // Attempt to sync any locally cached batches now that user is signed in
+            try {
+              window.dispatchEvent(new Event('pharbit:local-sync'));
+            } catch (err) {
+              console.warn('Could not dispatch local-sync event:', err);
+            }
         } else {
           // User signed out, clear data
           setShipments([]);
@@ -115,6 +121,60 @@ export const SupabaseProvider = ({ children }) => {
       }
     };
   }, []);
+
+  // Local sync handler - listens for requests to sync local batches when user signs in
+  const handleLocalSyncEvent = async (ev) => {
+    // Triggered after sign-in to upload local batches to server
+    try {
+      const localBatches = JSON.parse(localStorage.getItem('pharbitBatches') || '[]');
+      if (!localBatches || !localBatches.length) return;
+
+      for (const b of localBatches) {
+        try {
+          // Attempt to POST each batch to backend
+          const resp = await fetch(`${API_BASE_URL}/batches`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              drugName: b.drugName,
+              quantity: b.quantity,
+              manufacturer: b.manufacturer,
+              lotNumber: b.lotNumber,
+              dosageForm: b.dosageForm,
+              strength: b.strength,
+              packaging: b.packaging,
+              description: b.description,
+              metadata: { qr_hash: b.qrCode?.hash, generated_at: b.qrCode?.generatedAt }
+            })
+          });
+
+          if (!resp.ok) {
+            console.warn('Failed to sync batch to server:', await resp.text());
+            continue;
+          }
+
+          const result = await resp.json();
+          // On success, remove this batch from local storage list
+          // We'll filter by a best-effort matching on generated createdAt or batchId
+          const remaining = JSON.parse(localStorage.getItem('pharbitBatches') || '[]').filter(lb => lb.batchId !== b.batchId);
+          localStorage.setItem('pharbitBatches', JSON.stringify(remaining));
+        } catch (err) {
+          console.warn('Error syncing local batch:', err);
+        }
+      }
+    } catch (err) {
+      console.warn('Local sync handler error:', err);
+    }
+  };
+
+  // Attach listener when component mounts (and Supabase configured)
+  useEffect(() => {
+    window.addEventListener('pharbit:local-sync', handleLocalSyncEvent);
+    return () => window.removeEventListener('pharbit:local-sync', handleLocalSyncEvent);
+  }, [session]);
 
   const fetchUserData = async () => {
     if (!user) return;

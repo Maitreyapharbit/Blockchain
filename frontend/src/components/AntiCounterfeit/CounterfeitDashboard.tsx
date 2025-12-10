@@ -82,8 +82,8 @@ const CounterfeitDashboard: React.FC<CounterfeitDashboardProps> = ({
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    dispatch(fetchReports());
-    dispatch(fetchSuspiciousActivities());
+    dispatch(fetchReports({}));
+    dispatch(fetchSuspiciousActivities({}));
     dispatch(fetchCounterfeitStats());
   }, [dispatch]);
 

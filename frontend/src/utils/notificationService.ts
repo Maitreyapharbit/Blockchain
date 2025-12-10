@@ -1,10 +1,12 @@
-import { Notification } from '../types';
+import type { Notification as AppNotification } from '../types';
 
 // Notification service for real-time updates
+import { supabase } from '../config/supabase';
+
 export class NotificationService {
   private static instance: NotificationService;
   private eventSource: EventSource | null = null;
-  private listeners: Map<string, Set<(notification: Notification) => void>> = new Map();
+  private listeners: Map<string, Set<(notification: AppNotification) => void>> = new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
@@ -21,16 +23,17 @@ export class NotificationService {
   }
 
   // Connect to notification server
-  private connect(): void {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.warn('No auth token found, skipping notification connection');
-      return;
-    }
+  private async connect(): Promise<void> {
+    try {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        console.warn('No supabase session found, skipping notification connection');
+        return;
+      }
 
-    const url = `${process.env.REACT_APP_NOTIFICATION_URL || 'http://localhost:3001'}/notifications/stream?token=${token}`;
-    
-    this.eventSource = new EventSource(url);
+      const url = `${process.env.REACT_APP_NOTIFICATION_URL || 'http://localhost:3001'}/notifications/stream?token=${token}`;
+      this.eventSource = new EventSource(url);
 
     this.eventSource.onopen = () => {
       console.log('Connected to notification stream');
@@ -39,7 +42,7 @@ export class NotificationService {
 
     this.eventSource.onmessage = (event) => {
       try {
-        const notification: Notification = JSON.parse(event.data);
+        const notification: AppNotification = JSON.parse(event.data);
         this.handleNotification(notification);
       } catch (error) {
         console.error('Error parsing notification:', error);
@@ -53,7 +56,7 @@ export class NotificationService {
 
     this.eventSource.addEventListener('recall', (event) => {
       try {
-        const notification: Notification = JSON.parse(event.data);
+        const notification: AppNotification = JSON.parse(event.data);
         this.handleNotification(notification, 'recall');
       } catch (error) {
         console.error('Error parsing recall notification:', error);
@@ -62,7 +65,7 @@ export class NotificationService {
 
     this.eventSource.addEventListener('counterfeit', (event) => {
       try {
-        const notification: Notification = JSON.parse(event.data);
+        const notification: AppNotification = JSON.parse(event.data);
         this.handleNotification(notification, 'counterfeit');
       } catch (error) {
         console.error('Error parsing counterfeit notification:', error);
@@ -71,12 +74,16 @@ export class NotificationService {
 
     this.eventSource.addEventListener('verification', (event) => {
       try {
-        const notification: Notification = JSON.parse(event.data);
+        const notification: AppNotification = JSON.parse(event.data);
         this.handleNotification(notification, 'verification');
       } catch (error) {
         console.error('Error parsing verification notification:', error);
       }
     });
+  } catch (err) {
+    console.error('Notification connection error:', err);
+  }
+
   }
 
   // Handle reconnection logic
@@ -97,7 +104,7 @@ export class NotificationService {
   }
 
   // Handle incoming notification
-  private handleNotification(notification: Notification, type?: string): void {
+  private handleNotification(notification: AppNotification, type?: string): void {
     // Notify all listeners
     const allListeners = this.listeners.get('*') || new Set();
     allListeners.forEach(listener => listener(notification));
@@ -113,7 +120,7 @@ export class NotificationService {
   }
 
   // Show browser notification
-  private showBrowserNotification(notification: Notification): void {
+  private showBrowserNotification(notification: AppNotification): void {
     if (Notification.permission === 'granted') {
       new Notification(notification.title, {
         body: notification.message,
@@ -125,7 +132,7 @@ export class NotificationService {
   }
 
   // Get notification icon based on severity
-  private getNotificationIcon(severity: Notification['severity']): string {
+  private getNotificationIcon(severity: AppNotification['severity']): string {
     const icons = {
       info: '/icons/info.png',
       warning: '/icons/warning.png',
@@ -136,7 +143,7 @@ export class NotificationService {
   }
 
   // Subscribe to notifications
-  subscribe(type: string, callback: (notification: Notification) => void): () => void {
+  subscribe(type: string, callback: (notification: AppNotification) => void): () => void {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
@@ -155,7 +162,7 @@ export class NotificationService {
   }
 
   // Unsubscribe from notifications
-  unsubscribe(type: string, callback: (notification: Notification) => void): void {
+  unsubscribe(type: string, callback: (notification: AppNotification) => void): void {
     const typeListeners = this.listeners.get(type);
     if (typeListeners) {
       typeListeners.delete(callback);
@@ -212,13 +219,13 @@ export const notificationService = NotificationService.getInstance();
 
 // Utility functions for notifications
 export const createNotification = (
-  type: Notification['type'],
+  type: AppNotification['type'],
   title: string,
   message: string,
-  severity: Notification['severity'] = 'info',
+  severity: AppNotification['severity'] = 'info',
   actionRequired: boolean = false,
   relatedId?: string
-): Notification => ({
+): AppNotification => ({
   id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   type,
   title,
@@ -249,7 +256,7 @@ export const formatNotificationTime = (timestamp: string): string => {
   }
 };
 
-export const getSeverityColor = (severity: Notification['severity']): string => {
+export const getSeverityColor = (severity: AppNotification['severity']): string => {
   const colors = {
     info: '#2196F3',
     warning: '#FF9800',
@@ -259,7 +266,7 @@ export const getSeverityColor = (severity: Notification['severity']): string => 
   return colors[severity] || colors.info;
 };
 
-export const getSeverityIcon = (severity: Notification['severity']): string => {
+export const getSeverityIcon = (severity: AppNotification['severity']): string => {
   const icons = {
     info: 'info',
     warning: 'warning',
@@ -270,7 +277,7 @@ export const getSeverityIcon = (severity: Notification['severity']): string => {
 };
 
 // Local storage utilities for notifications
-export const saveNotificationToStorage = (notification: Notification): void => {
+export const saveNotificationToStorage = (notification: AppNotification): void => {
   try {
     const notifications = getNotificationsFromStorage();
     notifications.unshift(notification);
@@ -286,7 +293,7 @@ export const saveNotificationToStorage = (notification: Notification): void => {
   }
 };
 
-export const getNotificationsFromStorage = (): Notification[] => {
+export const getNotificationsFromStorage = (): AppNotification[] => {
   try {
     const stored = localStorage.getItem('notifications');
     return stored ? JSON.parse(stored) : [];
