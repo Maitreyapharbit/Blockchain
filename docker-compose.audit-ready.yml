@@ -1,0 +1,455 @@
+version: '3.8'
+
+services:
+  # ==================== VALIDATOR NODES (7-node IBFT 2.0) ====================
+  
+  validator-1:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-1
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-1
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000001
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-2:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-1-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.11
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "30303:30303"
+      - "9545:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-2:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-2
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-2
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000002
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-2-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.12
+    ports:
+      - "8546:8545"
+      - "8547:8546"
+      - "30304:30303"
+      - "9546:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-3:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-3
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-3
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000003
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-3-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.13
+    ports:
+      - "8547:8545"
+      - "8548:8546"
+      - "30305:30303"
+      - "9547:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-4:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-4
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-4
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000004
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-4-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.14
+    ports:
+      - "8548:8545"
+      - "8549:8546"
+      - "30306:30303"
+      - "9548:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-5:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-5
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-5
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000005
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-5-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.15
+    ports:
+      - "8550:8545"
+      - "8551:8546"
+      - "30307:30303"
+      - "9549:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-6:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-6
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-6
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000006
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-6-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.16
+    ports:
+      - "8552:8545"
+      - "8553:8546"
+      - "30308:30303"
+      - "9550:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  validator-7:
+    image: hyperledger/besu:latest
+    container_name: besu-validator-7
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data
+      - --p2p-port=30303
+      - --p2p-host=validator-7
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL
+      - --rpc-http-allow-host=*
+      - --rpc-ws-enabled
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --rpc-ws-api=ETH,NET,WEB3,IBFT
+      - --metrics-enabled
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --miner-enabled
+      - --miner-coinbase=0x0000000000000000000000000000000000000007
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - validator-7-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.17
+    ports:
+      - "8554:8545"
+      - "8555:8546"
+      - "30309:30303"
+      - "9551:9545"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+
+  # ==================== TESSERA PRIVATE ENCLAVES ====================
+  
+  tessera-validator-1:
+    image: quorumengineering/tessera:latest
+    container_name: tessera-validator-1
+    command:
+      - -configfile=/config/tessera-config.json
+    volumes:
+      - ./config/tessera-config.json:/config/tessera-config.json:ro
+      - tessera-validator-1-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.2.11
+    ports:
+      - "9081:9081"
+      - "9101:9101"
+    environment:
+      JAVA_OPTS: "-Xmx1g"
+    depends_on:
+      - validator-1
+
+  tessera-validator-2:
+    image: quorumengineering/tessera:latest
+    container_name: tessera-validator-2
+    command:
+      - -configfile=/config/tessera-config.json
+    volumes:
+      - ./config/tessera-config.json:/config/tessera-config.json:ro
+      - tessera-validator-2-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.2.12
+    ports:
+      - "9082:9081"
+      - "9102:9101"
+    environment:
+      JAVA_OPTS: "-Xmx1g"
+    depends_on:
+      - validator-2
+
+  tessera-validator-3:
+    image: quorumengineering/tessera:latest
+    container_name: tessera-validator-3
+    command:
+      - -configfile=/config/tessera-config.json
+    volumes:
+      - ./config/tessera-config.json:/config/tessera-config.json:ro
+      - tessera-validator-3-data:/data
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.2.13
+    ports:
+      - "9083:9081"
+      - "9103:9101"
+    environment:
+      JAVA_OPTS: "-Xmx1g"
+    depends_on:
+      - validator-3
+
+  # ==================== CONSENSUS MONITORING & RPC GATEWAY ====================
+  
+  consensus-monitor:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.monitor
+    container_name: pharbit-consensus-monitor
+    environment:
+      VALIDATOR_1_RPC: http://validator-1:8545
+      VALIDATOR_2_RPC: http://validator-2:8545
+      VALIDATOR_3_RPC: http://validator-3:8545
+      VALIDATOR_4_RPC: http://validator-4:8545
+      VALIDATOR_5_RPC: http://validator-5:8545
+      VALIDATOR_6_RPC: http://validator-6:8545
+      VALIDATOR_7_RPC: http://validator-7:8545
+      NODE_ENV: production
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.3.10
+    ports:
+      - "3001:3001"
+    depends_on:
+      - validator-1
+      - validator-2
+      - validator-3
+      - validator-4
+      - validator-5
+      - validator-6
+      - validator-7
+
+  # ==================== ARCHIVAL NODE ====================
+  
+  archival-node:
+    image: hyperledger/besu:latest
+    container_name: besu-archival
+    command:
+      - --genesis-file=/config/genesis.json
+      - --data-path=/data/archival
+      - --p2p-port=30303
+      - --p2p-host=archival-node
+      - --rpc-http-enabled
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT,ADMIN,TXPOOL,DEBUG
+      - --rpc-http-allow-host=*
+      - --sync-mode=FULL
+      - --pruning-enabled=false
+      - --logging=INFO
+      - --nat-method=DOCKER
+      - --bootnodes=enode://4ab3a290c4c87a2d05d4c4374ac4cce7f8f3ab67b74e91dbf46fde2efb3f90a5@validator-1:30303
+    volumes:
+      - ./config/genesis.json:/config/genesis.json:ro
+      - archival-data:/data/archival
+    networks:
+      pharbit-network:
+        ipv4_address: 10.0.1.20
+    ports:
+      - "8556:8545"
+      - "30310:30303"
+    environment:
+      JAVA_OPTS: "-Xmx4g"
+    depends_on:
+      - validator-1
+
+networks:
+  pharbit-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/16
+
+volumes:
+  validator-1-data:
+  validator-2-data:
+  validator-3-data:
+  validator-4-data:
+  validator-5-data:
+  validator-6-data:
+  validator-7-data:
+  tessera-validator-1-data:
+  tessera-validator-2-data:
+  tessera-validator-3-data:
+  archival-data:

@@ -1,0 +1,27 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache \
+    curl \
+    jq
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install Node dependencies
+RUN npm ci --only=production
+
+# Copy application files
+COPY . .
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:3001/live || exit 1
+
+# Expose monitoring ports
+EXPOSE 3001
+
+# Start the consensus monitor
+CMD ["node", "services/consensusMonitor.js"]

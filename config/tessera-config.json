@@ -1,0 +1,95 @@
+{
+  "mode": "orion",
+  "serverConfigs": [
+    {
+      "servername": "pharbit-tessera",
+      "serverAddress": "http://tessera:9081",
+      "bindingAddress": "http://0.0.0.0:9081",
+      "communicationConfig": {
+        "tls": "STRICT",
+        "tlsServerTrustMode": "TOFU",
+        "tlsClientTrustMode": "TOFU",
+        "tlsVersionWhitelist": ["TLSv1.2", "TLSv1.3"]
+      }
+    }
+  ],
+  "peer": [
+    {
+      "url": "http://tessera-validator-1:9081"
+    },
+    {
+      "url": "http://tessera-validator-2:9081"
+    },
+    {
+      "url": "http://tessera-validator-3:9081"
+    },
+    {
+      "url": "http://tessera-validator-4:9081"
+    },
+    {
+      "url": "http://tessera-validator-5:9081"
+    },
+    {
+      "url": "http://tessera-validator-6:9081"
+    },
+    {
+      "url": "http://tessera-validator-7:9081"
+    }
+  ],
+  "privateKeyPath": "/data/tm.key",
+  "publicKeyPath": "/data/tm.pub",
+  "workdir": "/data",
+  "alwaysSendTo": [],
+  "unixSocketFile": "/data/tm.ipc",
+  "features": {
+    "enableWhiteList": false,
+    "enablePrivacyEnhancements": true
+  },
+  "jdbc": {
+    "username": "sa",
+    "password": "",
+    "url": "jdbc:h2:/data/tessera;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+    "autoCreateTables": true
+  },
+  "p2p": {
+    "targetPeerCount": 3,
+    "maxActiveConnections": 20,
+    "maxOpenConnections": 100,
+    "vertxWorkerPoolSize": 10,
+    "klass": "com.quorum.tessera.p2p.jaxrs.RestP2pClient",
+    "properties": {
+      "httpClientFactory": "com.quorum.tessera.jaxrs.client.jersey.JerseyClientFactory"
+    }
+  },
+  "q2t": {
+    "port": 9101,
+    "bindingAddress": "http://0.0.0.0:9101",
+    "servername": "http://localhost:9101"
+  },
+  "encryptor": {
+    "type": "NACL",
+    "properties": {
+      "symmetricCipher": "AES256",
+      "asymmetricCipher": "ECIES",
+      "ellipticCurve": "secp256r1",
+      "nonceLength": 24,
+      "sharedTransactionPoolSize": 100
+    }
+  },
+  "logging": {
+    "appenders": [
+      {
+        "type": "FILE",
+        "currentLogFilename": "/data/tessera.log",
+        "threshold": "DEBUG",
+        "archive": true,
+        "archivedLogFilenamePattern": "/data/tessera-%d{yyyy-MM-dd}.log",
+        "archivedFileCount": 7
+      },
+      {
+        "type": "STDOUT",
+        "threshold": "INFO"
+      }
+    ]
+  }
+}
