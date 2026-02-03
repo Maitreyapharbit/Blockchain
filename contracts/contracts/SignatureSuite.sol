@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title SignatureSuite
@@ -13,7 +12,6 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
  */
 contract SignatureSuite is AccessControl, ReentrancyGuard {
     using ECDSA for bytes32;
-    using MessageHashUtils for bytes;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
     bytes32 public constant AUDITOR_ROLE = keccak256("AUDITOR_ROLE");

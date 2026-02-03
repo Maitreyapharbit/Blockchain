@@ -107,7 +107,7 @@ contract IoTComplianceTracker is AccessControl, ReentrancyGuard {
 
         // Initialize default thresholds (can be updated)
         // Temperature: 2°C to 8°C for refrigerated goods (pharmacy grade)
-        setComplianceThreshold("TEMPERATURE", 20, 80, "Safe pharmaceutical storage: 20-80°C");
+        setComplianceThreshold("TEMPERATURE", 20, 80, "Safe pharmaceutical storage: 20-80 C");
 
         // Humidity: 30% to 70% for most pharmaceuticals
         setComplianceThreshold("HUMIDITY", 30, 70, "Safe humidity range: 30-70%");
