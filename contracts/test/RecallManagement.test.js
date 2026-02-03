@@ -150,8 +150,12 @@ describe("RecallManagement", function () {
 
   describe("Distribution Tracking", function () {
     const batchId = "BATCH-001";
-    const distributor = addrs[0].address;
     const quantity = 1000;
+    let distributor;
+
+    beforeEach(function () {
+      distributor = addrs[0].address;
+    });
 
     it("Should record distribution", async function () {
       await expect(
