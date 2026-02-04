@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies (contracts)
+        working-directory: ./contracts
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./contracts
+        run: npm test
+
+      - name: Run coverage
+        working-directory: ./contracts
+        run: npm run coverage
+
+      - name: Setup Python for Slither
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Slither
+        run: pip install slither-analyzer
+
+      - name: Run Slither analyzer
+        run: slither contracts/contracts --solc-remaps "@openzeppelin/=contracts/node_modules/@openzeppelin/" --json slither-report.json || true
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./contracts/coverage
+
+      - name: Upload Slither report
+        uses: actions/upload-artifact@v4
+        with:
+          name: slither-report
+          path: ./slither-report.json

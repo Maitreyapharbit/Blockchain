@@ -48,4 +48,35 @@ describe("Token (consolidated) contract", function () {
     const r = await tx.wait();
     expect(r.status).to.equal(1);
   });
+
+  it("propose and acknowledge transfer flow with signatures", async function () {
+    const recipient = (await ethers.getSigners())[4];
+
+    const quantity = 10;
+    const measurementTime = Math.floor(Date.now() / 1000);
+
+    // Sender signs the proposal message
+    const messageHash = ethers.utils.solidityKeccak256(["uint256","address","uint256","uint256","address"], [1, recipient.address, quantity, measurementTime, manufacturer.address]);
+    const senderSignature = await manufacturer.signMessage(ethers.utils.arrayify(messageHash));
+
+    const tx2 = await token.connect(manufacturer).proposeDrugTransfer(1, recipient.address, quantity, measurementTime, ethers.utils.formatBytes32String("EMP-TR"), senderSignature);
+    const r2 = await tx2.wait();
+    const event = r2.events.find(e => e.event === 'TransferProposed');
+    const transferId = event.args.transferId;
+
+    // Read proposedAt to build receiver signature
+    const pending = await token.pendingTransfers(transferId);
+    const proposedAt = pending.proposedAt;
+
+    const receiverMessage = ethers.utils.solidityKeccak256(["uint256","address","uint256","address","uint256"], [1, recipient.address, quantity, manufacturer.address, proposedAt]);
+    const receiverSignature = await recipient.signMessage(ethers.utils.arrayify(receiverMessage));
+
+    await token.connect(recipient).acknowledgeDrugTransfer(transferId, ethers.utils.formatBytes32String("EMP-RX"), receiverSignature);
+
+    const transfer = await token.pendingTransfers(transferId);
+    expect(transfer.isCompleted).to.equal(true);
+
+    // Ensure recipient received tokens
+    expect(await token.balanceOf(recipient.address, 1)).to.equal(quantity);
+  });
 });

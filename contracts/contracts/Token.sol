@@ -20,6 +20,23 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
 
     enum BatchStatus { ACTIVE, COMPROMISED, RECALLED, CONSUMED }
 
+    // Custom errors to save bytecode size
+    error QuantityMustBePositive();
+    error InvalidDateRange();
+    error FutureTimestampNotAllowed();
+    error BatchNotActive();
+    error InsufficientBalance();
+    error InvalidRecipient();
+    error InvalidSenderSignature();
+    error OnlyRecipient();
+    error AlreadySigned();
+    error TransferNotFound();
+    error TransferExpired();
+    error InvalidReceiverSignature();
+    error InsufficientBalanceFromSender();
+    error BatchNotAvailable();
+    error RoleRequired();
+
     struct BatchMetadata {
         bytes32 batchHash;
         address manufacturer;
@@ -63,7 +80,7 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
     event BatchCompromised(uint256 indexed batchId, string reason, address indexed reporter, bytes32 employeeId, uint256 timestamp);
     event BatchRecalled(uint256 indexed batchId, uint256 timestamp);
 
-    constructor(string memory uri) ERC1155(uri) {
+    constructor(string memory baseUri) ERC1155(baseUri) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -75,10 +92,10 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
         bytes32 batchNumber,
         bytes32 employeeId,
         uint256 hardwareTimestamp
-    ) external onlyRole(MANUFACTURER_ROLE) returns (uint256) {
+    ) external onlyRole(MANUFACTURER_ROLE) nonReentrant returns (uint256) {
         require(quantity > 0, "Quantity must be positive");
-        require(expiryDate > manufacturingDate, "Invalid date range");
-        require(hardwareTimestamp <= block.timestamp, "Future timestamp not allowed");
+        if (!(expiryDate > manufacturingDate)) revert InvalidDateRange();
+        if (hardwareTimestamp > block.timestamp) revert FutureTimestampNotAllowed();
 
         _batchIdCounter++;
         uint256 batchId = _batchIdCounter;
@@ -99,13 +116,17 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
             employeeId: employeeId
         });
 
-        _mint(msg.sender, batchId, quantity, "");
+        // Effects first: update holder bookkeeping before invoking external calls in _mint
         if (!batchHolderExists[batchId][msg.sender]) {
             batchHolderExists[batchId][msg.sender] = true;
             holderCount[batchId] += 1;
-            emit HolderAdded(batchId, msg.sender);
         }
 
+        // Interaction
+        _mint(msg.sender, batchId, quantity, "");
+
+        // Emit events after a successful external call
+        emit HolderAdded(batchId, msg.sender);
         emit BatchMinted(batchId, msg.sender, quantity, metadataHash, employeeId, hardwareTimestamp, block.timestamp);
         return batchId;
     }
@@ -119,14 +140,14 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
         bytes calldata senderSignature
     ) external nonReentrant returns (bytes32) {
         BatchMetadata storage batch = batches[batchId];
-        require(batch.status == BatchStatus.ACTIVE, "Batch not active");
-        require(balanceOf(msg.sender, batchId) >= quantity, "Insufficient balance");
-        require(to != address(0), "Invalid recipient");
-        require(quantity > 0, "Quantity must be positive");
+        if (batch.status != BatchStatus.ACTIVE) revert BatchNotActive();
+        if (balanceOf(msg.sender, batchId) < quantity) revert InsufficientBalance();
+        if (to == address(0)) revert InvalidRecipient();
+        if (quantity == 0) revert QuantityMustBePositive();
 
         bytes32 messageHash = keccak256(abi.encodePacked(batchId, to, quantity, measurementTime, msg.sender));
         address signer = messageHash.toEthSignedMessageHash().recover(senderSignature);
-        require(signer == msg.sender, "Invalid sender signature");
+        if (signer != msg.sender) revert InvalidSenderSignature();
 
         bytes32 transferId = keccak256(abi.encodePacked(batchId, msg.sender, to, quantity, block.timestamp));
 
@@ -149,39 +170,47 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
 
     function acknowledgeDrugTransfer(bytes32 transferId, bytes32 employeeId, bytes calldata receiverSignature) external nonReentrant {
         PendingTransfer storage transfer = pendingTransfers[transferId];
-        require(transfer.to == msg.sender, "Only recipient can acknowledge");
-        require(!transfer.toSigned, "Already signed");
-        require(transfer.proposedAt > 0, "Transfer not found");
-        require(block.timestamp - transfer.proposedAt <= 86400, "Transfer expired");
+        if (transfer.to != msg.sender) revert OnlyRecipient();
+        if (transfer.toSigned) revert AlreadySigned();
+        if (transfer.proposedAt == 0) revert TransferNotFound();
+        if (block.timestamp - transfer.proposedAt > 86400) revert TransferExpired();
 
-        bytes32 messageHash = keccak256(abi.encodePacked(transfer.batchId, msg.sender, transfer.quantity, transfer.from, block.timestamp));
+        // Use the original proposedAt timestamp so the recipient can sign off-chain
+        bytes32 messageHash = keccak256(abi.encodePacked(transfer.batchId, msg.sender, transfer.quantity, transfer.from, transfer.proposedAt));
         address signer = messageHash.toEthSignedMessageHash().recover(receiverSignature);
-        require(signer == msg.sender, "Invalid receiver signature");
+        if (signer != msg.sender) revert InvalidReceiverSignature();
 
+        // Mark recipient as signed
         transfer.toSigned = true;
 
-        _safeTransferFrom(transfer.from, transfer.to, transfer.batchId, transfer.quantity, "");
+        // Re-check sender balance before completing (defensive)
+        if (balanceOf(transfer.from, transfer.batchId) < transfer.quantity) revert InsufficientBalanceFromSender();
 
+        // Effects: update batch and transfer state before external calls
         BatchMetadata storage batch = batches[transfer.batchId];
         batch.remainingQuantity -= transfer.quantity;
 
         if (!batchHolderExists[transfer.batchId][transfer.to]) {
             batchHolderExists[transfer.batchId][transfer.to] = true;
             holderCount[transfer.batchId] += 1;
-            emit HolderAdded(transfer.batchId, transfer.to);
         }
 
         transfer.isCompleted = true;
 
+        // Interaction: perform token transfer
+        _safeTransferFrom(transfer.from, transfer.to, transfer.batchId, transfer.quantity, "");
+
+        // Emit events after successful interaction
+        emit HolderAdded(transfer.batchId, transfer.to);
         emit TransferAcknowledged(transferId, msg.sender, employeeId, block.timestamp);
         emit TransferCompleted(transferId, transfer.batchId, transfer.from, transfer.to, transfer.quantity, block.timestamp);
     }
 
     function consumeMedicine(uint256 batchId, bytes32 hashedPatientId, uint256 quantity, bytes32 employeeId) external onlyRole(PHARMACY_ROLE) nonReentrant {
         BatchMetadata storage batch = batches[batchId];
-        require(batch.status == BatchStatus.ACTIVE, "Batch not available");
-        require(balanceOf(msg.sender, batchId) >= quantity, "Insufficient balance");
-        require(quantity > 0, "Quantity must be positive");
+        if (batch.status != BatchStatus.ACTIVE) revert BatchNotAvailable();
+        if (balanceOf(msg.sender, batchId) < quantity) revert InsufficientBalance();
+        if (quantity == 0) revert QuantityMustBePositive();
 
         batch.remainingQuantity -= quantity;
         _burn(msg.sender, batchId, quantity);
@@ -195,14 +224,14 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
 
     function flagBatchCompromised(uint256 batchId, string calldata reason, bytes32 employeeId) external onlyRole(AUDITOR_ROLE) {
         BatchMetadata storage batch = batches[batchId];
-        require(batch.status == BatchStatus.ACTIVE, "Batch already flagged");
+        if (batch.status != BatchStatus.ACTIVE) revert BatchNotActive();
         batch.status = BatchStatus.COMPROMISED;
         emit BatchCompromised(batchId, reason, msg.sender, employeeId, block.timestamp);
     }
 
     function recallBatch(uint256 batchId) external onlyRole(AUDITOR_ROLE) {
         BatchMetadata storage batch = batches[batchId];
-        require(batch.status == BatchStatus.ACTIVE || batch.status == BatchStatus.COMPROMISED, "Batch already recalled");
+        if (!(batch.status == BatchStatus.ACTIVE || batch.status == BatchStatus.COMPROMISED)) revert BatchNotActive();
         batch.status = BatchStatus.RECALLED;
         emit BatchRecalled(batchId, block.timestamp);
     }
@@ -212,7 +241,7 @@ contract Token is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
 
         if (from != address(0) && to != address(0)) {
             for (uint256 i = 0; i < ids.length; i++) {
-                require(batches[ids[i]].status == BatchStatus.ACTIVE, "Cannot transfer compromised/recalled batch");
+                if (batches[ids[i]].status != BatchStatus.ACTIVE) revert BatchNotActive();
             }
         }
     }
