@@ -301,10 +301,10 @@ main() {
         fi
     fi
 
-    # Deploy to local network
-    print_status "Deploying to local network..."
+    # Deploy the consolidated four contracts to local network
+    print_status "Deploying consolidated contracts (Token, Tracking, AntiCounterfeiting, PriceCalibration)..."
     if [ -f "node_modules/.bin/hardhat" ]; then
-        if ./node_modules/.bin/hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
+        if ./node_modules/.bin/hardhat run contracts/scripts/deploy-four.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
             print_success "Smart contracts deployed successfully"
         else
             print_error "Contract deployment failed"
@@ -312,7 +312,7 @@ main() {
             exit 1
         fi
     else
-        if npx hardhat run scripts/deploy.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
+        if npx hardhat run contracts/scripts/deploy-four.js --network hardhat > ../logs/contract-deploy.log 2>&1; then
             print_success "Smart contracts deployed successfully"
         else
             print_error "Contract deployment failed"
@@ -320,17 +320,21 @@ main() {
             exit 1
         fi
     fi
-    
-    # Extract contract addresses from deployment log
-    RECALL_CONTRACT=$(grep "RecallManagement deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
-    COUNTERFEIT_CONTRACT=$(grep "AntiCounterfeitVerification deployed to:" ../logs/contract-deploy.log | awk '{print $NF}')
-    
-    if [ -n "$RECALL_CONTRACT" ] && [ -n "$COUNTERFEIT_CONTRACT" ]; then
+
+    # Read addresses from deployed JSON
+    if [ -f "contracts/deployed-four.json" ]; then
+        TOKEN_CONTRACT=$(jq -r '.Token' contracts/deployed-four.json)
+        TRACKING_CONTRACT=$(jq -r '.Tracking' contracts/deployed-four.json)
+        ANTI_CONTRACT=$(jq -r '.AntiCounterfeiting' contracts/deployed-four.json)
+        PRICE_CONTRACT=$(jq -r '.PriceCalibration' contracts/deployed-four.json)
+
         print_success "Contract addresses extracted:"
-        print_success "  - Recall Management: $RECALL_CONTRACT"
-        print_success "  - Anti-Counterfeiting: $COUNTERFEIT_CONTRACT"
+        print_success "  - Token: $TOKEN_CONTRACT"
+        print_success "  - Tracking: $TRACKING_CONTRACT"
+        print_success "  - Anti-Counterfeiting: $ANTI_CONTRACT"
+        print_success "  - PriceCalibration: $PRICE_CONTRACT"
     else
-        print_warning "Could not extract contract addresses from deployment log"
+        print_warning "Could not read contracts/deployed-four.json"
     fi
     
     cd ..

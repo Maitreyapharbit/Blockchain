@@ -34,8 +34,8 @@ describe("Token (consolidated) contract", function () {
     const r = await tx.wait();
     expect(r.status).to.equal(1);
 
-    const batch = await token.getBatch(1);
-    expect(batch.totalQuantity).to.equal(500);
+    const batch = await token.batches(1);
+    expect(batch[4].toNumber()).to.equal(500);
   });
 
   it("prevents non-pharmacy from consuming", async function () {

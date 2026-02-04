@@ -27,9 +27,12 @@ describe("AntiCounterfeiting contract", function () {
 
   it("reports suspicious activity and flags batch", async function () {
     const batchId = 2;
-    const evidenceHash = ethers.keccak256(ethers.toUtf8Bytes("evidence-1"));
+    const evidenceHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("evidence-1"));
     await anti.connect(manufacturer).addSecurityFeature(batchId, 0, evidenceHash);
     await anti.connect(manufacturer).reportSuspiciousActivity(batchId, evidenceHash);
+    // Verifier updates status to Suspicious so batch becomes flagged
+    const VERIFIER_ROLE = await anti.VERIFIER_ROLE();
+    await anti.connect(verifier).updateBatchStatus(batchId, 2);
     const flagged = await anti.isBatchFlagged(batchId);
     expect(flagged).to.equal(true);
   });

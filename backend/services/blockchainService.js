@@ -19,8 +19,8 @@ class BlockchainService {
         logger.info(`Blockchain wallet initialized: ${this.wallet.address}`);
       }
 
-      // Load contract addresses from deployment
-      await this.loadContracts();
+      // Load contract addresses from deployment (prefer consolidated 'deployed-four.json')
+      await this.loadContracts(); // will attempt to load consolidated contracts first, then fallback
 
       this.isInitialized = true;
       logger.info('Blockchain service initialized successfully');
@@ -35,8 +35,35 @@ class BlockchainService {
    */
   async loadContracts() {
     try {
-      // Load deployment info
-      const deploymentPath = require('path').join(__dirname, '../deployments/pharma-contracts.json');
+      // Prefer consolidated deployed file (Token, Tracking, AntiCounterfeiting, PriceCalibration)
+      const fs = require('fs');
+      const path = require('path');
+      const consolidatedPath = path.join(__dirname, '../../contracts/deployed-four.json');
+
+      if (fs.existsSync(consolidatedPath)) {
+        const deployment = JSON.parse(fs.readFileSync(consolidatedPath, 'utf8'));
+
+        const Token = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/artifacts/contracts/Token.sol/Token.json'), 'utf8'));
+        const Tracking = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/artifacts/contracts/Tracking.sol/Tracking.json'), 'utf8'));
+        const Anti = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/artifacts/contracts/AntiCounterfeiting.sol/AntiCounterfeiting.json'), 'utf8'));
+        const Price = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/artifacts/contracts/PriceCalibration.sol/PriceCalibration.json'), 'utf8'));
+
+        this.contracts.token = new ethers.Contract(deployment.Token, Token.abi, this.wallet || this.provider);
+        this.contracts.tracking = new ethers.Contract(deployment.Tracking, Tracking.abi, this.wallet || this.provider);
+        this.contracts.anticounterfeiting = new ethers.Contract(deployment.AntiCounterfeiting, Anti.abi, this.wallet || this.provider);
+        this.contracts.priceCalibration = new ethers.Contract(deployment.PriceCalibration, Price.abi, this.wallet || this.provider);
+
+        logger.info('Consolidated contracts loaded successfully');
+        return;
+      }
+
+      // Fallback to legacy deployment (pharma-contracts.json)
+      const deploymentPath = path.join(__dirname, '../deployments/pharma-contracts.json');
+      if (!fs.existsSync(deploymentPath)) {
+        logger.warn('No deployment file found at ' + deploymentPath);
+        return;
+      }
+
       const deployment = require(deploymentPath);
 
       // Contract ABIs
@@ -63,7 +90,7 @@ class BlockchainService {
         this.wallet || this.provider
       );
 
-      logger.info('Contracts loaded successfully');
+      logger.info('Legacy contracts loaded successfully');
     } catch (error) {
       logger.error('Failed to load contracts:', error);
       throw error;
