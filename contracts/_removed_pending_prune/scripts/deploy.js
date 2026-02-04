@@ -3,23 +3,37 @@ const hre = require("hardhat");
 async function main() {
   console.log("Deploying contracts...");
 
-  // Deploy RecallManagement contract
-  const RecallManagement = await hre.ethers.getContractFactory("RecallManagement");
-  const recallManagement = await RecallManagement.deploy();
-  await recallManagement.deployed();
-  console.log("RecallManagement deployed to:", recallManagement.address);
+  // Deploy Token contract
+  const Token = await hre.ethers.getContractFactory("Token");
+  const token = await Token.deploy("ipfs://uri");
+  await token.deployed();
+  console.log("Token deployed to:", token.address);
 
-  // Deploy AntiCounterfeitVerification contract
-  const AntiCounterfeitVerification = await hre.ethers.getContractFactory("AntiCounterfeitVerification");
-  const antiCounterfeitVerification = await AntiCounterfeitVerification.deploy();
-  await antiCounterfeitVerification.deployed();
-  console.log("AntiCounterfeitVerification deployed to:", antiCounterfeitVerification.address);
+  // Deploy Tracking contract
+  const Tracking = await hre.ethers.getContractFactory("Tracking");
+  const tracking = await Tracking.deploy();
+  await tracking.deployed();
+  console.log("Tracking deployed to:", tracking.address);
+
+  // Deploy AntiCounterfeiting contract
+  const AntiCounterfeiting = await hre.ethers.getContractFactory("AntiCounterfeiting");
+  const antiCounterfeiting = await AntiCounterfeiting.deploy();
+  await antiCounterfeiting.deployed();
+  console.log("AntiCounterfeiting deployed to:", antiCounterfeiting.address);
+
+  // Deploy PriceCalibration contract
+  const PriceCalibration = await hre.ethers.getContractFactory("PriceCalibration");
+  const priceCalibration = await PriceCalibration.deploy();
+  await priceCalibration.deployed();
+  console.log("PriceCalibration deployed to:", priceCalibration.address);
 
   // Save contract addresses to a file
   const fs = require("fs");
   const contractAddresses = {
-    RecallManagement: recallManagement.address,
-    AntiCounterfeitVerification: antiCounterfeitVerification.address,
+    Token: token.address,
+    Tracking: tracking.address,
+    AntiCounterfeiting: antiCounterfeiting.address,
+    PriceCalibration: priceCalibration.address,
     network: hre.network.name,
     timestamp: new Date().toISOString(),
   };

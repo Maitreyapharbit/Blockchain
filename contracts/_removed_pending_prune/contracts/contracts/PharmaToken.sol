@@ -1,84 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
-/**
- * @title PharmaToken
- * @dev ERC-1155 based pharmaceutical batch tracking system with DSCSA compliance
- * @notice FDA ALCOA+ compliant token for drug supply chain with dual-signature transfers
- */
-contract PharmaToken is ERC1155, ERC1155Burnable, AccessControl, ReentrancyGuard {
-    using ECDSA for bytes32;
-
-    // Roles
-    bytes32 public constant MANUFACTURER_ROLE = keccak256("MANUFACTURER_ROLE");
-    bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
-    bytes32 public constant PHARMACY_ROLE = keccak256("PHARMACY_ROLE");
-    bytes32 public constant AUDITOR_ROLE = keccak256("AUDITOR_ROLE");
-    bytes32 public constant ADMIN_ROLE = DEFAULT_ADMIN_ROLE;
-
-    // Batch status enum
-    enum BatchStatus { ACTIVE, COMPROMISED, RECALLED, CONSUMED }
-
-    // Batch metadata structure - ALCOA+ compliant
-    struct BatchMetadata {
-        bytes32 batchHash;              // Immutable metadata commitment
-        address manufacturer;           // Manufacturing company
-        uint256 manufacturingDate;      // ISO 8601 timestamp
-        uint256 expiryDate;            // ISO 8601 timestamp
-        uint256 totalQuantity;         // Total units in batch
-        uint256 remainingQuantity;     // Units still in circulation
-        BatchStatus status;            // Current batch status
-        uint256 createdAt;             // Block timestamp
-        string drugName;               // Drug name
-        string batchNumber;            // Batch identifier
-    }
-
-    // Transfer record - ALCOA+ compliant audit trail
-    struct TransferRecord {
-        address from;                  // Sender address
-        address to;                    // Receiver address
-        uint256 quantity;              // Number of units transferred
-        uint256 timestamp;             // Block timestamp (record time)
-        bytes32 transactionHash;       // Unique transaction identifier
-        uint256 measurementTime;       // IoT sensor measurement time
-        uint256 recordTime;            // Blockchain record time
-        string employeeId;             // Actor ID (not role)
-        bool isHistorical;             // Flag if > 1 hour delay
-    }
-
-    // Pending transfer - dual-signature approval
-    struct PendingTransfer {
-        uint256 batchId;
-        address from;
-        address to;
-        uint256 quantity;
-        uint256 measurementTime;
-        uint256 proposedAt;
-        bool fromSigned;
-        bool toSigned;
-        bytes fromSignature;
-        bytes toSignature;
-        bool isCompleted;
-    }
-
-    // Storage mappings
-    mapping(uint256 batchId => BatchMetadata metadata) public batches;
-    mapping(uint256 batchId => address[] holders) public batchHolders;
-    mapping(uint256 batchId => TransferRecord[]) public transferHistory;
-    mapping(bytes32 transferId => PendingTransfer) public pendingTransfers;
-    
-    uint256 private _batchIdCounter;
-    bytes32[] public pendingTransferIds;
-
-    // Events - ALCOA+ compliant with employee ID and timestamps
-    event BatchMinted(
-        uint256 indexed batchId,
+/// @title Deprecated - PharmaToken
+/// @notice Replaced by `Token.sol`. Minimal DEPRECATED stub retained for history and migration.
+contract DeprecatedPharmaToken {
+    // Intentionally left blank. Use `Token.sol` for current functionality.
+} 
         address indexed manufacturer,
         uint256 quantity,
         bytes32 batchMetadataHash,

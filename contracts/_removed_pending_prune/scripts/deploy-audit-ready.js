@@ -10,7 +10,9 @@ const path = require("path");
  */
 
 async function main() {
-  console.log("\n=== PharbitChain Audit-Ready Deployment ===\n");
+  console.log("This deploy script is deprecated. Use scripts/deploy-four.js to deploy the consolidated contracts: Token, Tracking, AntiCounterfeiting, PriceCalibration.");
+  return;
+
 
   // Get deployer account
   const [deployer] = await hre.ethers.getSigners();

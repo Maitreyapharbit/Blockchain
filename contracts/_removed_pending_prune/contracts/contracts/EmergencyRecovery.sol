@@ -1,28 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-/**
- * @title EmergencyRecovery
- * @dev Multi-sig recovery mechanism for compromised private keys
- * @notice "If a manufacturer loses their private key, do you have a recovery process?"
- *         Answer: Yes - 3-of-5 emergency multisig can recover without losing batch history
- */
-contract EmergencyRecovery is AccessControl, ReentrancyGuard {
-
-    bytes32 public constant EMERGENCY_COUNCIL_MEMBER = keccak256("EMERGENCY_COUNCIL_MEMBER");
-    bytes32 public constant ROLE_ADMIN = keccak256("ROLE_ADMIN");
-
-    // Recovery request states
-    enum RecoveryState {
-        REQUESTED,      // Initiated by key holder
-        VOTING,         // Council voting on approval
-        APPROVED,       // Approved by multisig
-        EXECUTED,       // New key assigned
-        CANCELLED       // Request cancelled
-    }
+/// @title Deprecated - EmergencyRecovery
+/// @notice Emergency recovery is handled off-chain or in Governance modules. This file is a DEPRECATED stub.
+contract DeprecatedEmergencyRecovery {
+} 
 
     // Recovery request structure
     struct RecoveryRequest {

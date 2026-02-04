@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
-contract PharmaceuticalBatch is AccessControl {
+/// @title Deprecated - PharmaceuticalBatch
+/// @notice Batch metadata and tokenized batches are now represented by `Token.sol`. This file is deprecated.
+contract DeprecatedPharmaceuticalBatch {
+}
     bytes32 public constant MANUFACTURER_ROLE = keccak256("MANUFACTURER_ROLE");
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
     

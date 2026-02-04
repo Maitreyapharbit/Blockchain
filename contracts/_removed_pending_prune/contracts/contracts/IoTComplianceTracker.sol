@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+/// @title Deprecated - IoTComplianceTracker
+/// @notice IoT compliance tracking is now part of `Tracking.sol`. This file is deprecated and kept as a stub.
+contract DeprecatedIoTComplianceTracker {
+}
 
-/**
- * @title IoTComplianceTracker
- * @dev ALCOA+ Contemporaneous tracking with hardware timestamps
- * @notice Tracks sensor readings with both measurement time and blockchain record time
- */
-contract IoTComplianceTracker is AccessControl, ReentrancyGuard {
-    using ECDSA for bytes32;
 
     bytes32 public constant AUDITOR_ROLE = keccak256("AUDITOR_ROLE");
     bytes32 public constant PHARMACY_ROLE = keccak256("PHARMACY_ROLE");

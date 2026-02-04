@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-contract AntiCounterfeitVerification is Ownable, ReentrancyGuard {
+/// @title Deprecated - AntiCounterfeitVerification
+/// @notice Deprecated; functionality migrated to `AntiCounterfeiting.sol`.
+contract DeprecatedAntiCounterfeitVerification {
+}
     enum VerificationType { QR_SCAN, HOLOGRAM_CHECK, SERIAL_VERIFICATION }
     enum ReportStatus { PENDING, INVESTIGATING, CONFIRMED, FALSE_ALARM }
 

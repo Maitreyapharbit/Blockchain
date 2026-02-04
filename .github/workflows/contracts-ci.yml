@@ -1,0 +1,33 @@
+name: Contracts CI
+
+on:
+  push:
+    paths:
+      - 'contracts/**'
+      - '.github/workflows/contracts-ci.yml'
+  pull_request:
+    paths:
+      - 'contracts/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies (contracts)
+        working-directory: ./contracts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run tests
+        working-directory: ./contracts
+        run: npx hardhat test --show-stack-traces
+      - name: Upload test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: contracts-test-logs
+          path: ./contracts/**/mochawesome-report || ./contracts/test-results || ./contracts

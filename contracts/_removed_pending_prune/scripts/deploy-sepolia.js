@@ -22,8 +22,8 @@ const CONTRACTS_TO_DEPLOY = [
 ];
 
 async function main() {
-  console.log("🚀 Deploying to Sepolia Testnet");
-  console.log("═══════════════════════════════════════════════════════════");
+  console.log("This Sepolia deploy script is deprecated. Use scripts/deploy-four.js to deploy the consolidated contracts: Token, Tracking, AntiCounterfeiting, PriceCalibration.");
+  return;
 
   // Verify environment
   if (!process.env.SEPOLIA_PRIVATE_KEY) {

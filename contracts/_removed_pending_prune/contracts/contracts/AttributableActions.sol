@@ -1,57 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
-/**
- * @title AttributableActions
- * @dev ALCOA+ compliance contract for tracking individual employee actions
- * @notice Links all blockchain actions to specific employee IDs, not generic roles
- */
-contract AttributableActions is Ownable, ReentrancyGuard {
-    using ECDSA for bytes32;
-
-    // Actor registration - ALCOA+ Attributability
-    struct ActorRegistry {
-        string employeeId;        // "LAB-TECH-00123"
-        string department;        // "Quality Control"
-        string companyName;       // "Pfizer Inc"
-        address walletAddress;
-        uint256 registeredAt;
-        bool isActive;
-    }
-
-    // Action log - immutable audit trail
-    struct ActionLog {
-        bytes32 actionId;
-        address actor;
-        string employeeId;
-        string actionType;        // "BATCH_CREATED", "QUALITY_CHECK", etc
-        string description;
-        bytes32 dataHash;
-        uint256 hardwareTimestamp;  // IoT sensor time
-        uint256 recordedAt;         // Blockchain time
-        bytes signature;
-        bool isVerified;
-    }
-
-    // Storage mappings
-    mapping(address => ActorRegistry) public registeredActors;
-    mapping(bytes32 => ActionLog) public actionLogs;
-    
-    bytes32[] private actionLogIds;
-    mapping(address => bytes32[]) public actorActionHistory;
-
-    // Events
-    event ActorRegistered(
-        address indexed walletAddress,
-        string employeeId,
-        string department,
-        string companyName,
-        uint256 timestamp
-    );
+/// @title Deprecated - AttributableActions
+/// @notice Moved to `Tracking.sol`. This file is a minimal DEPRECATED stub to avoid unintended usage.
+contract DeprecatedAttributableActions {
+    // Use `Tracking.sol` for actor registration and action logging.
+} 
 
     event ActorDeactivated(
         address indexed walletAddress,

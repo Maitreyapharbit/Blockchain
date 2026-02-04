@@ -1,27 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-/**
- * @title IdentityVerification
- * @dev Identity verification and role assignment with documented process (FDA 21 CFR Part 11)
- * @notice Before ANY wallet receives a role (MANUFACTURER, PHARMACY, etc), it must pass 3-factor identity verification
- */
-contract IdentityVerification is AccessControl, ReentrancyGuard {
-
-    bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
-    bytes32 public constant COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
-
-    // Identity verification levels
-    enum VerificationLevel {
-        UNVERIFIED,        // No checks done
-        BASIC,             // Email + phone verified
-        STANDARD,          // BASIC + business license checked
-        ENHANCED,          // STANDARD + business principals verified
-        KYBA               // ENHANCED + Anti-Money Laundering checks
-    }
+/// @title Deprecated - IdentityVerification
+/// @notice Identity verification moved to `Tracking.sol`. This file is a minimal DEPRECATED stub.
+contract DeprecatedIdentityVerification {
+    // Replaced by `Tracking.sol`.
+} 
 
     // FDA-compliant identity record
     struct EntityIdentity {

@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-/**
- * @title PrivatePricingLedger
- * @dev Tessera-compatible private contract for sensitive pricing data
- * @notice Prices stored only in Tessera enclave, hashes recorded on public blockchain
- * @dev This contract is designed for Hyperledger Besu with Tessera private transactions
- */
-contract PrivatePricingLedger is AccessControl, ReentrancyGuard {
+/// @title Deprecated - PrivatePricingLedger
+/// @notice Use `PriceCalibration.sol` and off-chain privacy enclaves for private pricing. This file is deprecated.
+contract DeprecatedPrivatePricingLedger {
+}
     bytes32 public constant MANUFACTURER_ROLE = keccak256("MANUFACTURER_ROLE");
     bytes32 public constant REGULATOR_ROLE = keccak256("REGULATOR_ROLE");
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
